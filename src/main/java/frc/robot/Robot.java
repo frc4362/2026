@@ -10,9 +10,11 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
 public class Robot extends TimedRobot {
 
   private final RobotContainer m_robotContainer;
+  private final MatchStateTracker m_matchStateTracker;
 
   public Robot() {
     m_robotContainer = new RobotContainer();
+    m_matchStateTracker = new MatchStateTracker();
   }
 
   @Override
@@ -50,5 +52,8 @@ public class Robot extends TimedRobot {
   public void simulationInit() {}
 
   @Override
-  public void simulationPeriodic() {}
+  public void simulationPeriodic() {
+      m_matchStateTracker.update();
+      // m_matchStateTracker.getMatchState();
+  }
 }
