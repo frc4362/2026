@@ -4,17 +4,26 @@
 
 package frc.robot;
 
-import frc.robot.Constants.OperatorConstants;
+import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import frc.robot.subsystems.Shooter;
 
 public class RobotContainer {
 
-  private final CommandXboxController m_driverController =
-      new CommandXboxController(OperatorConstants.kDriverControllerPort);
+    private final CommandXboxController joystick = new CommandXboxController(0);
 
-  public RobotContainer() {
-    configureBindings();
-  }
+    private final Shooter m_shooter;
 
-  private void configureBindings() {}
+    public RobotContainer() {
+        m_shooter = new Shooter();
+
+        configureBindings();
+    }
+
+    private void configureBindings() {
+        joystick.rightBumper().onTrue(m_shooter.setVelocity(45));
+        joystick.rightBumper().onFalse(m_shooter.setOff());
+    }
+
+
 }

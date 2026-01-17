@@ -23,8 +23,9 @@ public final class Constants {
     public static final CANBus kMAIN_BUS = new CANBus("main");
     public static final CANBus kAUX_BUS = new CANBus("aux");
 
-    public static final int INTAKE_TRANSLATION = -1; //TODO: replace with actual value
-    public static final int INTAKE_DEPLOYER = -2; //TODO: replace with actual value
-
+    public static final int INTAKE_TRANSLATION = 9; //TODO: replace with actual value
+    public static final int INTAKE_DEPLOYER = 10; //TODO: replace with actual value
+    public static final int SHOOTER_LEFT = 11;
+    public static final int SHOOTER_RIGHT = 12;
   }
 }
