@@ -23,9 +23,26 @@ public final class Constants {
     public static final CANBus kMAIN_BUS = new CANBus("main");
     public static final CANBus kAUX_BUS = new CANBus("aux");
 
-    public static final int INTAKE_TRANSLATION = 9; //TODO: replace with actual value
-    public static final int INTAKE_DEPLOYER = 10; //TODO: replace with actual value
-    public static final int SHOOTER_LEFT = 11;
-    public static final int SHOOTER_RIGHT = 12;
+    public static final int SWERVE_IMU = 0; // Pigeon 2
+
+    public static final int SWERVE_NW_DRIVE = 0;
+    public static final int SWERVE_NE_DRIVE = 1;
+    public static final int SWERVE_SW_DRIVE = 2;
+    public static final int SWERVE_SE_DRIVE = 3;
+
+    public static final int SWERVE_NW_AZIMUTH = 4;
+    public static final int SWERVE_NE_AZIMUTH = 5;
+    public static final int SWERVE_SW_AZIMUTH = 6;
+    public static final int SWERVE_SE_AZIMUTH = 7;
+
+    public static final int SWERVE_NW_ENCODER = 8;
+    public static final int SWERVE_NE_ENCODER = 9;
+    public static final int SWERVE_SW_ENCODER = 10;
+    public static final int SWERVE_SE_ENCODER = 11;
+
+    public static final int INTAKE_TRANSLATION = 12; //TODO: replace with actual value
+    public static final int INTAKE_DEPLOYER = 13; //TODO: replace with actual value
+    public static final int SHOOTER_LEFT = 14;
+    public static final int SHOOTER_RIGHT = 15;
   }
 }
