@@ -40,9 +40,12 @@ public final class Constants {
     public static final int SWERVE_SW_ENCODER = 10;
     public static final int SWERVE_SE_ENCODER = 11;
 
-    public static final int INTAKE_TRANSLATION = 12; //TODO: replace with actual value
-    public static final int INTAKE_DEPLOYER = 13; //TODO: replace with actual value
-    public static final int SHOOTER_LEFT = 14;
-    public static final int SHOOTER_RIGHT = 15;
+    //--------------------aux-bus---------------------------
+
+    public static final int INTAKE_TOP_TRANSLATION = 30; //TODO: replace with actual value
+    public static final int INTAKE_BOTTOM_TRANSLATION = 31; //TODO: replace with actual value
+    public static final int INTAKE_DEPLOYER = 32;
+    public static final int SHOOTER_LEFT = 33;
+    public static final int SHOOTER_RIGHT = 34;
   }
 }
