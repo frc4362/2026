@@ -1,3 +1,4 @@
+/*
 package frc.robot.subsystems;
 
 import com.ctre.phoenix6.StatusSignal;
@@ -137,4 +138,4 @@ public class Shooter extends SubsystemBase {
         m_leftSimState.setRotorVelocity(m_flywheelSim.getAngularVelocity().times(GEARING));
         m_rightSimState.setRotorVelocity(m_flywheelSim.getAngularVelocity().times(GEARING));
     }
-}
+}*/

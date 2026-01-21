@@ -31,7 +31,7 @@ public class MatchStateTracker {
         matchStatePublisher = myTable.getStringTopic("match state").publish();
     }
 
-    enum MatchPeriod {
+    public enum MatchPeriod {
         AUTO,
         TRANSITION,
         PHASE1,
@@ -42,7 +42,7 @@ public class MatchStateTracker {
         DEBUG
     }
 
-    record MatchState(MatchPeriod period, double timeLeft, double timeUntilActive, boolean isActive) {
+    public record MatchState(MatchPeriod period, double timeLeft, double timeUntilActive, boolean isActive) {
         public String toString() {
             if (isActive) {
                 return "active " + period + " period, " + timeLeft + "s left";
@@ -120,8 +120,6 @@ public class MatchStateTracker {
     }
 
     public MatchState getMatchState() {
-        MatchState state = new MatchState(m_period, m_timeLeft, m_timeUntilActive, m_isActive);
-        // matchStatePublisher.set(state.toString());
-        return state;
+        return new MatchState(m_period, m_timeLeft, m_timeUntilActive, m_isActive);
     }
 }
