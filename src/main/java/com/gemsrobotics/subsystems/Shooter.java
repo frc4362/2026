@@ -1,5 +1,4 @@
-/*
-package frc.robot.subsystems;
+package com.gemsrobotics.subsystems;
 
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
@@ -8,6 +7,7 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.sim.TalonFXSimState;
+import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.networktables.DoublePublisher;
@@ -19,7 +19,9 @@ import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.FlywheelSim;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.Constants;
+import com.gemsrobotics.Constants;
+
+import java.util.function.DoubleSupplier;
 
 public class Shooter extends SubsystemBase {
     private static final double GEARING = 1.0;
@@ -44,36 +46,23 @@ public class Shooter extends SubsystemBase {
 
     private final TalonFXSimState m_leftSimState;
     private final TalonFXSimState m_rightSimState;
-    private final DCMotor m_motorModel;
     private final FlywheelSim m_flywheelSim;
 
     private boolean m_on;
 
-    public Shooter() {
-        m_motorModel = DCMotor.getKrakenX60Foc(2);
-
-        m_motorLeft = new TalonFX(Constants.CAN.SHOOTER_LEFT);
-        m_motorRight = new TalonFX(Constants.CAN.SHOOTER_RIGHT);
+    public Shooter(final TalonFX left, final TalonFX right) {
+        m_motorLeft = left;
+        m_motorRight = right;
 
         final var cfg = new TalonFXConfiguration();
-        cfg.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+        cfg.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
         cfg.Feedback.SensorToMechanismRatio = GEARING;
-        cfg.Slot0.kP = 1.0;
-        cfg.Slot0.kV = 1.0 / (m_motorModel.KvRadPerSecPerVolt / (2 * Math.PI));
-        cfg.Slot0.kA = 0.01;
-        cfg.MotionMagic.MotionMagicAcceleration = 180.0;
+        cfg.Slot0.kP = 2.0;
+        cfg.Slot0.kV = 0.0;
+        cfg.Slot0.kA = 0.0;
+        cfg.MotionMagic.MotionMagicAcceleration = 500.0;
         m_motorLeft.getConfigurator().apply(cfg);
         m_motorRight.getConfigurator().apply(cfg);
-
-        m_leftSimState = m_motorLeft.getSimState();
-        m_rightSimState = m_motorRight.getSimState();
-
-        m_flywheelSim =
-                new FlywheelSim(
-                        LinearSystemId.createFlywheelSystem(m_motorModel, .001, GEARING),
-                        m_motorModel,
-                        1
-                );
 
         m_request = new MotionMagicVelocityTorqueCurrentFOC(0.0);
         m_request.Slot = 0;
@@ -89,6 +78,17 @@ public class Shooter extends SubsystemBase {
         m_rightVelocitySignal = m_motorRight.getVelocity(false);
         m_rightVoltsAppliedSignal = m_motorRight.getMotorVoltage(false);
 
+        // sim code
+        m_leftSimState = m_motorLeft.getSimState();
+        m_rightSimState = m_motorRight.getSimState();
+
+        final DCMotor m_motorModel = DCMotor.getKrakenX60Foc(2);
+        m_flywheelSim = new FlywheelSim(
+                LinearSystemId.createFlywheelSystem(m_motorModel, .001, GEARING),
+                m_motorModel,
+                0.01);
+
+        // logging code
         final NetworkTable nt = NetworkTableInstance.getDefault().getTable("shooter");
         m_leftVelocityPublisher = nt.getDoubleTopic("left_velocity_rps").publish();
         m_leftVoltsAppliedPublisher = nt.getDoubleTopic("left_volts").publish();
@@ -97,11 +97,15 @@ public class Shooter extends SubsystemBase {
         m_flywheelVelocityPublisher = nt.getDoubleTopic("flywheel_velocity_rps").publish();
     }
 
-    public Command setVelocity(final double velocity) {
-        return runOnce(() -> {
+    public Command setVelocity(final DoubleSupplier velocitySupplier) {
+        return run(() -> {
             m_on = true;
-            m_request.Velocity = velocity;
+            m_request.Velocity = velocitySupplier.getAsDouble();
         });
+    }
+
+    public Command setVelocity(final double velocity) {
+        return setVelocity(() -> velocity);
     }
 
     public Command setOff() {
@@ -138,4 +142,4 @@ public class Shooter extends SubsystemBase {
         m_leftSimState.setRotorVelocity(m_flywheelSim.getAngularVelocity().times(GEARING));
         m_rightSimState.setRotorVelocity(m_flywheelSim.getAngularVelocity().times(GEARING));
     }
-}*/
+}
