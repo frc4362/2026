@@ -5,6 +5,9 @@
 package com.gemsrobotics;
 
 import com.ctre.phoenix6.CANBus;
+import edu.wpi.first.units.measure.Distance;
+
+import static edu.wpi.first.units.Units.Inches;
 
 /**
  * The Constants class provides a convenient place for teams to hold robot-wide numerical or boolean
@@ -15,6 +18,8 @@ import com.ctre.phoenix6.CANBus;
  * constants are needed, to reduce verbosity.
  */
 public final class Constants {
+  public static final Distance BUMPER_DEPTH = Inches.of(3.5);
+
   public static class OperatorConstants {
     public static final int kDriverControllerPort = 0;
   }
