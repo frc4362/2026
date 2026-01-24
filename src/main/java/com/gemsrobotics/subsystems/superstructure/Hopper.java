@@ -4,4 +4,8 @@ public class Hopper {
     public void periodic() {
 
     }
+
+    public void setIdle() {
+
+    }
 }
