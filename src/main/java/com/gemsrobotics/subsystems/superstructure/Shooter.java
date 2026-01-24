@@ -7,9 +7,9 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.sim.TalonFXSimState;
+import com.gemsrobotics.StatusSignalManager;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
-import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.units.measure.AngularVelocity;
@@ -19,7 +19,6 @@ import edu.wpi.first.wpilibj.simulation.FlywheelSim;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import com.gemsrobotics.Constants;
-
 import java.util.function.DoubleSupplier;
 
 public class Shooter extends SubsystemBase {
@@ -37,21 +36,15 @@ public class Shooter extends SubsystemBase {
     private final StatusSignal<AngularVelocity> m_rightVelocitySignal;
     private final StatusSignal<Voltage> m_rightVoltsAppliedSignal;
 
-    private final DoublePublisher m_leftVelocityPublisher;
-    private final DoublePublisher m_leftVoltsAppliedPublisher;
-    private final DoublePublisher m_rightVelocityPublisher;
-    private final DoublePublisher m_rightVoltsAppliedPublisher;
-    private final DoublePublisher m_flywheelVelocityPublisher;
-
     private final TalonFXSimState m_leftSimState;
     private final TalonFXSimState m_rightSimState;
     private final FlywheelSim m_flywheelSim;
 
     private boolean m_on;
 
-    public Shooter(final TalonFX left, final TalonFX right) {
-        m_motorLeft = left;
-        m_motorRight = right;
+    public Shooter(final StatusSignalManager signalManager, final int leftId, final int rightId) {
+        m_motorLeft = new TalonFX(leftId);
+        m_motorRight = new TalonFX(rightId);
 
         final var cfg = new TalonFXConfiguration();
         cfg.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
@@ -65,9 +58,7 @@ public class Shooter extends SubsystemBase {
 
         m_request = new MotionMagicVelocityTorqueCurrentFOC(0.0);
         m_request.Slot = 0;
-
         m_followerRequest = new Follower(Constants.CAN.SHOOTER_LEFT, MotorAlignmentValue.Opposed);
-
         m_coastRequest = new CoastOut();
 
         m_on = false;
@@ -89,11 +80,10 @@ public class Shooter extends SubsystemBase {
 
         // logging code
         final NetworkTable nt = NetworkTableInstance.getDefault().getTable("shooter");
-        m_leftVelocityPublisher = nt.getDoubleTopic("left_velocity_rps").publish();
-        m_leftVoltsAppliedPublisher = nt.getDoubleTopic("left_volts").publish();
-        m_rightVelocityPublisher = nt.getDoubleTopic("right_velocity_rps").publish();
-        m_rightVoltsAppliedPublisher = nt.getDoubleTopic("right_volts").publish();
-        m_flywheelVelocityPublisher = nt.getDoubleTopic("flywheel_velocity_rps").publish();
+        signalManager.registerPublished(m_leftVelocitySignal, nt, "left_velocity_rps");
+        signalManager.registerPublished(m_leftVoltsAppliedSignal, nt, "left_volts");
+        signalManager.registerPublished(m_rightVelocitySignal, nt, "right_velocity_rps");
+        signalManager.registerPublished(m_rightVoltsAppliedSignal, nt, "right_volts");
     }
 
     public Command setVelocity(final DoubleSupplier velocitySupplier) {
@@ -108,23 +98,11 @@ public class Shooter extends SubsystemBase {
     }
 
     public Command setOff() {
-        return runOnce(() -> {
-            m_on = false;
-        });
+        return runOnce(() -> m_on = false);
     }
 
     @Override
     public void periodic() {
-        m_leftVelocitySignal.refresh();
-        m_leftVelocityPublisher.set(m_leftVelocitySignal.getValueAsDouble());
-        m_leftVoltsAppliedSignal.refresh();
-        m_leftVoltsAppliedPublisher.set(m_leftVoltsAppliedSignal.getValueAsDouble());
-        m_rightVelocitySignal.refresh();
-        m_rightVelocityPublisher.set(m_rightVelocitySignal.getValueAsDouble());
-        m_rightVoltsAppliedSignal.refresh();
-        m_rightVoltsAppliedPublisher.set(m_rightVoltsAppliedSignal.getValueAsDouble());
-        m_flywheelVelocityPublisher.set(m_flywheelSim.getAngularVelocityRPM());
-
         m_motorLeft.setControl(m_on ? m_request : m_coastRequest);
         m_motorRight.setControl(m_followerRequest);
     }

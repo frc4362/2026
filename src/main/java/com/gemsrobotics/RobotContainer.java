@@ -7,7 +7,7 @@ package com.gemsrobotics;
 import com.ctre.phoenix6.swerve.SwerveModule;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.gemsrobotics.lib.swerve.FieldCentricEvasion;
-import edu.wpi.first.wpilibj.Joystick;
+import com.gemsrobotics.subsystems.superstructure.Shooter;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import com.gemsrobotics.subsystems.swerve.CommandSwerveDrivetrain;
@@ -27,6 +27,8 @@ public final class RobotContainer {
     private final FieldCentricEvasion m_driveRequest;
     private final Telemetry m_logger;
 
+    private final StatusSignalManager m_signalManager;
+    private final Shooter m_shooter;
 
     public RobotContainer() {
         m_joystick = new CommandXboxController(0);
@@ -39,6 +41,9 @@ public final class RobotContainer {
 
         m_brakeRequest = new SwerveRequest.SwerveDriveBrake();
 
+        m_signalManager = new StatusSignalManager();
+        m_shooter = new Shooter(m_signalManager, Constants.CAN.SHOOTER_LEFT, Constants.CAN.SHOOTER_RIGHT);
+
         // Note that X is defined as forward according to WPILib convention,
         // and Y is defined as to the left according to WPILib convention.
         m_drivetrain.setDefaultCommand(
@@ -48,6 +53,9 @@ public final class RobotContainer {
                                 .withVelocityY(-m_joystick.getLeftX() * MaxSpeed / 4) // Drive left with negative X (left)
                                 .withRotationalRate(-m_joystick.getRightX() * MaxAngularRate)));
 
+        m_joystick.rightBumper().onTrue(m_shooter.setVelocity(45));
+        m_joystick.rightBumper().onFalse(m_shooter.setOff());
+
         // Idle while the robot is disabled. This ensures the configured
         // neutral mode is applied to the drive motors while disabled.
         final var idle = new SwerveRequest.Idle();
@@ -55,5 +63,9 @@ public final class RobotContainer {
 
         m_logger = new Telemetry(MaxSpeed);
         m_drivetrain.registerTelemetry(m_logger::telemeterize);
+    }
+
+    public void periodic() {
+        m_signalManager.periodic();
     }
 }
