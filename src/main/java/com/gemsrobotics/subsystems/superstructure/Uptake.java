@@ -4,4 +4,8 @@ public class Uptake {
     public void periodic() {
 
     }
+
+    public void setIdle() {
+
+    }
 }
