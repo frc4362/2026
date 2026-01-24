@@ -14,31 +14,30 @@ import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Voltage;
+import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.FlywheelSim;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import com.gemsrobotics.Constants;
 import java.util.function.DoubleSupplier;
 
-public class Shooter extends SubsystemBase {
+import static edu.wpi.first.wpilibj2.command.Commands.run;
+import static edu.wpi.first.wpilibj2.command.Commands.runOnce;
+
+public class Shooter {
     private static final double GEARING = 1.0;
 
-    private final TalonFX m_motorLeft;
-    private final TalonFX m_motorRight;
-    private final MotionMagicVelocityTorqueCurrentFOC m_request;
+    private final TalonFX m_motorLeft, m_motorRight;
 
-    private final CoastOut m_coastRequest;
+    private final MotionMagicVelocityTorqueCurrentFOC m_request;
+    private final StaticBrake m_coastRequest;
     private final Follower m_followerRequest;
 
-    private final StatusSignal<AngularVelocity> m_leftVelocitySignal;
-    private final StatusSignal<Voltage> m_leftVoltsAppliedSignal;
-    private final StatusSignal<AngularVelocity> m_rightVelocitySignal;
-    private final StatusSignal<Voltage> m_rightVoltsAppliedSignal;
+    private final StatusSignal<AngularVelocity> m_leftVelocitySignal, m_rightVelocitySignal;
+    private final StatusSignal<Voltage> m_leftVoltsAppliedSignal, m_rightVoltsAppliedSignal;
 
-    private final TalonFXSimState m_leftSimState;
-    private final TalonFXSimState m_rightSimState;
+    private final TalonFXSimState m_leftSimState, m_rightSimState;
     private final FlywheelSim m_flywheelSim;
+    private final Notifier m_simNotifier;
 
     private boolean m_on;
 
@@ -58,15 +57,10 @@ public class Shooter extends SubsystemBase {
 
         m_request = new MotionMagicVelocityTorqueCurrentFOC(0.0);
         m_request.Slot = 0;
-        m_followerRequest = new Follower(Constants.CAN.SHOOTER_LEFT, MotorAlignmentValue.Opposed);
-        m_coastRequest = new CoastOut();
+        m_followerRequest = new Follower(leftId, MotorAlignmentValue.Opposed);
+        m_coastRequest = new StaticBrake();
 
         m_on = false;
-
-        m_leftVelocitySignal = m_motorLeft.getVelocity(false);
-        m_leftVoltsAppliedSignal = m_motorLeft.getMotorVoltage(false);
-        m_rightVelocitySignal = m_motorRight.getVelocity(false);
-        m_rightVoltsAppliedSignal = m_motorRight.getMotorVoltage(false);
 
         // sim code
         m_leftSimState = m_motorLeft.getSimState();
@@ -78,7 +72,15 @@ public class Shooter extends SubsystemBase {
                 m_motorModel,
                 0.01);
 
+        m_simNotifier = new Notifier(this::simulationPeriodic);
+        m_simNotifier.startPeriodic(0.02);
+
         // logging code
+        m_leftVelocitySignal = m_motorLeft.getVelocity(false);
+        m_leftVoltsAppliedSignal = m_motorLeft.getMotorVoltage(false);
+        m_rightVelocitySignal = m_motorRight.getVelocity(false);
+        m_rightVoltsAppliedSignal = m_motorRight.getMotorVoltage(false);
+
         final NetworkTable nt = NetworkTableInstance.getDefault().getTable("shooter");
         signalManager.registerPublished(m_leftVelocitySignal, nt, "left_velocity_rps");
         signalManager.registerPublished(m_leftVoltsAppliedSignal, nt, "left_volts");
@@ -86,28 +88,24 @@ public class Shooter extends SubsystemBase {
         signalManager.registerPublished(m_rightVoltsAppliedSignal, nt, "right_volts");
     }
 
-    public Command setVelocity(final DoubleSupplier velocitySupplier) {
-        return run(() -> {
-            m_on = true;
-            m_request.Velocity = velocitySupplier.getAsDouble();
-        });
+    public void setVelocity(final DoubleSupplier velocitySupplier) {
+        m_on = true;
+        m_request.Velocity = velocitySupplier.getAsDouble();
     }
 
-    public Command setVelocity(final double velocity) {
-        return setVelocity(() -> velocity);
+    public void setVelocity(final double velocity) {
+        setVelocity(() -> velocity);
     }
 
-    public Command setOff() {
-        return runOnce(() -> m_on = false);
+    public void setOff() {
+        m_on = false;
     }
 
-    @Override
     public void periodic() {
         m_motorLeft.setControl(m_on ? m_request : m_coastRequest);
         m_motorRight.setControl(m_followerRequest);
     }
 
-    @Override
     public void simulationPeriodic() {
         m_leftSimState.setSupplyVoltage(RobotController.getBatteryVoltage());
         m_rightSimState.setSupplyVoltage(RobotController.getBatteryVoltage());

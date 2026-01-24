@@ -14,6 +14,8 @@ import com.gemsrobotics.subsystems.swerve.CommandSwerveDrivetrain;
 import com.gemsrobotics.subsystems.swerve.TunerConstants;
 
 import static edu.wpi.first.units.Units.*;
+import static edu.wpi.first.wpilibj2.command.Commands.run;
+import static edu.wpi.first.wpilibj2.command.Commands.runOnce;
 
 public final class RobotContainer {
 
@@ -53,8 +55,8 @@ public final class RobotContainer {
                                 .withVelocityY(-m_joystick.getLeftX() * MaxSpeed / 4) // Drive left with negative X (left)
                                 .withRotationalRate(-m_joystick.getRightX() * MaxAngularRate)));
 
-        m_joystick.rightBumper().onTrue(m_shooter.setVelocity(45));
-        m_joystick.rightBumper().onFalse(m_shooter.setOff());
+        m_joystick.rightBumper().onTrue(runOnce(() -> m_shooter.setVelocity(45))); // TODO: runOnce shouldn't be used here
+        m_joystick.rightBumper().onFalse(runOnce(m_shooter::setOff));
 
         // Idle while the robot is disabled. This ensures the configured
         // neutral mode is applied to the drive motors while disabled.
@@ -67,5 +69,6 @@ public final class RobotContainer {
 
     public void periodic() {
         m_signalManager.periodic();
+        m_shooter.periodic();
     }
 }
