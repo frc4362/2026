@@ -6,15 +6,16 @@ package com.gemsrobotics;
 
 import com.ctre.phoenix6.swerve.SwerveModule;
 import com.ctre.phoenix6.swerve.SwerveRequest;
+import com.gemsrobotics.lib.StatusSignalManager;
 import com.gemsrobotics.lib.swerve.FieldCentricEvasion;
 import com.gemsrobotics.subsystems.superstructure.Shooter;
+import com.gemsrobotics.subsystems.swerve.Telemetry;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import com.gemsrobotics.subsystems.swerve.CommandSwerveDrivetrain;
 import com.gemsrobotics.subsystems.swerve.TunerConstants;
 
 import static edu.wpi.first.units.Units.*;
-import static edu.wpi.first.wpilibj2.command.Commands.run;
 import static edu.wpi.first.wpilibj2.command.Commands.runOnce;
 
 public final class RobotContainer {

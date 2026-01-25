@@ -1,11 +1,9 @@
-package com.gemsrobotics;
+package com.gemsrobotics.lib;
 
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.StatusSignalCollection;
 import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.NetworkTable;
-import edu.wpi.first.units.Measure;
-import edu.wpi.first.units.measure.AngularVelocity;
 
 import java.util.HashMap;
 

@@ -1,4 +1,4 @@
-package com.gemsrobotics;
+package com.gemsrobotics.subsystems.swerve;
 
 import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.swerve.SwerveDrivetrain.SwerveDriveState;
