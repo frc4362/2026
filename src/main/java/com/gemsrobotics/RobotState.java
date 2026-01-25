@@ -18,8 +18,6 @@ public class RobotState {
 	private final ConcurrentTimeInterpolatableBuffer<Pose2d> m_fieldToVehicle;
 	// units in radians per second
 	private final ConcurrentTimeInterpolatableBuffer<Double> m_vehicleAngularVelocity;
-	private final ConcurrentTimeInterpolatableBuffer<Rotation2d> m_turretRotations;
-	private final ConcurrentTimeInterpolatableBuffer<Double> m_turretAngularVelocity;
 
 	private ChassisSpeeds m_recentVehicleRelativeVelocity;
 	private ChassisSpeeds m_recentFieldRelativeVelocity;
@@ -30,13 +28,6 @@ public class RobotState {
 
 		m_vehicleAngularVelocity = ConcurrentTimeInterpolatableBuffer.createDoubleBuffer(LOOKBACK_TIME_SECONDS);
 		m_vehicleAngularVelocity.addSample(0.0, 0.0);
-
-		m_turretRotations = ConcurrentTimeInterpolatableBuffer.createBuffer(Rotation2d::interpolate, LOOKBACK_TIME_SECONDS);
-		m_turretRotations.addSample(0.0, Rotation2d.kZero);
-
-		m_turretAngularVelocity = ConcurrentTimeInterpolatableBuffer.createDoubleBuffer(LOOKBACK_TIME_SECONDS);
-		m_turretAngularVelocity.addSample(0.0, 0.0);
-
 		m_recentVehicleRelativeVelocity = new ChassisSpeeds();
 		m_recentFieldRelativeVelocity = new ChassisSpeeds();
 	}
@@ -53,15 +44,6 @@ public class RobotState {
 		m_recentFieldRelativeVelocity = ChassisSpeeds.fromRobotRelativeSpeeds(driveRelativeVelocity, driveLocation.getRotation());
 	}
 
-	public void addTurretSample(
-			final double timeSeconds,
-			final Rotation2d turretRotation,
-			final double turretVelocity
-	) {
-		m_turretRotations.addSample(timeSeconds, turretRotation);
-		m_turretAngularVelocity.addSample(timeSeconds, turretVelocity);
-	}
-
 	public Map.Entry<Double, Pose2d> getLatestFieldToVehicle() {
 		return m_fieldToVehicle.getLatest();
 	}
@@ -76,22 +58,6 @@ public class RobotState {
 
 	public Optional<Pose2d> getFieldToVehicle(final double timeSeconds) {
 		return m_fieldToVehicle.getSample(timeSeconds);
-	}
-
-	public Optional<Pose2d> getFieldToTurret(final double timeSeconds) {
-//		final Optional<Pose2d> fieldToVehicleMeasurement = m_fieldToVehicle.getSample(timeSeconds);
-//		final Optional<Rotation2d> vehicleToTurretMeasurement = m_turretRotations.getSample(timeSeconds);
-//		if (fieldToVehicleMeasurement.isPresent() && vehicleToTurretMeasurement.isPresent()) {
-//			return Optional.of(fieldToVehicleMeasurement.get()
-//					.transformBy(Constants.VEHICLE_TO_TURRET)
-//					.transformBy(new Transform2d(Translation2d.kZero, vehicleToTurretMeasurement.get())));
-//		} else {
-			return Optional.empty();
-//		}
-	}
-
-	public Optional<Double> getTurretAngularVelocity(final double timeSeconds) {
-		return m_turretAngularVelocity.getSample(timeSeconds);
 	}
 
 	public Pose2d getPredictedFieldToVehicle(final double lookaheadTimeSeconds) {
