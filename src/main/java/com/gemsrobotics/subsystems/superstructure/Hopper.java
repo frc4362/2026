@@ -23,6 +23,7 @@ import java.util.function.DoubleSupplier;
 
 public class Hopper {
     private static final double GEARING = 1.0;
+    private static final double SIM_UPDATE_SECONDS = 0.001;
 
     private final TalonFX m_motorLeader, m_motorFollower;
     private final MotionMagicVelocityTorqueCurrentFOC m_request;
@@ -66,7 +67,7 @@ public class Hopper {
                 0.01);
 
         m_simNotifier = new Notifier(this::simulationPeriodic);
-        m_simNotifier.startPeriodic(0.02);
+        m_simNotifier.startPeriodic(SIM_UPDATE_SECONDS);
         //endregion
 
         //region logging code
@@ -83,6 +84,23 @@ public class Hopper {
         //endregion
     }
 
+    public void periodic() {
+        m_motorLeader.setControl(m_request);
+        m_motorFollower.setControl(m_followerRequest);
+    }
+
+    private void simulationPeriodic() { // Called by the Notifier earlier in this class
+        m_leaderSimState.setSupplyVoltage(RobotController.getBatteryVoltage());
+        m_followerSimState.setSupplyVoltage(RobotController.getBatteryVoltage());
+
+        var voltage = m_leaderSimState.getMotorVoltage();
+        m_rollerSim.setInputVoltage(voltage);
+        m_rollerSim.update(SIM_UPDATE_SECONDS);
+
+        m_leaderSimState.setRotorVelocity(m_rollerSim.getAngularVelocity().times(GEARING));
+        m_followerSimState.setRotorVelocity(m_rollerSim.getAngularVelocity().times(GEARING));
+    }
+
     public void setVelocity(final DoubleSupplier velocitySupplier) {
         m_request.Velocity = velocitySupplier.getAsDouble();
     }
@@ -95,20 +113,7 @@ public class Hopper {
         setVelocity(0);
     }
 
-    public void periodic() {
-        m_motorLeader.setControl(m_request);
-        m_motorFollower.setControl(m_followerRequest);
-    }
-
-    private void simulationPeriodic() { // Called by the Notifier earlier in this class
-        m_leaderSimState.setSupplyVoltage(RobotController.getBatteryVoltage());
-        m_followerSimState.setSupplyVoltage(RobotController.getBatteryVoltage());
-
-        var voltage = m_leaderSimState.getMotorVoltage();
-        m_rollerSim.setInputVoltage(voltage);
-        m_rollerSim.update(0.02);
-
-        m_leaderSimState.setRotorVelocity(m_rollerSim.getAngularVelocity().times(GEARING));
-        m_followerSimState.setRotorVelocity(m_rollerSim.getAngularVelocity().times(GEARING));
+    public double getVelocity() {
+        return m_leaderVelocitySignal.getValueAsDouble();
     }
 }

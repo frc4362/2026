@@ -22,6 +22,7 @@ import java.util.function.DoubleSupplier;
 
 public class Shooter {
     private static final double GEARING = 1.0;
+    private static final double SIM_UPDATE_SECONDS = 0.001;
 
     private final TalonFX m_motorLeader, m_motorFollower;
     private final MotionMagicVelocityTorqueCurrentFOC m_request;
@@ -66,7 +67,7 @@ public class Shooter {
         m_flywheelSim = new FlywheelSim(
                 LinearSystemId.createFlywheelSystem(m_motorModel, .001, GEARING),
                 m_motorModel,
-                0.01);
+                SIM_UPDATE_SECONDS);
 
         m_simNotifier = new Notifier(this::simulationPeriodic);
         m_simNotifier.startPeriodic(0.02);
@@ -88,6 +89,23 @@ public class Shooter {
         m_on = false;
     }
 
+    public void periodic() {
+        m_motorLeader.setControl(m_on ? m_request : m_coastRequest);
+        m_motorFollower.setControl(m_followerRequest);
+    }
+
+    private void simulationPeriodic() { // Called by the Notifier earlier in this class
+        m_leaderSimState.setSupplyVoltage(RobotController.getBatteryVoltage());
+        m_followerSimState.setSupplyVoltage(RobotController.getBatteryVoltage());
+
+        var voltage = m_leaderSimState.getMotorVoltage();
+        m_flywheelSim.setInputVoltage(voltage);
+        m_flywheelSim.update(SIM_UPDATE_SECONDS);
+
+        m_leaderSimState.setRotorVelocity(m_flywheelSim.getAngularVelocity().times(GEARING));
+        m_followerSimState.setRotorVelocity(m_flywheelSim.getAngularVelocity().times(GEARING));
+    }
+
     public void setVelocity(final DoubleSupplier velocitySupplier) {
         m_on = true;
         m_request.Velocity = velocitySupplier.getAsDouble();
@@ -101,20 +119,7 @@ public class Shooter {
         m_on = false;
     }
 
-    public void periodic() {
-        m_motorLeader.setControl(m_on ? m_request : m_coastRequest);
-        m_motorFollower.setControl(m_followerRequest);
-    }
-
-    private void simulationPeriodic() { // Called by the Notifier earlier in this class
-        m_leaderSimState.setSupplyVoltage(RobotController.getBatteryVoltage());
-        m_followerSimState.setSupplyVoltage(RobotController.getBatteryVoltage());
-
-        var voltage = m_leaderSimState.getMotorVoltage();
-        m_flywheelSim.setInputVoltage(voltage);
-        m_flywheelSim.update(0.02);
-
-        m_leaderSimState.setRotorVelocity(m_flywheelSim.getAngularVelocity().times(GEARING));
-        m_followerSimState.setRotorVelocity(m_flywheelSim.getAngularVelocity().times(GEARING));
+    public double getVelocity() {
+        return m_leaderVelocitySignal.getValueAsDouble();
     }
 }

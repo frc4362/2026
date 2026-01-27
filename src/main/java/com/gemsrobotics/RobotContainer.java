@@ -29,24 +29,27 @@ public final class RobotContainer {
 
     private final StatusSignalManager m_signalManager;
 
+    private final CommandXboxController m_joystick;
+
     private final Superstructure m_superstructure;
 
-    private final CommandXboxController m_joystick;
     private final CommandSwerveDrivetrain m_drivetrain;
     private final FieldCentricEvasion m_driveRequest;
     private final Telemetry m_logger;
 
     public RobotContainer() {
         m_signalManager = new StatusSignalManager();
+        m_joystick = new CommandXboxController(0);
 
         m_superstructure = new Superstructure(
                 new Shooter(m_signalManager, new TalonFX(SHOOTER_WEST, kAUX_BUS), new TalonFX(SHOOTER_EAST, kAUX_BUS)),
                 new Hopper(m_signalManager, new TalonFX(HOPPER_NORTH, kAUX_BUS), new TalonFX(HOPPER_SOUTH, kAUX_BUS)),
                 new Uptake(m_signalManager, new TalonFX(UPTAKE_LEADER, kAUX_BUS), new TalonFX(UPTAKE_FOLLOWER, kAUX_BUS))
         );
+        m_joystick.rightTrigger().onTrue(m_superstructure.applyWantedState(Superstructure.SystemState.SHOOTING));
+        m_joystick.rightTrigger().onFalse(m_superstructure.applyWantedState(Superstructure.SystemState.IDLE));
 
         //region drivetrain
-        m_joystick = new CommandXboxController(0);
         m_drivetrain = TunerConstants.createDrivetrain();
         m_driveRequest = new FieldCentricEvasion(TunerConstants.moduleTranslations, Constants.BUMPER_DEPTH)
                 .withDeadband(0.05)
