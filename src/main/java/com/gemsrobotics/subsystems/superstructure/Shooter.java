@@ -23,24 +23,24 @@ import java.util.function.DoubleSupplier;
 public class Shooter {
     private static final double GEARING = 1.0;
 
-    private final TalonFX m_motorLeft, m_motorRight;
-
+    private final TalonFX m_motorLeader, m_motorFollower;
     private final MotionMagicVelocityTorqueCurrentFOC m_request;
-    private final StaticBrake m_coastRequest;
+    private final CoastOut m_coastRequest;
     private final Follower m_followerRequest;
 
-    private final StatusSignal<AngularVelocity> m_leftVelocitySignal, m_rightVelocitySignal;
-    private final StatusSignal<Voltage> m_leftVoltsAppliedSignal, m_rightVoltsAppliedSignal;
+    private final StatusSignal<AngularVelocity> m_leaderVelocitySignal, m_followerVelocitySignal;
+    private final StatusSignal<Voltage> m_leaderVoltsAppliedSignal, m_followerVoltsAppliedSignal;
 
-    private final TalonFXSimState m_leftSimState, m_rightSimState;
+    private final TalonFXSimState m_leaderSimState, m_followerSimState;
     private final FlywheelSim m_flywheelSim;
     private final Notifier m_simNotifier;
 
     private boolean m_on;
 
-    public Shooter(final StatusSignalManager signalManager, final int leftId, final int rightId) {
-        m_motorLeft = new TalonFX(leftId);
-        m_motorRight = new TalonFX(rightId);
+    public Shooter(final StatusSignalManager signalManager, final TalonFX motorLeader, final TalonFX motorFollower) {
+        //region motor config
+        m_motorLeader = motorLeader;
+        m_motorFollower = motorFollower;
 
         final var cfg = new TalonFXConfiguration();
         cfg.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
@@ -49,19 +49,18 @@ public class Shooter {
         cfg.Slot0.kV = 0.0;
         cfg.Slot0.kA = 0.0;
         cfg.MotionMagic.MotionMagicAcceleration = 500.0;
-        m_motorLeft.getConfigurator().apply(cfg);
-        m_motorRight.getConfigurator().apply(cfg);
+        m_motorLeader.getConfigurator().apply(cfg);
+        m_motorFollower.getConfigurator().apply(cfg);
 
         m_request = new MotionMagicVelocityTorqueCurrentFOC(0.0);
         m_request.Slot = 0;
-        m_followerRequest = new Follower(leftId, MotorAlignmentValue.Opposed);
-        m_coastRequest = new StaticBrake();
+        m_followerRequest = new Follower(m_motorLeader.getDeviceID(), MotorAlignmentValue.Opposed);
+        m_coastRequest = new CoastOut();
+        //endregion
 
-        m_on = false;
-
-        // sim code
-        m_leftSimState = m_motorLeft.getSimState();
-        m_rightSimState = m_motorRight.getSimState();
+        //region sim code
+        m_leaderSimState = m_motorLeader.getSimState();
+        m_followerSimState = m_motorFollower.getSimState();
 
         final DCMotor m_motorModel = DCMotor.getKrakenX60Foc(2);
         m_flywheelSim = new FlywheelSim(
@@ -71,18 +70,22 @@ public class Shooter {
 
         m_simNotifier = new Notifier(this::simulationPeriodic);
         m_simNotifier.startPeriodic(0.02);
+        //endregion
 
-        // logging code
-        m_leftVelocitySignal = m_motorLeft.getVelocity(false);
-        m_leftVoltsAppliedSignal = m_motorLeft.getMotorVoltage(false);
-        m_rightVelocitySignal = m_motorRight.getVelocity(false);
-        m_rightVoltsAppliedSignal = m_motorRight.getMotorVoltage(false);
+        //region logging code
+        m_leaderVelocitySignal = m_motorLeader.getVelocity(false);
+        m_leaderVoltsAppliedSignal = m_motorLeader.getMotorVoltage(false);
+        m_followerVelocitySignal = m_motorFollower.getVelocity(false);
+        m_followerVoltsAppliedSignal = m_motorFollower.getMotorVoltage(false);
 
         final NetworkTable nt = NetworkTableInstance.getDefault().getTable("shooter");
-        signalManager.registerPublished(m_leftVelocitySignal, nt, "left_velocity_rps");
-        signalManager.registerPublished(m_leftVoltsAppliedSignal, nt, "left_volts");
-        signalManager.registerPublished(m_rightVelocitySignal, nt, "right_velocity_rps");
-        signalManager.registerPublished(m_rightVoltsAppliedSignal, nt, "right_volts");
+        signalManager.registerPublished(m_leaderVelocitySignal, nt, "leader_velocity_rps");
+        signalManager.registerPublished(m_leaderVoltsAppliedSignal, nt, "leader_volts");
+        signalManager.registerPublished(m_followerVelocitySignal, nt, "follower_velocity_rps");
+        signalManager.registerPublished(m_followerVoltsAppliedSignal, nt, "follower_volts");
+        //endregion
+
+        m_on = false;
     }
 
     public void setVelocity(final DoubleSupplier velocitySupplier) {
@@ -99,19 +102,19 @@ public class Shooter {
     }
 
     public void periodic() {
-        m_motorLeft.setControl(m_on ? m_request : m_coastRequest);
-        m_motorRight.setControl(m_followerRequest);
+        m_motorLeader.setControl(m_on ? m_request : m_coastRequest);
+        m_motorFollower.setControl(m_followerRequest);
     }
 
-    public void simulationPeriodic() {
-        m_leftSimState.setSupplyVoltage(RobotController.getBatteryVoltage());
-        m_rightSimState.setSupplyVoltage(RobotController.getBatteryVoltage());
+    private void simulationPeriodic() { // Called by the Notifier earlier in this class
+        m_leaderSimState.setSupplyVoltage(RobotController.getBatteryVoltage());
+        m_followerSimState.setSupplyVoltage(RobotController.getBatteryVoltage());
 
-        var voltage = m_leftSimState.getMotorVoltage();
+        var voltage = m_leaderSimState.getMotorVoltage();
         m_flywheelSim.setInputVoltage(voltage);
         m_flywheelSim.update(0.02);
 
-        m_leftSimState.setRotorVelocity(m_flywheelSim.getAngularVelocity().times(GEARING));
-        m_rightSimState.setRotorVelocity(m_flywheelSim.getAngularVelocity().times(GEARING));
+        m_leaderSimState.setRotorVelocity(m_flywheelSim.getAngularVelocity().times(GEARING));
+        m_followerSimState.setRotorVelocity(m_flywheelSim.getAngularVelocity().times(GEARING));
     }
 }

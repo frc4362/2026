@@ -35,9 +35,10 @@ public class Hopper {
     private final FlywheelSim m_rollerSim;
     private final Notifier m_simNotifier;
 
-    public Hopper(final StatusSignalManager signalManager, final int leaderId, final int followerId) {
-        m_motorLeader = new TalonFX(leaderId);
-        m_motorFollower = new TalonFX(followerId);
+    public Hopper(final StatusSignalManager signalManager, final TalonFX motorLeader, final TalonFX motorFollower) {
+        //region motor config
+        m_motorLeader = motorLeader;
+        m_motorFollower = motorFollower;
 
         final var cfg = new TalonFXConfiguration();
         cfg.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
@@ -51,9 +52,10 @@ public class Hopper {
 
         m_request = new MotionMagicVelocityTorqueCurrentFOC(0.0);
         m_request.Slot = 0;
-        m_followerRequest = new Follower(leaderId, MotorAlignmentValue.Opposed);
+        m_followerRequest = new Follower(m_motorLeader.getDeviceID(), MotorAlignmentValue.Opposed);
+        //endregion
 
-        // sim code
+        //region sim code
         m_leaderSimState = m_motorLeader.getSimState();
         m_followerSimState = m_motorFollower.getSimState();
 
@@ -65,8 +67,9 @@ public class Hopper {
 
         m_simNotifier = new Notifier(this::simulationPeriodic);
         m_simNotifier.startPeriodic(0.02);
+        //endregion
 
-        // logging code
+        //region logging code
         m_leaderVelocitySignal = m_motorLeader.getVelocity(false);
         m_leaderVoltsAppliedSignal = m_motorLeader.getMotorVoltage(false);
         m_followerVelocitySignal = m_motorFollower.getVelocity(false);
@@ -77,6 +80,7 @@ public class Hopper {
         signalManager.registerPublished(m_leaderVoltsAppliedSignal, nt, "leader_volts");
         signalManager.registerPublished(m_followerVelocitySignal, nt, "follower_velocity_rps");
         signalManager.registerPublished(m_followerVoltsAppliedSignal, nt, "follower_volts");
+        //endregion
     }
 
     public void setVelocity(final DoubleSupplier velocitySupplier) {
@@ -96,7 +100,7 @@ public class Hopper {
         m_motorFollower.setControl(m_followerRequest);
     }
 
-    public void simulationPeriodic() {
+    private void simulationPeriodic() { // Called by the Notifier earlier in this class
         m_leaderSimState.setSupplyVoltage(RobotController.getBatteryVoltage());
         m_followerSimState.setSupplyVoltage(RobotController.getBatteryVoltage());
 

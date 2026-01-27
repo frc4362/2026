@@ -47,10 +47,14 @@ public final class Constants {
 
     //--------------------aux-bus---------------------------
 
-    public static final int INTAKE_TOP_TRANSLATION = 30; //TODO: replace with actual value
-    public static final int INTAKE_BOTTOM_TRANSLATION = 31; //TODO: replace with actual value
+    public static final int INTAKE_TOP_TRANSLATION = 30;
+    public static final int INTAKE_BOTTOM_TRANSLATION = 31;
     public static final int INTAKE_DEPLOYER = 32;
-    public static final int SHOOTER_LEFT = 33;
-    public static final int SHOOTER_RIGHT = 34;
+    public static final int SHOOTER_WEST = 33;
+    public static final int SHOOTER_EAST = 34;
+    public static final int HOPPER_NORTH = 35;
+    public static final int HOPPER_SOUTH = 36;
+    public static final int UPTAKE_LEADER = 37; // TODO: rename to give spatial information
+    public static final int UPTAKE_FOLLOWER = 38; // TODO: rename to give spatial information
   }
 }
