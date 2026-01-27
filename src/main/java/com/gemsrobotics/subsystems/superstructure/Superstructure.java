@@ -56,8 +56,9 @@ public final class Superstructure extends SubsystemBase {
         m_hopper.periodic();
         m_uptake.periodic();
 
-        final SystemState newState = switch (m_state) {
+        final SystemState newState = switch (m_stateWanted) {
             case IDLE -> handleIdle();
+            case SHOOTING -> handleShooting();
             default -> SystemState.IDLE;
         };
 
@@ -75,6 +76,15 @@ public final class Superstructure extends SubsystemBase {
         m_uptake.setIdle();
         m_hopper.setIdle();
         return SystemState.IDLE;
+    }
+
+    public SystemState handleShooting() {
+        m_shooter.setVelocity(45); // TODO: tuning / interpolation
+        if (m_shooter.getVelocity() > 40) {
+            m_uptake.setVelocity(30);
+            m_hopper.setVelocity(30);
+        }
+        return SystemState.SHOOTING;
     }
 
     public Command setWantedState(final SystemState state) {

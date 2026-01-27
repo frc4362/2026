@@ -8,6 +8,7 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.sim.TalonFXSimState;
+import com.gemsrobotics.Robot;
 import com.gemsrobotics.lib.StatusSignalManager;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
@@ -15,6 +16,7 @@ import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Voltage;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.FlywheelSim;
@@ -23,6 +25,7 @@ import java.util.function.DoubleSupplier;
 
 public class Uptake {
     private static final double GEARING = 1.0;
+    private static final double SIM_UPDATE_SECONDS = 0.001;
 
     private final TalonFX m_motorLeader, m_motorFollower;
     private final MotionMagicVelocityTorqueCurrentFOC m_request;
@@ -66,7 +69,9 @@ public class Uptake {
                 0.01);
 
         m_simNotifier = new Notifier(this::simulationPeriodic);
-        m_simNotifier.startPeriodic(0.02);
+        if (Robot.isSimulation()) {
+            m_simNotifier.startPeriodic(SIM_UPDATE_SECONDS);
+        }
         //endregion
 
         //region logging code
@@ -83,6 +88,23 @@ public class Uptake {
         //endregion
     }
 
+    public void periodic() {
+        m_motorLeader.setControl(m_request);
+        m_motorFollower.setControl(m_followerRequest);
+    }
+
+    private void simulationPeriodic() { // Called by the Notifier earlier in this class
+        m_leaderSimState.setSupplyVoltage(RobotController.getBatteryVoltage());
+        m_followerSimState.setSupplyVoltage(RobotController.getBatteryVoltage());
+
+        var voltage = m_leaderSimState.getMotorVoltage();
+        m_rollerSim.setInputVoltage(voltage);
+        m_rollerSim.update(SIM_UPDATE_SECONDS);
+
+        m_leaderSimState.setRotorVelocity(m_rollerSim.getAngularVelocity().times(GEARING));
+        m_followerSimState.setRotorVelocity(m_rollerSim.getAngularVelocity().times(GEARING));
+    }
+
     public void setVelocity(final DoubleSupplier velocitySupplier) {
         m_request.Velocity = velocitySupplier.getAsDouble();
     }
@@ -95,20 +117,7 @@ public class Uptake {
         setVelocity(0);
     }
 
-    public void periodic() {
-        m_motorLeader.setControl(m_request);
-        m_motorFollower.setControl(m_followerRequest);
-    }
-
-    private void simulationPeriodic() { // Called by the Notifier earlier in this class
-        m_leaderSimState.setSupplyVoltage(RobotController.getBatteryVoltage());
-        m_followerSimState.setSupplyVoltage(RobotController.getBatteryVoltage());
-
-        var voltage = m_leaderSimState.getMotorVoltage();
-        m_rollerSim.setInputVoltage(voltage);
-        m_rollerSim.update(0.02);
-
-        m_leaderSimState.setRotorVelocity(m_rollerSim.getAngularVelocity().times(GEARING));
-        m_followerSimState.setRotorVelocity(m_rollerSim.getAngularVelocity().times(GEARING));
+    public double getVelocity() {
+        return m_leaderVelocitySignal.getValueAsDouble();
     }
 }
