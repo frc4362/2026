@@ -79,8 +79,8 @@ public final class Superstructure extends SubsystemBase {
     }
 
     public SystemState handleShooting() {
-        m_shooter.setVelocity(45); // TODO: tuning / interpolation
-        if (m_shooter.getVelocity() > 40) {
+        m_shooter.setVelocity(35); // TODO: tuning / interpolation
+        if (m_shooter.getVelocity() > 30) {
             m_uptake.setVelocity(30);
             m_hopper.setVelocity(30);
         }
@@ -101,5 +101,13 @@ public final class Superstructure extends SubsystemBase {
 
     public SystemState getState() {
         return m_state;
+    }
+
+    public Shooter getShooter() {
+        return m_shooter;
+    }
+
+    public boolean isLaunching() {
+        return m_shooter.getVelocity() > 33 && m_uptake.getVelocity() > 28 && m_hopper.getVelocity() > 28;
     }
 }

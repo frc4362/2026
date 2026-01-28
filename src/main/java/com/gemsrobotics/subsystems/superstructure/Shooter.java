@@ -13,6 +13,8 @@ import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.units.measure.Distance;
+import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotController;
@@ -20,8 +22,12 @@ import edu.wpi.first.wpilibj.simulation.FlywheelSim;
 
 import java.util.function.DoubleSupplier;
 
+import static edu.wpi.first.units.Units.*;
+
 public class Shooter {
-    private static final double GEARING = 1.0;
+    private static final Distance WHEEL_CIRCUMFERENCE = Inches.of(2).times(2 * Math.PI);
+    private static final double SCRUB_FACTOR = 0.7;
+    private static final double GEARING = 1.2;
     private static final double SIM_UPDATE_SECONDS = 0.001;
 
     private final TalonFX m_motorLeader, m_motorFollower;
@@ -46,10 +52,10 @@ public class Shooter {
         final var cfg = new TalonFXConfiguration();
         cfg.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
         cfg.Feedback.SensorToMechanismRatio = GEARING;
-        cfg.Slot0.kP = 2.0;
+        cfg.Slot0.kP = 100.0;
         cfg.Slot0.kV = 0.0;
-        cfg.Slot0.kA = 0.0;
-        cfg.MotionMagic.MotionMagicAcceleration = 500.0;
+        cfg.Slot0.kA = 1.0;
+        cfg.MotionMagic.MotionMagicAcceleration = 1000.0;
         m_motorLeader.getConfigurator().apply(cfg);
         m_motorFollower.getConfigurator().apply(cfg);
 
@@ -121,5 +127,9 @@ public class Shooter {
 
     public double getVelocity() {
         return m_leaderVelocitySignal.getValueAsDouble();
+    }
+
+    public LinearVelocity getLaunchVelocity() {
+        return MetersPerSecond.of(m_leaderVelocitySignal.getValueAsDouble() * WHEEL_CIRCUMFERENCE.in(Meters) * SCRUB_FACTOR);
     }
 }

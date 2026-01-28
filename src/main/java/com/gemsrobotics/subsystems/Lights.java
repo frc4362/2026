@@ -1,3 +1,5 @@
+package com.gemsrobotics.subsystems;
+
 import com.ctre.phoenix6.signals.RGBWColor;
 
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -23,7 +25,7 @@ public class Lights extends SubsystemBase{
     private static final int kSlot0StartIdx = 8;
     private static final int kSlot0EndIdx = 37;
 
-    private final CANdle m_candle = new CANdle(0)
+    private final CANdle m_candle = new CANdle(0);
 
     private enum AnimationType {
         None,
@@ -53,23 +55,23 @@ public class Lights extends SubsystemBase{
         SmartDashboard.putData("Animation 0", m_anim0Chooser);
     }
 
-    @Override
-    public void () {
-        final var m_anim0Selection = m_anim0Chooser.getSelected();
-        if (m_anim0State != m_anim0Selection) {
-            m_anim0State = m_anim0Selection;
-
-            switch (m_anim0State) {
-                default:
-                case SingleFade:
-                    m_candle.setControl(
-                        new SingleFadeAnimation(kSlot0StartIdx, kSlot0EndIdx).withSlot(0).withColor(kRed)
-                    );
-                    break;
-        
-            }
-        }
-
-    }
+//    @Override
+//    public void () {
+//        final var m_anim0Selection = m_anim0Chooser.getSelected();
+//        if (m_anim0State != m_anim0Selection) {
+//            m_anim0State = m_anim0Selection;
+//
+//            switch (m_anim0State) {
+//                default:
+//                case SingleFade:
+//                    m_candle.setControl(
+//                        new SingleFadeAnimation(kSlot0StartIdx, kSlot0EndIdx).withSlot(0).withColor(kRed)
+//                    );
+//                    break;
+//
+//            }
+//        }
+//
+//    }
 
 }

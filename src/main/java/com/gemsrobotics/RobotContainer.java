@@ -9,11 +9,13 @@ import com.ctre.phoenix6.swerve.SwerveModule;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.gemsrobotics.lib.StatusSignalManager;
 import com.gemsrobotics.lib.swerve.FieldCentricEvasion;
+import com.gemsrobotics.sim.ProjectileManager;
 import com.gemsrobotics.subsystems.superstructure.Hopper;
 import com.gemsrobotics.subsystems.superstructure.Shooter;
 import com.gemsrobotics.subsystems.superstructure.Superstructure;
 import com.gemsrobotics.subsystems.superstructure.Uptake;
 import com.gemsrobotics.subsystems.swerve.Telemetry;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import com.gemsrobotics.subsystems.swerve.CommandSwerveDrivetrain;
@@ -33,9 +35,12 @@ public final class RobotContainer {
 
     private final Superstructure m_superstructure;
 
+    private final RobotState m_robotState;
     private final CommandSwerveDrivetrain m_drivetrain;
     private final FieldCentricEvasion m_driveRequest;
     private final Telemetry m_logger;
+
+    private final ProjectileManager m_projectileManager;
 
     public RobotContainer() {
         m_signalManager = new StatusSignalManager();
@@ -49,8 +54,10 @@ public final class RobotContainer {
         m_joystick.rightTrigger().onTrue(m_superstructure.applyWantedState(Superstructure.SystemState.SHOOTING));
         m_joystick.rightTrigger().onFalse(m_superstructure.applyWantedState(Superstructure.SystemState.IDLE));
 
+
         //region drivetrain
-        m_drivetrain = TunerConstants.createDrivetrain();
+        m_robotState = new RobotState();
+        m_drivetrain = TunerConstants.createDrivetrain(m_robotState);
         m_driveRequest = new FieldCentricEvasion(TunerConstants.moduleTranslations, Constants.BUMPER_DEPTH)
                 .withDeadband(0.05)
                 .withRotationalDeadband(0.1)
@@ -58,9 +65,10 @@ public final class RobotContainer {
                 .withEvading(false);
         m_drivetrain.setDefaultCommand(
                 m_drivetrain.applyRequest(() ->
-                        m_driveRequest.withVelocityX(-m_joystick.getLeftY() * MaxSpeed / 4) // Drive forward with negative Y (forward)
-                                .withVelocityY(-m_joystick.getLeftX() * MaxSpeed / 4) // Drive left with negative X (left)
+                        m_driveRequest.withVelocityX(-m_joystick.getLeftY() * MaxSpeed / 2) // Drive forward with negative Y (forward)
+                                .withVelocityY(-m_joystick.getLeftX() * MaxSpeed / 2) // Drive left with negative X (left)
                                 .withRotationalRate(-m_joystick.getRightX() * MaxAngularRate)));
+
         // Idle while the robot is disabled. This ensures the configured
         // neutral mode is applied to the drive motors while disabled.
         final var idle = new SwerveRequest.Idle();
@@ -68,10 +76,26 @@ public final class RobotContainer {
         m_logger = new Telemetry(MaxSpeed);
         m_drivetrain.registerTelemetry(m_logger::telemeterize);
         //endregion
+
+        m_projectileManager = new ProjectileManager(
+                m_robotState,
+                m_superstructure.getShooter()::getLaunchVelocity,
+                () -> Rotation2d.fromDegrees(75));
     }
 
     public void periodic() {
         m_signalManager.periodic();
         m_superstructure.periodic();
+
+        if (Robot.isSimulation()) {
+            m_projectileManager.updateAll();
+            if (m_superstructure.isLaunching()) {
+                m_projectileManager.attemptSpawn();
+            }
+        }
+    }
+
+    public RobotState getRobotState() {
+        return m_robotState;
     }
 }
