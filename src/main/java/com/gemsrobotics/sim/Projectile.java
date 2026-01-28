@@ -1,16 +1,12 @@
 package com.gemsrobotics.sim;
 
-import com.gemsrobotics.RobotContainer;
-import com.gemsrobotics.RobotState;
+import com.gemsrobotics.FieldConstants;
 import edu.wpi.first.math.geometry.*;
-import edu.wpi.first.networktables.NetworkTable;
-import edu.wpi.first.networktables.NetworkTableInstance;
-import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.wpilibj.Timer;
-import edu.wpi.first.wpilibj2.command.Command;
 
 public class Projectile {
     private static final boolean BOUNCE = true;
+    private static final double FUEL_RADIUS = 5.91 / 2;
 
     private Pose3d pose;
     private Translation3d velocity;
@@ -34,19 +30,24 @@ public class Projectile {
         pose = new Pose3d(pose.getX() + velocity.getX() * dt, pose.getY() + velocity.getY() * dt, pose.getZ() + velocity.getZ() * dt, pose.getRotation());
         velocity = velocity.plus(new Translation3d(0.0, 0.0, -9.8 * dt));
 
-        // Floor
-        if(BOUNCE && pose.getZ() < 0 && velocity.getZ() < 0) {
-            velocity = new Translation3d(velocity.getX(), velocity.getY(), velocity.getZ() * -0.8);
-        }
 
-        // X walls
-        if(BOUNCE && ((pose.getX() < 0 && velocity.getX() < 0) || (pose.getX() > 17.5 && velocity.getX() > 0))) {
-            velocity = new Translation3d(velocity.getX() * -0.8, velocity.getY(), velocity.getZ());
-        }
 
-        // Y walls
-        if(BOUNCE && ((pose.getY() < 0 && velocity.getY() < 0) || (pose.getY() > 8 && velocity.getY() > 0))) {
-            velocity = new Translation3d(velocity.getX(), velocity.getY() * -0.8, velocity.getZ());
+        // Bouncing
+
+        if(BOUNCE) {
+            if (pose.getZ() < FUEL_RADIUS / 2 && velocity.getZ() < 0) {
+                velocity = new Translation3d(velocity.getX(), velocity.getY(), velocity.getZ() * -0.8);
+            }
+
+            // X walls
+            if ((pose.getX() < FUEL_RADIUS && velocity.getX() < 0) || (pose.getX() > FieldConstants.fieldLength - FUEL_RADIUS && velocity.getX() > 0)) {
+                velocity = new Translation3d(velocity.getX() * -0.8, velocity.getY(), velocity.getZ());
+            }
+
+            // Y walls
+            if ((pose.getY() < FUEL_RADIUS && velocity.getY() < 0) || (pose.getY() > FieldConstants.fieldWidth - FUEL_RADIUS && velocity.getY() > 0)) {
+                velocity = new Translation3d(velocity.getX(), velocity.getY() * -0.8, velocity.getZ());
+            }
         }
 
         lastTimeStamp = timestamp;

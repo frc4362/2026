@@ -9,8 +9,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
-// TODO make sure turret frame is only applied once
-
 public class RobotState {
 	private static final double LOOKBACK_TIME_SECONDS = 1.0;
 
