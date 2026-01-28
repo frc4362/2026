@@ -6,7 +6,7 @@ import edu.wpi.first.wpilibj.Timer;
 
 public class Projectile {
     private static final boolean BOUNCE = true;
-    private static final double FUEL_RADIUS = 5.91 / 2;
+    private static final double FUEL_RADIUS = 0.075;
 
     private Pose3d pose;
     private Translation3d velocity;
