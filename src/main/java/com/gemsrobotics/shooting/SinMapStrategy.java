@@ -19,4 +19,14 @@ public class SinMapStrategy implements ShootingStrategy {
 		final var y = RPS_OFFSET_UP + RPS_PER_METER_UP * rangeMeters;
 		return new LaunchParameters(Rotation2d.fromRadians(Math.atan(x / y)).plus(HOOD_ANGLE_OFFSET), Math.hypot(x, y));
 	}
+
+	@Override
+	public double getMinRangeMeters() {
+		return 2.0;
+	}
+
+	@Override
+	public double getMaxRangeMeters() {
+		return 6.0;
+	}
 }
