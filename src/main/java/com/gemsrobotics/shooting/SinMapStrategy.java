@@ -5,7 +5,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 
 // represents our shots as vectors. their magnitude is the velocity, and their angle is the hood angle
 // the two constants determine how heavily the "up" and "forward" components of the vector scale with range
-public class SinMapStrategy implements ShootingStrategy {
+public final class SinMapStrategy extends LaunchStrategy {
 	public static final double RPS_PER_METER_UP = 0.5;
 	public static final double RPS_OFFSET_UP = 60.0;
 	public static final double RPS_PER_METER_FORWARD = 3.0;
@@ -14,7 +14,7 @@ public class SinMapStrategy implements ShootingStrategy {
 	public static final Rotation2d HOOD_ANGLE_OFFSET = Hood.STARTING_ANGLE;
 
 	@Override
-	public LaunchParameters parametersFor(final double rangeMeters) {
+	protected LaunchParameters unsafeParametersFor(final double rangeMeters) {
 		final var x = RPS_OFFSET_FORWARD + RPS_PER_METER_FORWARD * rangeMeters;
 		final var y = RPS_OFFSET_UP + RPS_PER_METER_UP * rangeMeters;
 		return new LaunchParameters(Rotation2d.fromRadians(Math.atan(x / y)).plus(HOOD_ANGLE_OFFSET), Math.hypot(x, y));
