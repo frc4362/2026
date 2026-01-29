@@ -5,9 +5,11 @@ import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.PositionTorqueCurrentFOC;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
+import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.sim.TalonFXSimState;
 import com.gemsrobotics.Robot;
 import com.gemsrobotics.lib.StatusSignalManager;
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
@@ -20,23 +22,27 @@ import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 
-public class Hood {
-    private static final double GEARING = 150.0;
-    // 15 degrees forward from the vertical
-    public static final Rotation2d STARTING_ANGLE = Rotation2d.fromDegrees(15.0);
-    private static final double SIM_PERIOD = 0.001;
+public final class Hood {
+    private static final double GEARING = 300.0;
+    // 15 degrees forward from the vertical, or 75 degrees up from the horizon
+    public static final Rotation2d MIN_ANGLE  = Rotation2d.fromDegrees(15.0);
+    public static final Rotation2d MAX_ANGLE  = Rotation2d.fromDegrees(55.0);
+    private static final Rotation2d DEFAULT_TOLERANCE = Rotation2d.fromDegrees(0.5);
 
     private final TalonFX m_motor;
     private final PositionTorqueCurrentFOC m_request;
+
+    private final StatusSignal<Angle> m_motorRotations;
+    private final StatusSignal<Current> m_motorAmps;
+    private final StructPublisher<Rotation2d> m_worldAnglePublisher;
+
+    private Rotation2d m_reference;
 
     // sim
     private final TalonFXSimState m_simState;
     private final Notifier m_simNotifier;
     private final DCMotorSim m_motorModel;
-
-    private final StatusSignal<Angle> m_motorRotations;
-    private final StatusSignal<Current> m_motorAmps;
-    private final StructPublisher<Rotation2d> m_worldAnglePublisher;
+    private static final double SIM_PERIOD = 0.001;
 
     public Hood(final StatusSignalManager signalManager, final TalonFX motor) {
         m_motor = motor;
@@ -49,6 +55,11 @@ public class Hood {
         cfg.Slot0.kA = 0.0;
         cfg.TorqueCurrent.PeakForwardTorqueCurrent = 60.0;
         cfg.TorqueCurrent.PeakReverseTorqueCurrent = -60.0;
+        cfg.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
+        cfg.SoftwareLimitSwitch.ReverseSoftLimitThreshold = 0.0;
+        cfg.SoftwareLimitSwitch.ForwardSoftLimitEnable = false;
+        cfg.SoftwareLimitSwitch.ReverseSoftLimitThreshold = 0.0; // this should be the maximum rotor position later
+        cfg.MotorOutput.NeutralMode = NeutralModeValue.Brake;
         motor.getConfigurator().apply(cfg);
 
         m_request = new PositionTorqueCurrentFOC(0.0);
@@ -75,27 +86,32 @@ public class Hood {
     }
 
     public void periodic() {
-        m_worldAnglePublisher.set(getWorldAngle());
+        m_worldAnglePublisher.set(rotor2WorldAngle(m_motorRotations.getValueAsDouble()));
+        m_motor.setControl(m_request.withPosition(angle2Rotor(m_reference)));
     }
 
-    public void setWorldAngle(final Rotation2d goal) {
-        m_motor.setControl(m_request.withPosition(angle2Rotor(goal)));
+    public void setReference(final Rotation2d worldAngle) {
+        m_reference = clampAngle(worldAngle);
     }
 
-    private double angle2Rotor(final Rotation2d angle) {
-        return angle.getRotations();
+    public boolean atReference(final Rotation2d tolerance) {
+        return m_motorRotations.isNear(angle2Rotor(m_reference), tolerance.getRotations());
     }
 
-    private Rotation2d rotor2Angle(final double rotations) {
-        return Rotation2d.fromRotations(rotations);
+    public boolean atReference() {
+        return atReference(DEFAULT_TOLERANCE);
     }
 
-    public Rotation2d getWorldAngle() {
-        return rotor2Angle(m_motorRotations.getValueAsDouble()).plus(STARTING_ANGLE);
+    private Rotation2d rotor2WorldAngle(final double rotorValue) {
+        return Rotation2d.fromRotations(rotorValue).plus(MIN_ANGLE);
     }
 
-    private double clampSafeRotor(final double rotorPosition) {
-        return 0.0;
+    private double angle2Rotor(final Rotation2d worldAngle) {
+        return worldAngle.minus(MIN_ANGLE).getRotations();
+    }
+
+    private Rotation2d clampAngle(final Rotation2d worldAngle) {
+        return Rotation2d.fromRotations(MathUtil.clamp(worldAngle.getRotations(), MIN_ANGLE.getRotations(), MAX_ANGLE.getRotations()));
     }
 
     private void simulationPeriodic() {
