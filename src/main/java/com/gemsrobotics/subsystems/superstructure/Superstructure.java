@@ -1,5 +1,6 @@
 package com.gemsrobotics.subsystems.superstructure;
 
+import com.gemsrobotics.shooting.LaunchParameters;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StringPublisher;
@@ -19,6 +20,7 @@ public final class Superstructure extends SubsystemBase {
     private final Shooter m_shooter;
     private final Hopper m_hopper;
     private final Uptake m_uptake;
+    private final Hood m_hood;
 
     private final StringPublisher m_systemStatePublisher;
     private final StringPublisher m_wantedStatePublisher;
@@ -31,11 +33,13 @@ public final class Superstructure extends SubsystemBase {
     public Superstructure(
             final Shooter shooter,
             final Hopper hopper,
-            final Uptake uptake
+            final Uptake uptake,
+            final Hood hood
     ) {
         m_shooter = shooter;
         m_hopper = hopper;
         m_uptake = uptake;
+        m_hood = hood;
 
         final NetworkTable myTable = NetworkTableInstance.getDefault().getTable(NT_KEY);
         m_wantedStatePublisher = myTable.getStringTopic("wanted_state").publish();
@@ -55,6 +59,7 @@ public final class Superstructure extends SubsystemBase {
         m_shooter.periodic();
         m_hopper.periodic();
         m_uptake.periodic();
+        m_hood.periodic();
 
         final SystemState newState = switch (m_stateWanted) {
             case IDLE -> handleIdle();
@@ -97,6 +102,11 @@ public final class Superstructure extends SubsystemBase {
         return run(() -> {
             m_stateWanted = newState;
         }).until(() -> m_state == newState);
+    }
+
+    public void conformToLaunchParameters(final LaunchParameters parameters) {
+        m_hood.setReference(parameters.hoodAngle());
+        m_shooter.setVelocity(parameters.rps());
     }
 
     public SystemState getState() {

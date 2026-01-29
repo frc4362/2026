@@ -13,6 +13,7 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
+import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructPublisher;
@@ -21,6 +22,8 @@ import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
+
+import java.util.function.DoubleSupplier;
 
 public final class Hood {
     private static final double GEARING = 300.0;
@@ -34,9 +37,8 @@ public final class Hood {
 
     private final StatusSignal<Angle> m_motorRotations;
     private final StatusSignal<Current> m_motorAmps;
-    private final StructPublisher<Rotation2d> m_worldAnglePublisher;
-
-    private Rotation2d m_reference;
+    private final DoublePublisher m_referencePublisher;
+    private final StructPublisher<Rotation2d> m_worldAnglePublisher, m_referenceWorldPublisher;
 
     // sim
     private final TalonFXSimState m_simState;
@@ -70,6 +72,8 @@ public final class Hood {
 
         final NetworkTable nt = NetworkTableInstance.getDefault().getTable("hood");
         m_worldAnglePublisher = nt.getStructTopic("rotations_world", Rotation2d.struct).publish();
+        m_referencePublisher = nt.getDoubleTopic("reference_motor").publish();
+        m_referenceWorldPublisher = nt.getStructTopic("reference_world", Rotation2d.struct).publish();
         signalManager.registerPublished(m_motorRotations, nt, "rotations_motor");
         signalManager.registerPublished(m_motorAmps, nt, "amps");
 
@@ -87,15 +91,18 @@ public final class Hood {
 
     public void periodic() {
         m_worldAnglePublisher.set(rotor2WorldAngle(m_motorRotations.getValueAsDouble()));
-        m_motor.setControl(m_request.withPosition(angle2Rotor(m_reference)));
+        m_referencePublisher.set(m_request.Position);
+        m_referenceWorldPublisher.set(rotor2WorldAngle(m_request.Position));
+
+        m_motor.setControl(m_request);
     }
 
     public void setReference(final Rotation2d worldAngle) {
-        m_reference = clampAngle(worldAngle);
+        m_request.Position = angle2Rotor(clampAngle(worldAngle));
     }
 
     public boolean atReference(final Rotation2d tolerance) {
-        return m_motorRotations.isNear(angle2Rotor(m_reference), tolerance.getRotations());
+        return m_motorRotations.isNear(m_request.Position, tolerance.getRotations());
     }
 
     public boolean atReference() {
