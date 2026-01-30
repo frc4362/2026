@@ -2,6 +2,7 @@ package com.gemsrobotics.subsystems;
 
 import com.ctre.phoenix6.signals.*;
 
+import com.gemsrobotics.Constants;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StringPublisher;
@@ -12,7 +13,7 @@ import com.ctre.phoenix6.configs.CANdleConfiguration;
 import com.ctre.phoenix6.controls.*;
 import com.ctre.phoenix6.hardware.CANdle;
 
-public class Lights extends SubsystemBase{
+public class Lights extends SubsystemBase {
 
     private static final RGBWColor kRed = new RGBWColor(255, 0, 0, 0);
     private static final RGBWColor kGreen = new RGBWColor(0, 255, 0, 0);
@@ -21,12 +22,11 @@ public class Lights extends SubsystemBase{
     private static final int kSlot0StartIdx = 8;
     private static final int kSlot0EndIdx = 37;
 
-    private final CANdle m_candle = new CANdle(0);
+    private final CANdle m_candle;
 
-    private static final int LED_COUNT = 8;
+    private static final int LED_COUNT = 30;
 
     private enum Animation {
-
         NONE(new EmptyAnimation(0)),
         OUT_RANGE(new SolidColor(0, LED_COUNT - 1).withColor(kYellow)),
         IN_RANGE(new SolidColor(0, LED_COUNT - 1).withColor(kGreen)),
@@ -47,9 +47,9 @@ public class Lights extends SubsystemBase{
     private Animation m_animState = Animation.NONE;
     private final StringPublisher m_animStatePublisher;
 
-    //private final SendableChooser<AnimationType> m_anim0Chooser = new SendableChooser<AnimationType>();
-
     public Lights() {
+        m_candle = new CANdle(0, Constants.CAN.kAUX_BUS);
+
         var cfg = new CANdleConfiguration();
         cfg.LED.StripType = StripTypeValue.GRB;
         cfg.LED.BrightnessScalar = 0.5;
@@ -58,12 +58,12 @@ public class Lights extends SubsystemBase{
 
         m_candle.getConfigurator().apply(cfg);
 
-        m_animState = Animation.NONE;
-        m_candle.setControl(Animation.NONE.getAnim());
-        
-
         final NetworkTable nt = NetworkTableInstance.getDefault().getTable("Lights");
         m_animStatePublisher = nt.getStringTopic("animation state").publish();
+
+        m_animState = Animation.NONE;
+        m_animStatePublisher.set(Animation.NONE.name());
+        m_candle.setControl(Animation.NONE.getAnim());
 
         //m_anim0Chooser.setDefaultOption("Single Fade", AnimationType.None);
 
@@ -93,12 +93,4 @@ public class Lights extends SubsystemBase{
     public Command setJammed() {
         return set(Animation.JAMMED);
     }
-
-
-
-
-
-
-
-
 }

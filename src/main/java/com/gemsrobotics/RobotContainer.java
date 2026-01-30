@@ -56,7 +56,7 @@ public final class RobotContainer {
         m_joystick.rightTrigger().onTrue(m_superstructure.applyWantedState(Superstructure.SystemState.SHOOTING));
         m_joystick.rightTrigger().onFalse(m_superstructure.applyWantedState(Superstructure.SystemState.IDLE));
         m_joystick.a().onTrue(m_lights.setJammed());
-        //m_joystick.a().onFalse(m_lights.setOff());
+        m_joystick.a().onFalse(m_lights.setOff());
 
         //region drivetrain
         m_robotState = new RobotState();
