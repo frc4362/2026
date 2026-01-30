@@ -2,6 +2,9 @@ package com.gemsrobotics.subsystems;
 
 import com.ctre.phoenix6.signals.*;
 
+import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.networktables.StringPublisher;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
@@ -20,7 +23,7 @@ public class Lights extends SubsystemBase{
 
     private final CANdle m_candle = new CANdle(0);
 
-    private static final int LED_COUNT = 100;
+    private static final int LED_COUNT = 8;
 
     private enum Animation {
 
@@ -41,7 +44,8 @@ public class Lights extends SubsystemBase{
 
     }
 
-    private Animation m_anim0State = Animation.NONE;
+    private Animation m_animState = Animation.NONE;
+    private final StringPublisher m_animStatePublisher;
 
     //private final SendableChooser<AnimationType> m_anim0Chooser = new SendableChooser<AnimationType>();
 
@@ -54,27 +58,40 @@ public class Lights extends SubsystemBase{
 
         m_candle.getConfigurator().apply(cfg);
 
+        m_animState = Animation.NONE;
         m_candle.setControl(Animation.NONE.getAnim());
+        
+
+        final NetworkTable nt = NetworkTableInstance.getDefault().getTable("Lights");
+        m_animStatePublisher = nt.getStringTopic("animation state").publish();
 
         //m_anim0Chooser.setDefaultOption("Single Fade", AnimationType.None);
 
         //SmartDashboard.putData("Animation 0", m_anim0Chooser);
     }
 
+    private Command set(Animation a) {
+        return run(() -> {
+            m_animState = a;
+            m_animStatePublisher.set(a.name());
+            m_candle.setControl(a.getAnim());
+        });
+    }
+
     public Command setOff() {
-        return run(() -> m_candle.setControl(Animation.NONE.getAnim()));
+        return set(Animation.NONE);
     }
 
     public Command setOutOfRange() {
-        return run(() -> m_candle.setControl(Animation.OUT_RANGE.getAnim()));
+        return set(Animation.OUT_RANGE);
     }
 
     public Command setWithinRange() {
-        return run(() -> m_candle.setControl(Animation.IN_RANGE.getAnim()));
+        return set(Animation.IN_RANGE);
     }
 
     public Command setJammed() {
-        return run(() -> m_candle.setControl(Animation.JAMMED.getAnim()));
+        return set(Animation.JAMMED);
     }
 
 

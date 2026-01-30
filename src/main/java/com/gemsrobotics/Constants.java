@@ -56,5 +56,6 @@ public final class Constants {
     public static final int HOPPER_SOUTH = 36;
     public static final int UPTAKE_LEADER = 37; // TODO: rename to give spatial information
     public static final int UPTAKE_FOLLOWER = 38; // TODO: rename to give spatial information
+    public static final int HOOD = 39;
   }
 }
