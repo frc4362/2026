@@ -6,6 +6,8 @@ package com.gemsrobotics;
 
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.Follower;
+import com.ctre.phoenix6.controls.PositionTorqueCurrentFOC;
+import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
@@ -20,30 +22,48 @@ public class Robot extends TimedRobot {
     private final RobotContainer m_robotContainer;
     private final MatchStateTracker m_matchStateTracker;
 
-    private final VoltageOut m_request;
-    private final Follower m_followerRequest;
+    private final VoltageOut m_intakeRequest;
+    private final Follower m_intakeFollowerRequest;
     private final TalonFX m_intakeTop;
     private final TalonFX m_intakeBottom;
+    private final PositionTorqueCurrentFOC m_deployerRequest;
+    private final TalonFX m_deployer;
 
     public Robot() {
         m_robotContainer = new RobotContainer();
         m_matchStateTracker = new MatchStateTracker();
 
-        m_request = new VoltageOut(0);
-        m_followerRequest = new Follower(Constants.CAN.INTAKE_TOP_TRANSLATION, MotorAlignmentValue.Opposed);
+        m_intakeRequest = new VoltageOut(0);
+        m_intakeFollowerRequest = new Follower(Constants.CAN.INTAKE_TOP_TRANSLATION, MotorAlignmentValue.Opposed);
+
+        m_deployerRequest = new PositionTorqueCurrentFOC(0);
 
         m_intakeTop = new TalonFX(Constants.CAN.INTAKE_TOP_TRANSLATION, Constants.CAN.kAUX_BUS);
         m_intakeBottom = new TalonFX(Constants.CAN.INTAKE_BOTTOM_TRANSLATION, Constants.CAN.kAUX_BUS);
-        final var cfg = new TalonFXConfiguration();
-        cfg.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
-        cfg.CurrentLimits.StatorCurrentLimit = 60;
-        cfg.Voltage.PeakForwardVoltage = 12;
-        cfg.Voltage.PeakReverseVoltage = -12;
-        cfg.MotorOutput.NeutralMode = NeutralModeValue.Coast;
-        m_intakeTop.getConfigurator().apply(cfg);
-        m_intakeBottom.getConfigurator().apply(cfg);
+        final var intakecfg = new TalonFXConfiguration();
+        intakecfg.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+        intakecfg.CurrentLimits.StatorCurrentLimit = 60;
+        intakecfg.Voltage.PeakForwardVoltage = 12;
+        intakecfg.Voltage.PeakReverseVoltage = -12;
+        intakecfg.MotorOutput.NeutralMode = NeutralModeValue.Coast;
+        m_intakeTop.getConfigurator().apply(intakecfg);
+        m_intakeBottom.getConfigurator().apply(intakecfg);
 
-        SmartDashboard.putNumber("test_volts", 0);
+        m_deployer = new TalonFX(Constants.CAN.INTAKE_DEPLOYER, Constants.CAN.kAUX_BUS);
+        final var deployercfg = new TalonFXConfiguration();
+        deployercfg.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;  //may need to be changed
+        deployercfg.Feedback.SensorToMechanismRatio = 1.0;  //replace with gearing
+        deployercfg.Slot0.kP = 50.0;  //probably will need to be changed
+        deployercfg.Slot0.kV = 0.0;
+        deployercfg.Slot0.kA = 0.0;
+        deployercfg.Slot0.kG = 5.0;   //probably will need to be changed
+        deployercfg.TorqueCurrent.PeakForwardTorqueCurrent = 60.0;
+        deployercfg.TorqueCurrent.PeakReverseTorqueCurrent = -60.0;
+        deployercfg.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+        m_deployer.getConfigurator().apply(deployercfg);
+
+        SmartDashboard.putNumber("intake_test_volts", 0);
+        SmartDashboard.putNumber("deployer_test_position", 0);
     }
 
     @Override
@@ -69,9 +89,11 @@ public class Robot extends TimedRobot {
 
     @Override
     public void teleopPeriodic() {
-        m_request.Output = SmartDashboard.getNumber("test_volts", 0);
-        m_intakeTop.setControl(m_request);
-        m_intakeBottom.setControl(m_followerRequest);
+        m_intakeRequest.Output = SmartDashboard.getNumber("intake_test_volts", 0);
+        m_intakeTop.setControl(m_intakeRequest);
+        m_intakeBottom.setControl(m_intakeFollowerRequest);
+        m_deployerRequest.Position = SmartDashboard.getNumber("deployer_test_position", 0);
+        m_deployer.setPosition(m_deployerRequest.Position);
     }
 
     @Override
