@@ -8,6 +8,7 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.sim.TalonFXSimState;
+import com.gemsrobotics.Robot;
 import com.gemsrobotics.lib.StatusSignalManager;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
@@ -67,7 +68,9 @@ public class Hopper {
                 0.01);
 
         m_simNotifier = new Notifier(this::simulationPeriodic);
-        m_simNotifier.startPeriodic(SIM_UPDATE_SECONDS);
+        if (Robot.isSimulation()) {
+            m_simNotifier.startPeriodic(SIM_UPDATE_SECONDS);
+        }
         //endregion
 
         //region logging code

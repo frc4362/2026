@@ -7,6 +7,7 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.sim.TalonFXSimState;
+import com.gemsrobotics.Robot;
 import com.gemsrobotics.lib.StatusSignalManager;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
@@ -76,7 +77,9 @@ public class Shooter {
                 SIM_UPDATE_SECONDS);
 
         m_simNotifier = new Notifier(this::simulationPeriodic);
-        m_simNotifier.startPeriodic(0.02);
+        if (Robot.isSimulation()) {
+            m_simNotifier.startPeriodic(0.02);
+        }
         //endregion
 
         //region logging code

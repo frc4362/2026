@@ -5,65 +5,63 @@
 package com.gemsrobotics;
 
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
-import com.ctre.phoenix6.controls.Follower;
-import com.ctre.phoenix6.controls.PositionTorqueCurrentFOC;
-import com.ctre.phoenix6.controls.PositionVoltage;
-import com.ctre.phoenix6.controls.VoltageOut;
+import com.ctre.phoenix6.controls.*;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
-import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.wpilibj.TimedRobot;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 
 public class Robot extends TimedRobot {
 
     private final RobotContainer m_robotContainer;
     private final MatchStateTracker m_matchStateTracker;
-
-    private final VoltageOut m_intakeRequest;
-    private final Follower m_intakeFollowerRequest;
+    
+    private final VelocityTorqueCurrentFOC m_request;
+    private final PositionTorqueCurrentFOC m_deployRequest;
+    private final CoastOut m_coastRequest;
     private final TalonFX m_intakeTop;
-    private final TalonFX m_intakeBottom;
-    private final PositionTorqueCurrentFOC m_deployerRequest;
-    private final TalonFX m_deployer;
+    private final TalonFX m_intakeDeployer;
+
+    Trigger runIntakeTrigger;
+    Trigger deployIntakeTrigger;
 
     public Robot() {
         m_robotContainer = new RobotContainer();
         m_matchStateTracker = new MatchStateTracker();
-
-        m_intakeRequest = new VoltageOut(0);
-        m_intakeFollowerRequest = new Follower(Constants.CAN.INTAKE_TOP_TRANSLATION, MotorAlignmentValue.Opposed);
-
-        m_deployerRequest = new PositionTorqueCurrentFOC(0);
+        
+        m_request = new VelocityTorqueCurrentFOC(0);
+        m_deployRequest = new PositionTorqueCurrentFOC(0);
+        m_coastRequest = new CoastOut();
 
         m_intakeTop = new TalonFX(Constants.CAN.INTAKE_TOP_TRANSLATION, Constants.CAN.kAUX_BUS);
-        m_intakeBottom = new TalonFX(Constants.CAN.INTAKE_BOTTOM_TRANSLATION, Constants.CAN.kAUX_BUS);
-        final var intakecfg = new TalonFXConfiguration();
-        intakecfg.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
-        intakecfg.CurrentLimits.StatorCurrentLimit = 60;
-        intakecfg.Voltage.PeakForwardVoltage = 12;
-        intakecfg.Voltage.PeakReverseVoltage = -12;
-        intakecfg.MotorOutput.NeutralMode = NeutralModeValue.Coast;
-        m_intakeTop.getConfigurator().apply(intakecfg);
-        m_intakeBottom.getConfigurator().apply(intakecfg);
+        final var cfg = new TalonFXConfiguration();
+        cfg.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
+        cfg.CurrentLimits.StatorCurrentLimit = 120;
+        cfg.CurrentLimits.StatorCurrentLimitEnable = true;
+        cfg.Voltage.PeakForwardVoltage = 12;
+        cfg.Voltage.PeakReverseVoltage = -12;
+        cfg.MotorOutput.NeutralMode = NeutralModeValue.Coast;
+        cfg.Slot0.kP = 8.0;
+        cfg.Slot0.kA = 0.0;
+        m_intakeTop.getConfigurator().apply(cfg);
 
-        m_deployer = new TalonFX(Constants.CAN.INTAKE_DEPLOYER, Constants.CAN.kAUX_BUS);
-        final var deployercfg = new TalonFXConfiguration();
-        deployercfg.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;  //may need to be changed
-        deployercfg.Feedback.SensorToMechanismRatio = 1.0;  //replace with gearing
-        deployercfg.Slot0.kP = 50.0;  //probably will need to be changed
-        deployercfg.Slot0.kV = 0.0;
-        deployercfg.Slot0.kA = 0.0;
-        deployercfg.Slot0.kG = 5.0;   //probably will need to be changed
-        deployercfg.TorqueCurrent.PeakForwardTorqueCurrent = 60.0;
-        deployercfg.TorqueCurrent.PeakReverseTorqueCurrent = -60.0;
-        deployercfg.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-        m_deployer.getConfigurator().apply(deployercfg);
+        m_intakeDeployer = new TalonFX(Constants.CAN.INTAKE_DEPLOYER, Constants.CAN.kAUX_BUS);
+        final var cfgDep = new TalonFXConfiguration();
+        cfgDep.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
+        cfgDep.CurrentLimits.StatorCurrentLimit = 60;
+        cfgDep.CurrentLimits.StatorCurrentLimitEnable = true;
+        cfgDep.Voltage.PeakForwardVoltage = 12;
+        cfgDep.Voltage.PeakReverseVoltage = -12;
+        cfgDep.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+        cfgDep.Slot0.kP = 3000;
+        cfgDep.Slot0.kD = 30;
+        cfgDep.Feedback.SensorToMechanismRatio = 23.0 * (32.0 / 36.0);
+        m_intakeDeployer.getConfigurator().apply(cfgDep);
 
-        SmartDashboard.putNumber("intake_test_volts", 0);
-        SmartDashboard.putNumber("deployer_test_position", 0);
+        runIntakeTrigger = m_robotContainer.getPilot().rightBumper();
+        deployIntakeTrigger = m_robotContainer.getPilot().leftBumper();
     }
 
     @Override
@@ -89,11 +87,12 @@ public class Robot extends TimedRobot {
 
     @Override
     public void teleopPeriodic() {
-        m_intakeRequest.Output = SmartDashboard.getNumber("intake_test_volts", 0);
-        m_intakeTop.setControl(m_intakeRequest);
-        m_intakeBottom.setControl(m_intakeFollowerRequest);
-        m_deployerRequest.Position = SmartDashboard.getNumber("deployer_test_position", 0);
-        m_deployer.setPosition(m_deployerRequest.Position);
+        m_intakeTop.setControl(runIntakeTrigger.getAsBoolean() ?
+                m_request.withVelocity(90) :
+                m_coastRequest);
+        m_intakeDeployer.setControl(deployIntakeTrigger.getAsBoolean() ?
+                m_deployRequest.withPosition(0) :
+                m_coastRequest);
     }
 
     @Override
