@@ -1,0 +1,160 @@
+
+ package com.gemsrobotics.subsystems.superstructure;
+
+ import com.ctre.phoenix6.StatusSignal;
+ import com.ctre.phoenix6.configs.TalonFXConfiguration;
+ import com.ctre.phoenix6.controls.*;
+ import com.ctre.phoenix6.hardware.TalonFX;
+ import com.ctre.phoenix6.signals.InvertedValue;
+ import com.ctre.phoenix6.signals.NeutralModeValue;
+ import com.ctre.phoenix6.sim.TalonFXSimState;
+
+ import com.gemsrobotics.Robot;
+ import com.gemsrobotics.lib.StatusSignalManager;
+ import edu.wpi.first.math.system.plant.DCMotor;
+ import edu.wpi.first.math.system.plant.LinearSystemId;
+ import edu.wpi.first.networktables.NetworkTable;
+ import edu.wpi.first.networktables.NetworkTableInstance;
+ import edu.wpi.first.units.measure.Angle;
+ import edu.wpi.first.units.measure.AngularVelocity;
+ import edu.wpi.first.units.measure.Current;
+ import edu.wpi.first.wpilibj.Notifier;
+ import edu.wpi.first.wpilibj.RobotController;
+ import edu.wpi.first.wpilibj.simulation.DCMotorSim;
+ import edu.wpi.first.wpilibj.simulation.SingleJointedArmSim;
+
+ public class Intake {
+     //TODO: fix values (because these are just copied from last year)
+     private static final double INTAKE_STARTING_ROTATIONS = 0.000;
+     // Assumes the intake is retracted at 0 rotations and deploys in the positive direction
+     private static final double INTAKE_STOWED_ROTATIONS = 0.0;
+     private static final double INTAKE_DEPLOYED_ROTATIONS = 105.0 / 360.0;   // (135deg/360deg)
+     private static final double INTAKE_VELOCITY = 108;
+     private static final double IDLE_VElOCITY = 0;
+     private static final double SIM_UPDATE_SECONDS = 0.001;
+
+     private static final double INTAKE_GEARING = 1.0 / 1.2;
+     private static final double DEPLOYER_GEARING = 23.0 * (32.0 / 36.0);
+     private static final double DEPLOYER_ARM_LENGTH = 0.37;
+
+
+     private final StatusSignal<AngularVelocity> m_intakeVelocitySignal;
+     private final StatusSignal<Current> m_intakeStatorCurrentSignal, m_deployerStatorCurrentSignal, m_intakeSupplyCurrentSignal, m_deployerSupplyCurrentSignal;
+     private final StatusSignal<Angle> m_deployerPosition;
+
+ 	 private final TalonFXSimState m_intakeSimState;
+     private final TalonFXSimState m_deployerSimState;
+ 	 private final DCMotor m_intakeModel;
+     private final DCMotor m_deployerModel;
+     private final DCMotorSim m_intakeSim;
+     private final SingleJointedArmSim m_deployerSim;
+     private final Notifier m_simNotifier;
+
+     private final VelocityTorqueCurrentFOC m_request;
+     private final PositionTorqueCurrentFOC m_deployRequest;
+     private final TalonFX m_intakeTop;
+     private final TalonFX m_intakeDeployer;
+
+     public Intake(final StatusSignalManager signalManager, final TalonFX intakeMotor, final TalonFX deployerMotor) {
+         m_intakeTop = intakeMotor;
+         final var cfg = new TalonFXConfiguration();
+         cfg.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
+         cfg.Feedback.SensorToMechanismRatio = INTAKE_GEARING;
+         cfg.CurrentLimits.StatorCurrentLimit = 120;
+         cfg.CurrentLimits.StatorCurrentLimitEnable = true;
+         cfg.Voltage.PeakForwardVoltage = 12;
+         cfg.Voltage.PeakReverseVoltage = -12;
+         cfg.MotorOutput.NeutralMode = NeutralModeValue.Coast;
+         cfg.Slot0.kP = 8.0;
+         cfg.Slot0.kA = 0.0;
+         m_intakeTop.getConfigurator().apply(cfg);
+
+         m_intakeDeployer = deployerMotor;
+         final var cfgDep = new TalonFXConfiguration();
+         cfgDep.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
+         cfgDep.CurrentLimits.StatorCurrentLimit = 60;
+         cfgDep.CurrentLimits.StatorCurrentLimitEnable = true;
+         cfgDep.Voltage.PeakForwardVoltage = 12;
+         cfgDep.Voltage.PeakReverseVoltage = -12;
+         cfgDep.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+         cfgDep.Slot0.kP = 3000;
+         cfgDep.Slot0.kD = 30;
+         cfgDep.Feedback.SensorToMechanismRatio = DEPLOYER_GEARING;
+         m_intakeDeployer.getConfigurator().apply(cfgDep);
+
+         m_request = new VelocityTorqueCurrentFOC(0);
+         m_deployRequest = new PositionTorqueCurrentFOC(0);
+
+         m_intakeVelocitySignal = m_intakeTop.getVelocity(false);
+         m_intakeStatorCurrentSignal = m_intakeTop.getStatorCurrent(false);
+         m_deployerStatorCurrentSignal = m_intakeDeployer.getStatorCurrent(false);
+         m_intakeSupplyCurrentSignal = m_intakeTop.getSupplyCurrent(false);
+         m_deployerSupplyCurrentSignal = m_intakeDeployer.getSupplyCurrent(false);
+         m_deployerPosition = m_intakeDeployer.getPosition();
+
+         final NetworkTable nt = NetworkTableInstance.getDefault().getTable("intake");
+         signalManager.registerPublished(m_intakeVelocitySignal, nt, "intake_velocity_rps");
+         signalManager.registerPublished(m_intakeStatorCurrentSignal, nt, "intake_stator_current");
+         signalManager.registerPublished(m_deployerStatorCurrentSignal, nt, "deployer_stator_current");
+         signalManager.registerPublished(m_intakeSupplyCurrentSignal, nt, "intake_supply_current");
+         signalManager.registerPublished(m_deployerSupplyCurrentSignal, nt, "deployer_supply_current");
+         signalManager.registerPublished(m_deployerPosition, nt, "deployer_position");
+
+         m_intakeModel = DCMotor.getKrakenX60Foc(1);
+         m_deployerModel = DCMotor.getKrakenX44Foc(1);
+
+         m_intakeSimState = m_intakeTop.getSimState();
+         m_intakeSim = new DCMotorSim(
+             LinearSystemId.createDCMotorSystem(m_intakeModel, 0.001, INTAKE_GEARING),
+             m_intakeModel
+         );
+
+         m_deployerSimState = m_intakeDeployer.getSimState();
+         m_deployerSim = new SingleJointedArmSim(
+             LinearSystemId.createSingleJointedArmSystem(m_deployerModel, 0.01, DEPLOYER_GEARING),
+             m_deployerModel,
+             DEPLOYER_GEARING,
+             DEPLOYER_ARM_LENGTH,
+             0.0,
+             Math.toRadians(105),
+             true,
+             0.0,
+             0.0, 0.0
+         );
+
+         m_simNotifier = new Notifier(this::simulationPeriodic);
+         if (Robot.isSimulation()) {
+             m_simNotifier.startPeriodic(0.001);
+         }
+     }
+
+     public void setDeploy() {
+         m_intakeDeployer.setControl(m_deployRequest.withPosition(INTAKE_DEPLOYED_ROTATIONS));
+     }
+
+     public void setRetract() {
+         m_intakeDeployer.setControl(m_deployRequest.withPosition(INTAKE_STOWED_ROTATIONS));
+     }
+
+     public void setIntaking() {
+         m_intakeTop.setControl(m_request.withVelocity(INTAKE_VELOCITY));
+     }
+
+     public void setStop() {
+         m_intakeTop.setControl(m_request.withVelocity(IDLE_VElOCITY));
+     }
+
+     public void simulationPeriodic() {
+         m_intakeSimState.setSupplyVoltage(RobotController.getBatteryVoltage());
+         m_deployerSimState.setSupplyVoltage(RobotController.getBatteryVoltage());
+
+         m_intakeSim.setInputVoltage(m_intakeSimState.getMotorVoltage());
+         m_intakeSim.update(SIM_UPDATE_SECONDS);
+         m_deployerSim.setInputVoltage(m_deployerSimState.getMotorVoltage());
+         m_deployerSim.update(SIM_UPDATE_SECONDS);
+
+         m_intakeSimState.setRotorVelocity(m_intakeSim.getAngularVelocity().times(INTAKE_GEARING));
+         m_deployerSimState.setRawRotorPosition(m_deployerSim.getAngleRads() / 2 * Math.PI * DEPLOYER_GEARING);
+     }
+ }
+

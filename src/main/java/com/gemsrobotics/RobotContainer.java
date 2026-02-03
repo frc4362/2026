@@ -31,7 +31,7 @@ public final class RobotContainer {
 
     private final CommandXboxController m_joystick;
 
-//    private final Superstructure m_superstructure;
+    private final Superstructure m_superstructure;
 
     private final RobotState m_robotState;
     private final CommandSwerveDrivetrain m_drivetrain;
@@ -45,16 +45,17 @@ public final class RobotContainer {
         m_signalManager = new StatusSignalManager();
         m_joystick = new CommandXboxController(0);
 
-//        m_superstructure = new Superstructure(
-//                new Shooter(m_signalManager, new TalonFX(SHOOTER_WEST, kAUX_BUS), new TalonFX(SHOOTER_EAST, kAUX_BUS)),
-//                new Hopper(m_signalManager, new TalonFX(HOPPER_NORTH, kAUX_BUS), new TalonFX(HOPPER_SOUTH, kAUX_BUS)),
-//                new Uptake(m_signalManager, new TalonFX(UPTAKE_LEADER, kAUX_BUS), new TalonFX(UPTAKE_FOLLOWER, kAUX_BUS)),
-//                new Hood(m_signalManager, new TalonFX(HOOD, kAUX_BUS))
-//        );
+        m_superstructure = new Superstructure(
+                new Shooter(m_signalManager, new TalonFX(SHOOTER_WEST, kAUX_BUS), new TalonFX(SHOOTER_EAST, kAUX_BUS)),
+                new Hopper(m_signalManager, new TalonFX(HOPPER_NORTH, kAUX_BUS), new TalonFX(HOPPER_SOUTH, kAUX_BUS)),
+                new Uptake(m_signalManager, new TalonFX(UPTAKE_LEADER, kAUX_BUS), new TalonFX(UPTAKE_FOLLOWER, kAUX_BUS)),
+                new Hood(m_signalManager, new TalonFX(HOOD, kAUX_BUS)),
+                new Intake(m_signalManager, new TalonFX(INTAKE_DEPLOYER, kAUX_BUS), new TalonFX(INTAKE_TOP_TRANSLATION, kAUX_BUS))
+        );
         m_lights = new Lights();
 
-//        m_joystick.rightTrigger().onTrue(m_superstructure.applyWantedState(Superstructure.SystemState.SHOOTING));
-//        m_joystick.rightTrigger().onFalse(m_superstructure.applyWantedState(Superstructure.SystemState.IDLE));
+        m_joystick.rightTrigger().onTrue(m_superstructure.applyWantedState(Superstructure.SystemState.INTAKING));
+        m_joystick.rightTrigger().onFalse(m_superstructure.applyWantedState(Superstructure.SystemState.IDLE));
         m_joystick.a().onTrue(m_lights.setJammed());
         m_joystick.a().onFalse(m_lights.setOff());
 

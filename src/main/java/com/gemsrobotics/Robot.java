@@ -17,51 +17,10 @@ public class Robot extends TimedRobot {
 
     private final RobotContainer m_robotContainer;
     private final MatchStateTracker m_matchStateTracker;
-    
-    private final VelocityTorqueCurrentFOC m_request;
-    private final PositionTorqueCurrentFOC m_deployRequest;
-    private final CoastOut m_coastRequest;
-    private final TalonFX m_intakeTop;
-    private final TalonFX m_intakeDeployer;
-
-    Trigger runIntakeTrigger;
-    Trigger deployIntakeTrigger;
 
     public Robot() {
         m_robotContainer = new RobotContainer();
         m_matchStateTracker = new MatchStateTracker();
-        
-        m_request = new VelocityTorqueCurrentFOC(0);
-        m_deployRequest = new PositionTorqueCurrentFOC(0);
-        m_coastRequest = new CoastOut();
-
-        m_intakeTop = new TalonFX(Constants.CAN.INTAKE_TOP_TRANSLATION, Constants.CAN.kAUX_BUS);
-        final var cfg = new TalonFXConfiguration();
-        cfg.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
-        cfg.CurrentLimits.StatorCurrentLimit = 120;
-        cfg.CurrentLimits.StatorCurrentLimitEnable = true;
-        cfg.Voltage.PeakForwardVoltage = 12;
-        cfg.Voltage.PeakReverseVoltage = -12;
-        cfg.MotorOutput.NeutralMode = NeutralModeValue.Coast;
-        cfg.Slot0.kP = 8.0;
-        cfg.Slot0.kA = 0.0;
-        m_intakeTop.getConfigurator().apply(cfg);
-
-        m_intakeDeployer = new TalonFX(Constants.CAN.INTAKE_DEPLOYER, Constants.CAN.kAUX_BUS);
-        final var cfgDep = new TalonFXConfiguration();
-        cfgDep.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
-        cfgDep.CurrentLimits.StatorCurrentLimit = 60;
-        cfgDep.CurrentLimits.StatorCurrentLimitEnable = true;
-        cfgDep.Voltage.PeakForwardVoltage = 12;
-        cfgDep.Voltage.PeakReverseVoltage = -12;
-        cfgDep.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-        cfgDep.Slot0.kP = 3000;
-        cfgDep.Slot0.kD = 30;
-        cfgDep.Feedback.SensorToMechanismRatio = 23.0 * (32.0 / 36.0);
-        m_intakeDeployer.getConfigurator().apply(cfgDep);
-
-        runIntakeTrigger = m_robotContainer.getPilot().rightBumper();
-        deployIntakeTrigger = m_robotContainer.getPilot().leftBumper();
     }
 
     @Override
@@ -86,14 +45,7 @@ public class Robot extends TimedRobot {
     public void teleopInit() {}
 
     @Override
-    public void teleopPeriodic() {
-        m_intakeTop.setControl(runIntakeTrigger.getAsBoolean() ?
-                m_request.withVelocity(90) :
-                m_coastRequest);
-        m_intakeDeployer.setControl(deployIntakeTrigger.getAsBoolean() ?
-                m_deployRequest.withPosition(0) :
-                m_coastRequest);
-    }
+    public void teleopPeriodic() {}
 
     @Override
     public void testInit() {

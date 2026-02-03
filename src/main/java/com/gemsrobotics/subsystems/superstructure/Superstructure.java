@@ -21,6 +21,7 @@ public final class Superstructure extends SubsystemBase {
     private final Hopper m_hopper;
     private final Uptake m_uptake;
     private final Hood m_hood;
+    private final Intake m_intake;
 
     private final StringPublisher m_systemStatePublisher;
     private final StringPublisher m_wantedStatePublisher;
@@ -30,16 +31,20 @@ public final class Superstructure extends SubsystemBase {
     private Timer m_stateChangedTimer;
     private boolean m_stateChanged;
 
+    private boolean m_retractIntake;
+
     public Superstructure(
             final Shooter shooter,
             final Hopper hopper,
             final Uptake uptake,
-            final Hood hood
+            final Hood hood,
+            final Intake intake
     ) {
         m_shooter = shooter;
         m_hopper = hopper;
         m_uptake = uptake;
         m_hood = hood;
+        m_intake = intake;
 
         final NetworkTable myTable = NetworkTableInstance.getDefault().getTable(NT_KEY);
         m_wantedStatePublisher = myTable.getStringTopic("wanted_state").publish();
@@ -64,6 +69,7 @@ public final class Superstructure extends SubsystemBase {
         final SystemState newState = switch (m_stateWanted) {
             case IDLE -> handleIdle();
             case SHOOTING -> handleShooting();
+            case INTAKING -> handleIntaking();
             default -> SystemState.IDLE;
         };
 
@@ -80,6 +86,9 @@ public final class Superstructure extends SubsystemBase {
         m_shooter.setOff();
         m_uptake.setIdle();
         m_hopper.setIdle();
+        if(m_retractIntake) {m_intake.setRetract();}
+        else {m_intake.setDeploy();}
+        m_intake.setStop();
         return SystemState.IDLE;
     }
 
@@ -90,6 +99,12 @@ public final class Superstructure extends SubsystemBase {
             m_hopper.setVelocity(30);
         }
         return SystemState.SHOOTING;
+    }
+
+    public SystemState handleIntaking() {
+        m_intake.setIntaking();
+        m_intake.setDeploy();
+        return SystemState.INTAKING;
     }
 
     public Command setWantedState(final SystemState state) {
@@ -119,5 +134,9 @@ public final class Superstructure extends SubsystemBase {
 
     public boolean isLaunching() {
         return m_shooter.getVelocity() > 33 && m_uptake.getVelocity() > 28 && m_hopper.getVelocity() > 28;
+    }
+
+    public void setRetractIntake(boolean retractIntake) {
+        this.m_retractIntake = retractIntake;
     }
 }

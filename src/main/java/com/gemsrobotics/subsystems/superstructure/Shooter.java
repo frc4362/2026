@@ -78,7 +78,7 @@ public class Shooter {
 
         m_simNotifier = new Notifier(this::simulationPeriodic);
         if (Robot.isSimulation()) {
-            m_simNotifier.startPeriodic(0.02);
+            m_simNotifier.startPeriodic(0.001);
         }
         //endregion
 
