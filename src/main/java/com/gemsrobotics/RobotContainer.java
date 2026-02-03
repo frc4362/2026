@@ -23,10 +23,6 @@ import static com.gemsrobotics.Constants.CAN.*;
 import static edu.wpi.first.units.Units.*;
 
 public final class RobotContainer {
-
-    private final double MaxSpeed = 1.0 * TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
-    private final double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
-
     private final StatusSignalManager m_signalManager;
 
     private final CommandXboxController m_joystick;
@@ -35,8 +31,6 @@ public final class RobotContainer {
 
     private final RobotState m_robotState;
     private final CommandSwerveDrivetrain m_drivetrain;
-    private final FieldCentricEvasion m_driveRequest;
-    private final Telemetry m_logger;
     private final Lights m_lights;
 
     private final ProjectileManager m_projectileManager;
@@ -59,27 +53,8 @@ public final class RobotContainer {
         m_joystick.a().onTrue(m_lights.setJammed());
         m_joystick.a().onFalse(m_lights.setOff());
 
-        //region drivetrain
         m_robotState = new RobotState();
-        m_drivetrain = TunerConstants.createDrivetrain(m_robotState);
-        m_driveRequest = new FieldCentricEvasion(TunerConstants.moduleTranslations, Constants.BUMPER_DEPTH)
-                .withDeadband(0.05)
-                .withRotationalDeadband(0.1)
-                .withDriveRequestType(SwerveModule.DriveRequestType.OpenLoopVoltage)
-                .withEvading(false);
-        m_drivetrain.setDefaultCommand(
-                m_drivetrain.applyRequest(() ->
-                        m_driveRequest.withVelocityX(-m_joystick.getLeftY() * MaxSpeed / 2) // Drive forward with negative Y (forward)
-                                .withVelocityY(-m_joystick.getLeftX() * MaxSpeed / 2) // Drive left with negative X (left)
-                                .withRotationalRate(-m_joystick.getRightX() * MaxAngularRate)));
-
-        // Idle while the robot is disabled. This ensures the configured
-        // neutral mode is applied to the drive motors while disabled.
-        final var idle = new SwerveRequest.Idle();
-        RobotModeTriggers.disabled().whileTrue(m_drivetrain.applyRequest(() -> idle).ignoringDisable(true));
-        m_logger = new Telemetry(MaxSpeed);
-        m_drivetrain.registerTelemetry(m_logger::telemeterize);
-        //endregion
+        m_drivetrain = TunerConstants.createDrivetrain(m_robotState, m_joystick);
 
         m_projectileManager = new ProjectileManager(
                 m_robotState,

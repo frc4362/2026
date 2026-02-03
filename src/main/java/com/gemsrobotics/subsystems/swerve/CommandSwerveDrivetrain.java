@@ -1,6 +1,10 @@
 package com.gemsrobotics.subsystems.swerve;
 
+import static com.gemsrobotics.Constants.MAX_ANGULAR_RATE;
+import static com.gemsrobotics.Constants.MAX_SPEED;
 import static edu.wpi.first.units.Units.*;
+import static java.lang.Math.abs;
+import static java.lang.Math.max;
 
 import java.util.Optional;
 import java.util.function.Supplier;
@@ -9,10 +13,17 @@ import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.Utils;
 import com.ctre.phoenix6.swerve.SwerveDrivetrainConstants;
+import com.ctre.phoenix6.swerve.SwerveModule;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
+import com.ctre.phoenix6.swerve.SwerveRequest.FieldCentricFacingAngle;
+import com.gemsrobotics.Constants;
 import com.gemsrobotics.RobotState;
+import com.gemsrobotics.lib.math.Rotation2dPlus;
+import com.gemsrobotics.lib.math.Translation2dPlus;
+import com.gemsrobotics.lib.swerve.FieldCentricEvasion;
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -26,6 +37,8 @@ import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Subsystem;
+import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 
 /**
@@ -39,6 +52,11 @@ public class CommandSwerveDrivetrain extends TunerConstants.TunerSwerveDrivetrai
     private static final double kSimLoopPeriod = 0.004; // 4 ms
     private Notifier m_simNotifier = null;
     private double m_lastSimTime;
+
+    private final Telemetry m_logger;
+    private final FieldCentricEvasion m_evasionRequest;
+    private final FieldCentricFacingAngle m_maintainHeadingRequest;
+    private final SwerveRequest.Idle m_idleRequest;
 
     /* Blue alliance sees forward as 0 degrees (toward red alliance wall) */
     private static final Rotation2d kBlueAlliancePerspectiveRotation = Rotation2d.kZero;
@@ -130,6 +148,7 @@ public class CommandSwerveDrivetrain extends TunerConstants.TunerSwerveDrivetrai
     public CommandSwerveDrivetrain(
         SwerveDrivetrainConstants drivetrainConstants,
         final RobotState robotState,
+        final CommandXboxController joystick,
         SwerveModuleConstants<?, ?, ?>... modules
     ) {
         super(drivetrainConstants, modules);
@@ -137,9 +156,73 @@ public class CommandSwerveDrivetrain extends TunerConstants.TunerSwerveDrivetrai
         m_robotState = robotState;
         m_yawVelocity = getPigeon2().getAngularVelocityZWorld(false);
 
+        m_evasionRequest = new FieldCentricEvasion(TunerConstants.moduleTranslations, Constants.BUMPER_DEPTH)
+                .withDeadband(0.05)
+                .withRotationalDeadband(0.1)
+                .withDriveRequestType(SwerveModule.DriveRequestType.OpenLoopVoltage);
+        setDefaultCommand(driveOpenLoopJoysticks(joystick));
+
+        m_maintainHeadingRequest = new FieldCentricFacingAngle()
+                .withDeadband(0.05)
+                .withRotationalDeadband(0.1)
+                .withDriveRequestType(SwerveModule.DriveRequestType.OpenLoopVoltage);
+
+        // Idle while the robot is disabled. This ensures the configured
+        // neutral mode is applied to the drive motors while disabled.
+        m_idleRequest = new SwerveRequest.Idle();
+        RobotModeTriggers.disabled().whileTrue(applyRequest(() -> m_idleRequest).ignoringDisable(true));
+
+        m_logger = new Telemetry(MAX_SPEED);
+        registerTelemetry(m_logger::telemeterize);
+
         if (Utils.isSimulation()) {
             startSimThread();
         }
+    }
+
+    public Command driveOpenLoopJoysticks(CommandXboxController joystick) {
+        return run(() -> {
+            if (joystick.rightBumper().getAsBoolean()) {
+                setControl(m_evasionRequest
+                        .withVelocityX(-joystick.getLeftY() * MAX_SPEED / 2.0) // Drive forward with negative Y (forward)
+                        .withVelocityY(-joystick.getLeftX() * MAX_SPEED / 2.0) // Drive left with negative X (left)
+                        .withRotationalRate(-joystick.getRightX() * Constants.MAX_ANGULAR_RATE)
+                        .withEvading(true));
+            } else {
+                // Correct travel direction to nearest 90deg if close to it
+                double stickMagnitude = new Translation2dPlus(-joystick.getLeftY(), -joystick.getLeftX()).getNorm();
+                stickMagnitude = MathUtil.applyDeadband(Math.pow(stickMagnitude, 1.5), 0.025, 1.0); // Scale for low-range movements
+
+                Rotation2dPlus stickDirection = new Rotation2dPlus(-joystick.getLeftY(), -joystick.getLeftX());
+                final var nearestPole = stickDirection.getNearestPole();
+                if (abs(stickDirection.minus(nearestPole).getDegrees()) < 5) {
+                    stickDirection = nearestPole;
+                }
+
+                final Translation2dPlus targetVelocity = new Translation2dPlus(stickMagnitude * MAX_SPEED / 2.0, stickDirection);
+                
+                // Maintain drive heading unless turning
+                final var dbRotation = MathUtil.applyDeadband(-joystick.getRightX(), 0.025, 1.0) * MAX_ANGULAR_RATE;
+
+                if (dbRotation == 0.0) {
+                    // Don't move if not commanding an input
+                    if (targetVelocity.getNorm() < 0.01) {
+                        setControl(m_idleRequest);
+                    } else {
+                        setControl(m_maintainHeadingRequest
+                                .withVelocityX(targetVelocity.getX())
+                                .withVelocityY(targetVelocity.getY())
+                                .withTargetDirection(getState().Pose.getRotation())); // maintain heading
+                    }
+                } else {
+                    setControl(m_evasionRequest
+                            .withVelocityX(targetVelocity.getX()) // Drive forward with negative Y (forward)
+                            .withVelocityY(targetVelocity.getY()) // Drive left with negative X (left)
+                            .withRotationalRate(dbRotation)
+                            .withEvading(false));
+                }
+            }
+        });
     }
 
     /**

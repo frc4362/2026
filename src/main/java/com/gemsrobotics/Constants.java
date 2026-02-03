@@ -5,9 +5,11 @@
 package com.gemsrobotics;
 
 import com.ctre.phoenix6.CANBus;
+import com.gemsrobotics.subsystems.swerve.TunerConstants;
 import edu.wpi.first.units.measure.Distance;
 
-import static edu.wpi.first.units.Units.Inches;
+import static edu.wpi.first.units.Units.*;
+import static edu.wpi.first.units.Units.RadiansPerSecond;
 
 /**
  * The Constants class provides a convenient place for teams to hold robot-wide numerical or boolean
@@ -20,7 +22,10 @@ import static edu.wpi.first.units.Units.Inches;
 public final class Constants {
   public static final Distance BUMPER_DEPTH = Inches.of(3.5);
 
-  public static class OperatorConstants {
+  public static final double MAX_SPEED = 1.0 * TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
+  public static final double MAX_ANGULAR_RATE = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
+
+    public static class OperatorConstants {
     public static final int kDriverControllerPort = 0;
   }
 
