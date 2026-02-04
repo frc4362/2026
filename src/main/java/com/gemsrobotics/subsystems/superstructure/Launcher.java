@@ -13,13 +13,11 @@ import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
-import edu.wpi.first.units.measure.AngularVelocity;
-import edu.wpi.first.units.measure.Distance;
-import edu.wpi.first.units.measure.LinearVelocity;
-import edu.wpi.first.units.measure.Voltage;
+import edu.wpi.first.units.measure.*;
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.FlywheelSim;
+import sun.misc.Signal;
 
 import java.util.function.DoubleSupplier;
 
@@ -38,6 +36,7 @@ public class Launcher {
 
     private final StatusSignal<AngularVelocity> m_leaderVelocitySignal, m_followerVelocitySignal;
     private final StatusSignal<Voltage> m_leaderVoltsAppliedSignal, m_followerVoltsAppliedSignal;
+    private final StatusSignal<Current> m_leaderTorqueSignal, m_followerTorqueSignal;
 
     private final TalonFXSimState m_leaderSimState, m_followerSimState;
     private final FlywheelSim m_flywheelSim;
@@ -85,14 +84,18 @@ public class Launcher {
         //region logging code
         m_leaderVelocitySignal = m_motorLeader.getVelocity(false);
         m_leaderVoltsAppliedSignal = m_motorLeader.getMotorVoltage(false);
+        m_leaderTorqueSignal = m_motorLeader.getTorqueCurrent(false);
         m_followerVelocitySignal = m_motorFollower.getVelocity(false);
         m_followerVoltsAppliedSignal = m_motorFollower.getMotorVoltage(false);
+        m_followerTorqueSignal = m_motorFollower.getTorqueCurrent(false);
 
         final NetworkTable nt = NetworkTableInstance.getDefault().getTable("launcher/" + ntName);
         signalManager.registerPublished(m_leaderVelocitySignal, nt, "leader_velocity_rps");
         signalManager.registerPublished(m_leaderVoltsAppliedSignal, nt, "leader_volts");
+        signalManager.registerPublished(m_leaderTorqueSignal, nt, "leader_torque");
         signalManager.registerPublished(m_followerVelocitySignal, nt, "follower_velocity_rps");
         signalManager.registerPublished(m_followerVoltsAppliedSignal, nt, "follower_volts");
+        signalManager.registerPublished(m_followerTorqueSignal, nt, "follower_torque");
         //endregion
 
         m_on = false;
