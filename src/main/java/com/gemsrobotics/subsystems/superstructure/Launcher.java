@@ -25,7 +25,7 @@ import java.util.function.DoubleSupplier;
 
 import static edu.wpi.first.units.Units.*;
 
-public class Shooter {
+public class Launcher {
     private static final Distance WHEEL_CIRCUMFERENCE = Inches.of(2).times(2 * Math.PI);
     private static final double SCRUB_FACTOR = 0.7;
     private static final double GEARING = 1.2;
@@ -45,7 +45,7 @@ public class Shooter {
 
     private boolean m_on;
 
-    public Shooter(final StatusSignalManager signalManager, final TalonFX motorLeader, final TalonFX motorFollower) {
+    public Launcher(final StatusSignalManager signalManager, final String ntName, final TalonFX motorLeader, final TalonFX motorFollower) {
         //region motor config
         m_motorLeader = motorLeader;
         m_motorFollower = motorFollower;
@@ -88,7 +88,7 @@ public class Shooter {
         m_followerVelocitySignal = m_motorFollower.getVelocity(false);
         m_followerVoltsAppliedSignal = m_motorFollower.getMotorVoltage(false);
 
-        final NetworkTable nt = NetworkTableInstance.getDefault().getTable("shooter");
+        final NetworkTable nt = NetworkTableInstance.getDefault().getTable("launcher/" + ntName);
         signalManager.registerPublished(m_leaderVelocitySignal, nt, "leader_velocity_rps");
         signalManager.registerPublished(m_leaderVoltsAppliedSignal, nt, "leader_volts");
         signalManager.registerPublished(m_followerVelocitySignal, nt, "follower_velocity_rps");

@@ -5,17 +5,12 @@
 package com.gemsrobotics;
 
 import com.ctre.phoenix6.hardware.TalonFX;
-import com.ctre.phoenix6.swerve.SwerveModule;
-import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.gemsrobotics.lib.StatusSignalManager;
-import com.gemsrobotics.lib.swerve.FieldCentricEvasion;
 import com.gemsrobotics.sim.ProjectileManager;
 import com.gemsrobotics.subsystems.Lights;
 import com.gemsrobotics.subsystems.superstructure.*;
-import com.gemsrobotics.subsystems.swerve.Telemetry;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
-import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import com.gemsrobotics.subsystems.swerve.CommandSwerveDrivetrain;
 import com.gemsrobotics.subsystems.swerve.TunerConstants;
 
@@ -40,7 +35,7 @@ public final class RobotContainer {
         m_joystick = new CommandXboxController(0);
 
         m_superstructure = new Superstructure(
-                new Shooter(m_signalManager, new TalonFX(SHOOTER_WEST, kAUX_BUS), new TalonFX(SHOOTER_EAST, kAUX_BUS)),
+                new Launcher(m_signalManager, "left", new TalonFX(LAUNCHER_WEST, kAUX_BUS), new TalonFX(LAUNCHER_EAST, kAUX_BUS)),
                 new Hopper(m_signalManager, new TalonFX(HOPPER_NORTH, kAUX_BUS), new TalonFX(HOPPER_SOUTH, kAUX_BUS)),
                 new Uptake(m_signalManager, new TalonFX(UPTAKE_LEADER, kAUX_BUS), new TalonFX(UPTAKE_FOLLOWER, kAUX_BUS)),
                 new Hood(m_signalManager, new TalonFX(HOOD, kAUX_BUS)),

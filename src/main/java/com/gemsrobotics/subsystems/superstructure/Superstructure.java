@@ -17,7 +17,7 @@ public final class Superstructure extends SubsystemBase {
         SHOOTING
     }
 
-    private final Shooter m_shooter;
+    private final Launcher m_launcher;
     private final Hopper m_hopper;
     private final Uptake m_uptake;
     private final Hood m_hood;
@@ -34,13 +34,13 @@ public final class Superstructure extends SubsystemBase {
     private boolean m_retractIntake;
 
     public Superstructure(
-            final Shooter shooter,
+            final Launcher launcher,
             final Hopper hopper,
             final Uptake uptake,
             final Hood hood,
             final Intake intake
     ) {
-        m_shooter = shooter;
+        m_launcher = launcher;
         m_hopper = hopper;
         m_uptake = uptake;
         m_hood = hood;
@@ -61,7 +61,7 @@ public final class Superstructure extends SubsystemBase {
         m_systemStatePublisher.set(m_state.name());
         m_wantedStatePublisher.set(m_stateWanted.name());
 
-        m_shooter.periodic();
+        m_launcher.periodic();
         m_hopper.periodic();
         m_uptake.periodic();
         m_hood.periodic();
@@ -83,7 +83,7 @@ public final class Superstructure extends SubsystemBase {
     }
 
     public SystemState handleIdle() {
-        m_shooter.setOff();
+        m_launcher.setOff();
         m_uptake.setIdle();
         m_hopper.setIdle();
         if(m_retractIntake) {m_intake.setRetract();}
@@ -93,8 +93,8 @@ public final class Superstructure extends SubsystemBase {
     }
 
     public SystemState handleShooting() {
-        m_shooter.setVelocity(35); // TODO: tuning / interpolation
-        if (m_shooter.getVelocity() > 30) {
+        m_launcher.setVelocity(35); // TODO: tuning / interpolation
+        if (m_launcher.getVelocity() > 30) {
             m_uptake.setVelocity(30);
             m_hopper.setVelocity(30);
         }
@@ -121,19 +121,19 @@ public final class Superstructure extends SubsystemBase {
 
     public void conformToLaunchParameters(final LaunchParameters parameters) {
         m_hood.setReference(parameters.hoodAngle());
-        m_shooter.setVelocity(parameters.rps());
+        m_launcher.setVelocity(parameters.rps());
     }
 
     public SystemState getState() {
         return m_state;
     }
 
-    public Shooter getShooter() {
-        return m_shooter;
+    public Launcher getShooter() {
+        return m_launcher;
     }
 
     public boolean isLaunching() {
-        return m_shooter.getVelocity() > 33 && m_uptake.getVelocity() > 28 && m_hopper.getVelocity() > 28;
+        return m_launcher.getVelocity() > 33 && m_uptake.getVelocity() > 28 && m_hopper.getVelocity() > 28;
     }
 
     public void setRetractIntake(boolean retractIntake) {

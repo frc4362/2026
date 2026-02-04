@@ -55,8 +55,8 @@ public final class Constants {
     public static final int INTAKE_TOP_TRANSLATION = 30;
     public static final int INTAKE_BOTTOM_TRANSLATION = 31;
     public static final int INTAKE_DEPLOYER = 32;
-    public static final int SHOOTER_WEST = 33;
-    public static final int SHOOTER_EAST = 34;
+    public static final int LAUNCHER_WEST = 33;
+    public static final int LAUNCHER_EAST = 34;
     public static final int HOPPER_NORTH = 35;
     public static final int HOPPER_SOUTH = 36;
     public static final int UPTAKE_LEADER = 37; // TODO: rename to give spatial information
