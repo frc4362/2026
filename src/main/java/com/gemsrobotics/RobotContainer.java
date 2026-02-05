@@ -43,13 +43,14 @@ public final class RobotContainer {
         );
         m_lights = new Lights();
 
+        m_robotState = new RobotState();
+        m_drivetrain = TunerConstants.createDrivetrain(m_robotState, m_joystick);
+
         m_joystick.rightTrigger().onTrue(m_superstructure.applyWantedState(Superstructure.SystemState.INTAKING));
         m_joystick.rightTrigger().onFalse(m_superstructure.applyWantedState(Superstructure.SystemState.IDLE));
         m_joystick.a().onTrue(m_lights.setJammed());
         m_joystick.a().onFalse(m_lights.setOff());
-
-        m_robotState = new RobotState();
-        m_drivetrain = TunerConstants.createDrivetrain(m_robotState, m_joystick);
+        m_joystick.b().onTrue(m_drivetrain.driveToPose(FieldConstants.Hub.nearFace));
 
         m_projectileManager = new ProjectileManager(
                 m_robotState,
