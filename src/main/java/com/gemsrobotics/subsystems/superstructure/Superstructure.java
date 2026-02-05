@@ -14,7 +14,9 @@ public final class Superstructure extends SubsystemBase {
     public enum SystemState {
         IDLE,
         INTAKING,
-        SHOOTING
+        LAUNCHING,
+        CLIMBING,
+        CLIMBED
     }
 
     private final Launcher m_launcher;
@@ -68,8 +70,10 @@ public final class Superstructure extends SubsystemBase {
 
         final SystemState newState = switch (m_stateWanted) {
             case IDLE -> handleIdle();
-            case SHOOTING -> handleShooting();
+            case LAUNCHING -> handleLaunching();
             case INTAKING -> handleIntaking();
+            case CLIMBING -> handleClimbing();
+            case CLIMBED -> handleClimbed();
             default -> SystemState.IDLE;
         };
 
@@ -92,19 +96,27 @@ public final class Superstructure extends SubsystemBase {
         return SystemState.IDLE;
     }
 
-    public SystemState handleShooting() {
+    public SystemState handleLaunching() {
         m_launcher.setVelocity(35); // TODO: tuning / interpolation
         if (m_launcher.getVelocity() > 30) {
             m_uptake.setVelocity(30);
             m_hopper.setVelocity(30);
         }
-        return SystemState.SHOOTING;
+        return SystemState.LAUNCHING;
     }
 
     public SystemState handleIntaking() {
         m_intake.setIntaking();
         m_intake.setDeploy();
         return SystemState.INTAKING;
+    }
+
+    public SystemState handleClimbing() {
+        return SystemState.CLIMBING;
+    }
+
+    public SystemState handleClimbed() {
+        return SystemState.CLIMBED;
     }
 
     public Command setWantedState(final SystemState state) {
