@@ -140,7 +140,7 @@ public final class Superstructure extends SubsystemBase {
         return m_state;
     }
 
-    public Launcher getShooter() {
+    public Launcher getLauncher() {
         return m_launcher;
     }
 
