@@ -1,10 +1,10 @@
 package com.gemsrobotics.subsystems.superstructure;
 
-import com.gemsrobotics.shooting.LaunchParameters;
-import edu.wpi.first.networktables.NetworkTable;
-import edu.wpi.first.networktables.NetworkTableInstance;
-import edu.wpi.first.networktables.StringPublisher;
+import com.gemsrobotics.shooting.*;
+import edu.wpi.first.networktables.*;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
@@ -35,6 +35,8 @@ public final class Superstructure extends SubsystemBase {
 
     private boolean m_retractIntake;
 
+    private final SendableChooser<LaunchStrategy> m_launchStrategyChooser;
+
     public Superstructure(
             final Launcher launcher,
             final Hopper hopper,
@@ -51,6 +53,12 @@ public final class Superstructure extends SubsystemBase {
         final NetworkTable myTable = NetworkTableInstance.getDefault().getTable(NT_KEY);
         m_wantedStatePublisher = myTable.getStringTopic("wanted_state").publish();
         m_systemStatePublisher = myTable.getStringTopic("system_state").publish();
+
+        m_launchStrategyChooser = new SendableChooser<>();
+        m_launchStrategyChooser.setDefaultOption("LookupTable", new LookupTableStrategy());
+        m_launchStrategyChooser.addOption("SinMap", new SinMapStrategy());
+        m_launchStrategyChooser.addOption("TunedLaunch", new TunedLaunchStrategy(myTable));
+        SmartDashboard.putData("Launch Strategy", m_launchStrategyChooser);
 
         m_state = SystemState.IDLE;
         m_stateWanted = SystemState.IDLE;

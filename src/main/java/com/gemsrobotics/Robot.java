@@ -9,7 +9,12 @@ import com.ctre.phoenix6.controls.*;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
+import com.gemsrobotics.shooting.LaunchStrategy;
+import com.gemsrobotics.shooting.LookupTableStrategy;
+import com.gemsrobotics.shooting.SinMapStrategy;
+import com.gemsrobotics.shooting.TunedLaunchStrategy;
 import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 
