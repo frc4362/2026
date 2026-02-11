@@ -167,7 +167,8 @@ public class CommandSwerveDrivetrain extends TunerConstants.TunerSwerveDrivetrai
         m_evasionRequest = new FieldCentricEvasion(TunerConstants.moduleTranslations, Constants.BUMPER_DEPTH)
                 .withDeadband(0.05)
                 .withRotationalDeadband(0.1)
-                .withDriveRequestType(SwerveModule.DriveRequestType.OpenLoopVoltage);
+                .withDriveRequestType(SwerveModule.DriveRequestType.OpenLoopVoltage)
+                .withEvading(false);
         m_maintainHeadingRequest = new FieldCentricFacingAngle()
                 .withDeadband(0.05)
                 .withRotationalDeadband(0.1)
