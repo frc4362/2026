@@ -19,8 +19,12 @@ import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.FlywheelSim;
+import edu.wpi.first.wpilibj2.command.Command;
 
 import java.util.function.DoubleSupplier;
+
+import static edu.wpi.first.wpilibj2.command.Commands.run;
+import static edu.wpi.first.wpilibj2.command.Commands.runOnce;
 
 public class Hopper {
     private static final double GEARING = 1.0;
@@ -54,7 +58,7 @@ public class Hopper {
 
         m_request = new MotionMagicVelocityTorqueCurrentFOC(0.0);
         m_request.Slot = 0;
-        m_followerRequest = new Follower(m_motorLeader.getDeviceID(), MotorAlignmentValue.Opposed);
+        m_followerRequest = new Follower(m_motorLeader.getDeviceID(), MotorAlignmentValue.Aligned);
         //endregion
 
         //region sim code
@@ -108,8 +112,14 @@ public class Hopper {
         m_request.Velocity = velocitySupplier.getAsDouble();
     }
 
-    public void setVelocity(final double velocity) {
-        setVelocity(() -> velocity);
+//    public void setVelocity(final double velocity) {
+//        setVelocity(() -> velocity);
+//    }
+
+    public Command setVelocity(final double velocity) {
+        return runOnce(() -> {
+            setVelocity(() -> velocity);
+        });
     }
 
     public void setIdle() {

@@ -115,7 +115,8 @@ public final class Superstructure extends SubsystemBase {
 
     public SystemState handleIntaking() {
         m_intake.setIntaking();
-        m_intake.setDeploy();
+        m_intake.setRetract();
+        //m_intake.setDeploy();
         return SystemState.INTAKING;
     }
 
@@ -148,8 +149,12 @@ public final class Superstructure extends SubsystemBase {
         return m_state;
     }
 
-    public Launcher getShooter() {
+    public Launcher getLauncher() {
         return m_launcher;
+    }
+
+    public Hopper getHopper() {
+        return m_hopper;
     }
 
     public boolean isLaunching() {

@@ -18,6 +18,7 @@ import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
 import com.ctre.phoenix6.swerve.SwerveRequest.FieldCentricFacingAngle;
+import com.ctre.phoenix6.swerve.utility.LinearPath;
 import com.gemsrobotics.Constants;
 import com.gemsrobotics.RobotState;
 import com.gemsrobotics.lib.math.Rotation2dPlus;
@@ -29,6 +30,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
@@ -58,6 +60,10 @@ public class CommandSwerveDrivetrain extends TunerConstants.TunerSwerveDrivetrai
     private final FieldCentricFacingAngle m_maintainHeadingRequest;
     private final SwerveRequest.Idle m_idleRequest;
 
+    private final Timer m_timer;
+    private final LinearPath m_linearPathController;
+    private LinearPath.State m_initialLinearState;
+
     /* Blue alliance sees forward as 0 degrees (toward red alliance wall) */
     private static final Rotation2d kBlueAlliancePerspectiveRotation = Rotation2d.kZero;
     /* Red alliance sees forward as 180 degrees (toward blue alliance wall) */
@@ -65,6 +71,7 @@ public class CommandSwerveDrivetrain extends TunerConstants.TunerSwerveDrivetrai
     /* Keep track if we've ever applied the operator perspective before or not */
     private boolean m_hasAppliedOperatorPerspective = false;
 
+    //region SysId
     /* Swerve requests to apply during SysId characterization */
     private final SwerveRequest.SysIdSwerveTranslation m_translationCharacterization = new SwerveRequest.SysIdSwerveTranslation();
     private final SwerveRequest.SysIdSwerveSteerGains m_steerCharacterization = new SwerveRequest.SysIdSwerveSteerGains();
@@ -131,6 +138,7 @@ public class CommandSwerveDrivetrain extends TunerConstants.TunerSwerveDrivetrai
 
     /* The SysId routine to test */
     private SysIdRoutine m_sysIdRoutineToApply = m_sysIdRoutineTranslation;
+    //endregion
 
     private final RobotState m_robotState;
     private final StatusSignal<AngularVelocity> m_yawVelocity;
@@ -159,21 +167,25 @@ public class CommandSwerveDrivetrain extends TunerConstants.TunerSwerveDrivetrai
         m_evasionRequest = new FieldCentricEvasion(TunerConstants.moduleTranslations, Constants.BUMPER_DEPTH)
                 .withDeadband(0.05)
                 .withRotationalDeadband(0.1)
-                .withDriveRequestType(SwerveModule.DriveRequestType.OpenLoopVoltage);
-        setDefaultCommand(driveOpenLoopJoysticks(joystick));
-
+                .withDriveRequestType(SwerveModule.DriveRequestType.OpenLoopVoltage)
+                .withEvading(false);
         m_maintainHeadingRequest = new FieldCentricFacingAngle()
                 .withDeadband(0.05)
                 .withRotationalDeadband(0.1)
                 .withDriveRequestType(SwerveModule.DriveRequestType.OpenLoopVoltage);
-
-        // Idle while the robot is disabled. This ensures the configured
-        // neutral mode is applied to the drive motors while disabled.
         m_idleRequest = new SwerveRequest.Idle();
-        RobotModeTriggers.disabled().whileTrue(applyRequest(() -> m_idleRequest).ignoringDisable(true));
 
         m_logger = new Telemetry(MAX_SPEED);
         registerTelemetry(m_logger::telemeterize);
+
+        m_timer = new Timer();
+        m_linearPathController = new LinearPath(
+                new TrapezoidProfile.Constraints(MAX_SPEED, MAX_SPEED),
+                new TrapezoidProfile.Constraints(MAX_ANGULAR_RATE, MAX_ANGULAR_RATE));
+
+        // Configure defaults
+        setDefaultCommand(driveOpenLoopJoysticks(joystick));
+        RobotModeTriggers.disabled().whileTrue(applyRequest(() -> m_idleRequest).ignoringDisable(true)); // Idle while the robot is disabled
 
         if (Utils.isSimulation()) {
             startSimThread();
@@ -222,6 +234,22 @@ public class CommandSwerveDrivetrain extends TunerConstants.TunerSwerveDrivetrai
                             .withEvading(false));
                 }
             }
+        });
+    }
+
+    public Command driveToPose(Pose2d target) {
+        return startRun(() -> {
+        }, () -> {
+            var setpoint = m_linearPathController.calculate(
+                    0.02,
+                    new LinearPath.State(getState().Pose, getKinematics().toChassisSpeeds(getStateCopy().ModuleStates)),
+                    target);
+
+            setControl(m_evasionRequest
+                    .withVelocityX(setpoint.speeds.vxMetersPerSecond)
+                    .withVelocityY(setpoint.speeds.vyMetersPerSecond)
+                    .withRotationalRate(setpoint.speeds.omegaRadiansPerSecond)
+                    .withEvading(false));
         });
     }
 

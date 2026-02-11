@@ -36,25 +36,28 @@ public final class RobotContainer {
 
         m_superstructure = new Superstructure(
                 new Launcher(m_signalManager, "left", new TalonFX(LAUNCHER_WEST, kAUX_BUS), new TalonFX(LAUNCHER_EAST, kAUX_BUS)),
-                new Hopper(m_signalManager, new TalonFX(HOPPER_NORTH, kAUX_BUS), new TalonFX(HOPPER_SOUTH, kAUX_BUS)),
+                new Hopper(m_signalManager, new TalonFX(SINGULATOR_WEST, kAUX_BUS), new TalonFX(SINGULATOR_EAST, kAUX_BUS)),
                 new Uptake(m_signalManager, new TalonFX(UPTAKE_LEADER, kAUX_BUS), new TalonFX(UPTAKE_FOLLOWER, kAUX_BUS)),
                 new Hood(m_signalManager, new TalonFX(HOOD, kAUX_BUS)),
                 new Intake(m_signalManager, new TalonFX(INTAKE_DEPLOYER, kAUX_BUS), new TalonFX(INTAKE_TOP_TRANSLATION, kAUX_BUS))
         );
         m_lights = new Lights();
 
-        m_joystick.rightTrigger().onTrue(m_superstructure.applyWantedState(Superstructure.SystemState.INTAKING));
-        m_joystick.rightTrigger().onFalse(m_superstructure.applyWantedState(Superstructure.SystemState.IDLE));
-        m_joystick.a().onTrue(m_lights.setJammed());
-        m_joystick.a().onFalse(m_lights.setOff());
-
         m_robotState = new RobotState();
         m_drivetrain = TunerConstants.createDrivetrain(m_robotState, m_joystick);
+
+        m_joystick.rightTrigger().onTrue(m_superstructure.getHopper().setVelocity(75));
+        m_joystick.rightTrigger().onFalse(m_superstructure.getHopper().setVelocity(0));
+        m_joystick.leftTrigger().onTrue(m_superstructure.applyWantedState(Superstructure.SystemState.INTAKING));
+        m_joystick.leftTrigger().onFalse(m_superstructure.applyWantedState(Superstructure.SystemState.IDLE));
+        m_joystick.a().onTrue(m_lights.setJammed());
+        m_joystick.a().onFalse(m_lights.setOff());
+        //m_joystick.b().onTrue(m_drivetrain.driveToPose(FieldConstants.Hub.nearFace));
 
         m_projectileManager = new ProjectileManager(
                 m_robotState,
                 // TODO
-                () -> MetersPerSecond.of(0.0),//m_superstructure.getShooter()::getLaunchVelocity,
+                () -> MetersPerSecond.of(0.0),//m_superstructure.getLauncher()::getLaunchVelocity,
                 () -> Rotation2d.fromDegrees(75));
     }
 
