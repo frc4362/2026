@@ -1,6 +1,7 @@
 package com.gemsrobotics.subsystems.superstructure;
 
 import com.gemsrobotics.shooting.*;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.networktables.*;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
@@ -98,8 +99,6 @@ public final class Superstructure extends SubsystemBase {
         m_launcher.setOff();
         m_uptake.setIdle();
         m_hopper.setIdle();
-        if(m_retractIntake) {m_intake.setRetract();}
-        else {m_intake.setDeploy();}
         m_intake.setStop();
         return SystemState.IDLE;
     }
@@ -139,6 +138,13 @@ public final class Superstructure extends SubsystemBase {
             m_stateWanted = newState;
         }).until(() -> m_state == newState);
     }
+
+//    private LaunchParameters getLaunchParameters() {
+//        final Translation2d target =
+//        return m_launchStrategyChooser.getSelected().getParameters();
+//    }
+//
+//    private
 
     public void conformToLaunchParameters(final LaunchParameters parameters) {
         m_hood.setReference(parameters.hoodAngle());

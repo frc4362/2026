@@ -23,7 +23,7 @@ public final class Constants {
   public static final Distance BUMPER_DEPTH = Inches.of(3.5);
 
   public static final double MAX_SPEED = 1.0 * TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
-  public static final double MAX_ANGULAR_RATE = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
+  public static final double MAX_ANGULAR_RATE = RotationsPerSecond.of(1.5).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
 
     public static class OperatorConstants {
     public static final int kDriverControllerPort = 0;

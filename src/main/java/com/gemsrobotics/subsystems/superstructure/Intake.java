@@ -37,7 +37,6 @@
      private static final double DEPLOYER_GEARING = 23.0 * (32.0 / 36.0);
      private static final double DEPLOYER_ARM_LENGTH = 0.37;
 
-
      private final StatusSignal<AngularVelocity> m_intakeVelocitySignal;
      private final StatusSignal<Current> m_intakeStatorCurrentSignal, m_deployerStatorCurrentSignal, m_intakeSupplyCurrentSignal, m_deployerSupplyCurrentSignal;
      private final StatusSignal<Angle> m_deployerPosition;
@@ -90,7 +89,7 @@
          m_deployerStatorCurrentSignal = m_intakeDeployer.getStatorCurrent(false);
          m_intakeSupplyCurrentSignal = m_intakeTop.getSupplyCurrent(false);
          m_deployerSupplyCurrentSignal = m_intakeDeployer.getSupplyCurrent(false);
-         m_deployerPosition = m_intakeDeployer.getPosition();
+         m_deployerPosition = m_intakeDeployer.getPosition(false);
 
          final NetworkTable nt = NetworkTableInstance.getDefault().getTable("intake");
          signalManager.registerPublished(m_intakeVelocitySignal, nt, "intake_velocity_rps");
@@ -100,6 +99,7 @@
          signalManager.registerPublished(m_deployerSupplyCurrentSignal, nt, "deployer_supply_current");
          signalManager.registerPublished(m_deployerPosition, nt, "deployer_position");
 
+         // sim code
          m_intakeModel = DCMotor.getKrakenX60Foc(1);
          m_deployerModel = DCMotor.getKrakenX44Foc(1);
 
@@ -141,7 +141,7 @@
      }
 
      public void setStop() {
-         m_intakeTop.setControl(m_request.withVelocity(IDLE_VElOCITY));
+         m_intakeTop.setControl(new CoastOut());
      }
 
      public void simulationPeriodic() {

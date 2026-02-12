@@ -9,6 +9,7 @@ import com.gemsrobotics.lib.StatusSignalManager;
 import com.gemsrobotics.sim.ProjectileManager;
 import com.gemsrobotics.subsystems.Lights;
 import com.gemsrobotics.subsystems.superstructure.*;
+import com.gemsrobotics.subsystems.swerve.PilotedDrive;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import com.gemsrobotics.subsystems.swerve.CommandSwerveDrivetrain;
@@ -39,12 +40,18 @@ public final class RobotContainer {
                 new Hopper(m_signalManager, new TalonFX(SINGULATOR_WEST, kAUX_BUS), new TalonFX(SINGULATOR_EAST, kAUX_BUS)),
                 new Uptake(m_signalManager, new TalonFX(UPTAKE_LEADER, kAUX_BUS), new TalonFX(UPTAKE_FOLLOWER, kAUX_BUS)),
                 new Hood(m_signalManager, new TalonFX(HOOD, kAUX_BUS)),
-                new Intake(m_signalManager, new TalonFX(INTAKE_DEPLOYER, kAUX_BUS), new TalonFX(INTAKE_TOP_TRANSLATION, kAUX_BUS))
+                new Intake(m_signalManager,  new TalonFX(INTAKE_TOP_TRANSLATION, kAUX_BUS), new TalonFX(INTAKE_DEPLOYER, kAUX_BUS))
         );
         m_lights = new Lights();
 
         m_robotState = new RobotState();
         m_drivetrain = TunerConstants.createDrivetrain(m_robotState, m_joystick);
+        m_drivetrain.setDefaultCommand(new PilotedDrive(
+                m_drivetrain,
+                m_joystick.rightBumper(),
+                () -> -m_joystick.getLeftY(),
+                () -> -m_joystick.getLeftX(),
+                () -> -m_joystick.getRightX()));
 
         m_joystick.rightTrigger().onTrue(m_superstructure.getHopper().setVelocity(75));
         m_joystick.rightTrigger().onFalse(m_superstructure.getHopper().setVelocity(0));

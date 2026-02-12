@@ -60,11 +60,6 @@ public class FieldCentricEvasion implements SwerveRequest {
      */
     public SwerveModule.ModuleRequest ModuleRequest = new SwerveModule.ModuleRequest();
 
-    /**
-     * The last applied state in case we don't have anything to drive.
-     */
-    protected SwerveModuleState[] m_lastAppliedState = null;
-
     public FieldCentricEvasion withEvading(final boolean b) {
         this.Evading = b;
         return this;
@@ -199,8 +194,10 @@ public class FieldCentricEvasion implements SwerveRequest {
     }
 
     public StatusCode apply(SwerveDrivetrain.SwerveControlParameters parameters, SwerveModule... modulesToApply) {
-        double toApplyX = VelocityX;
-        double toApplyY = VelocityY;
+        Translation2d v = new Translation2d(VelocityX, VelocityY).rotateBy(parameters.operatorForwardDirection);
+
+        double toApplyX = v.getX();
+        double toApplyY = v.getY();
         double toApplyOmega = RotationalRate;
         if (Math.sqrt(toApplyX * toApplyX + toApplyY * toApplyY) < Deadband) {
             toApplyX = 0;

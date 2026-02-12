@@ -56,9 +56,6 @@ public class CommandSwerveDrivetrain extends TunerConstants.TunerSwerveDrivetrai
     private double m_lastSimTime;
 
     private final Telemetry m_logger;
-    private final FieldCentricEvasion m_evasionRequest;
-    private final FieldCentricFacingAngle m_maintainHeadingRequest;
-    private final SwerveRequest.Idle m_idleRequest;
 
     private final Timer m_timer;
     private final LinearPath m_linearPathController;
@@ -164,17 +161,6 @@ public class CommandSwerveDrivetrain extends TunerConstants.TunerSwerveDrivetrai
         m_robotState = robotState;
         m_yawVelocity = getPigeon2().getAngularVelocityZWorld(false);
 
-        m_evasionRequest = new FieldCentricEvasion(TunerConstants.moduleTranslations, Constants.BUMPER_DEPTH)
-                .withDeadband(0.05)
-                .withRotationalDeadband(0.1)
-                .withDriveRequestType(SwerveModule.DriveRequestType.OpenLoopVoltage)
-                .withEvading(false);
-        m_maintainHeadingRequest = new FieldCentricFacingAngle()
-                .withDeadband(0.05)
-                .withRotationalDeadband(0.1)
-                .withDriveRequestType(SwerveModule.DriveRequestType.OpenLoopVoltage);
-        m_idleRequest = new SwerveRequest.Idle();
-
         m_logger = new Telemetry(MAX_SPEED);
         registerTelemetry(m_logger::telemeterize);
 
@@ -183,75 +169,26 @@ public class CommandSwerveDrivetrain extends TunerConstants.TunerSwerveDrivetrai
                 new TrapezoidProfile.Constraints(MAX_SPEED, MAX_SPEED),
                 new TrapezoidProfile.Constraints(MAX_ANGULAR_RATE, MAX_ANGULAR_RATE));
 
-        // Configure defaults
-        setDefaultCommand(driveOpenLoopJoysticks(joystick));
-        RobotModeTriggers.disabled().whileTrue(applyRequest(() -> m_idleRequest).ignoringDisable(true)); // Idle while the robot is disabled
-
         if (Utils.isSimulation()) {
             startSimThread();
         }
     }
-
-    public Command driveOpenLoopJoysticks(CommandXboxController joystick) {
-        return run(() -> {
-            if (joystick.rightBumper().getAsBoolean()) {
-                setControl(m_evasionRequest
-                        .withVelocityX(-joystick.getLeftY() * MAX_SPEED / 2.0) // Drive forward with negative Y (forward)
-                        .withVelocityY(-joystick.getLeftX() * MAX_SPEED / 2.0) // Drive left with negative X (left)
-                        .withRotationalRate(-joystick.getRightX() * Constants.MAX_ANGULAR_RATE)
-                        .withEvading(true));
-            } else {
-                // Correct travel direction to nearest 90deg if close to it
-                double stickMagnitude = new Translation2dPlus(-joystick.getLeftY(), -joystick.getLeftX()).getNorm();
-                stickMagnitude = MathUtil.applyDeadband(Math.pow(stickMagnitude, 1.5), 0.025, 1.0); // Scale for low-range movements
-
-                Rotation2dPlus stickDirection = new Rotation2dPlus(-joystick.getLeftY(), -joystick.getLeftX());
-                final var nearestPole = stickDirection.getNearestPole();
-                if (abs(stickDirection.minus(nearestPole).getDegrees()) < 5) {
-                    stickDirection = nearestPole;
-                }
-
-                final Translation2dPlus targetVelocity = new Translation2dPlus(stickMagnitude * MAX_SPEED / 2.0, stickDirection);
-                
-                // Maintain drive heading unless turning
-                final var dbRotation = MathUtil.applyDeadband(-joystick.getRightX(), 0.025, 1.0) * MAX_ANGULAR_RATE;
-
-                if (dbRotation == 0.0) {
-                    // Don't move if not commanding an input
-                    if (targetVelocity.getNorm() < 0.01) {
-                        setControl(m_idleRequest);
-                    } else {
-                        setControl(m_maintainHeadingRequest
-                                .withVelocityX(targetVelocity.getX())
-                                .withVelocityY(targetVelocity.getY())
-                                .withTargetDirection(getState().Pose.getRotation())); // maintain heading
-                    }
-                } else {
-                    setControl(m_evasionRequest
-                            .withVelocityX(targetVelocity.getX()) // Drive forward with negative Y (forward)
-                            .withVelocityY(targetVelocity.getY()) // Drive left with negative X (left)
-                            .withRotationalRate(dbRotation)
-                            .withEvading(false));
-                }
-            }
-        });
-    }
-
-    public Command driveToPose(Pose2d target) {
-        return startRun(() -> {
-        }, () -> {
-            var setpoint = m_linearPathController.calculate(
-                    0.02,
-                    new LinearPath.State(getState().Pose, getKinematics().toChassisSpeeds(getStateCopy().ModuleStates)),
-                    target);
-
-            setControl(m_evasionRequest
-                    .withVelocityX(setpoint.speeds.vxMetersPerSecond)
-                    .withVelocityY(setpoint.speeds.vyMetersPerSecond)
-                    .withRotationalRate(setpoint.speeds.omegaRadiansPerSecond)
-                    .withEvading(false));
-        });
-    }
+//
+//    public Command driveToPose(Pose2d target) {
+//        return startRun(() -> {
+//        }, () -> {
+//            var setpoint = m_linearPathController.calculate(
+//                    0.02,
+//                    new LinearPath.State(getState().Pose, getKinematics().toChassisSpeeds(getStateCopy().ModuleStates)),
+//                    target);
+//
+//            setControl(m_evasionRequest
+//                    .withVelocityX(setpoint.speeds.vxMetersPerSecond)
+//                    .withVelocityY(setpoint.speeds.vyMetersPerSecond)
+//                    .withRotationalRate(setpoint.speeds.omegaRadiansPerSecond)
+//                    .withEvading(false));
+//        });
+//    }
 
     /**
      * Returns a command that applies the specified control request to this swerve drivetrain.
