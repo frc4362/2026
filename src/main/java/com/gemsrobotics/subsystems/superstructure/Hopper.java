@@ -2,6 +2,7 @@ package com.gemsrobotics.subsystems.superstructure;
 
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.controls.CoastOut;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.MotionMagicVelocityTorqueCurrentFOC;
 import com.ctre.phoenix6.hardware.TalonFX;
@@ -32,6 +33,7 @@ public class Hopper {
 
     private final TalonFX m_motorLeader, m_motorFollower;
     private final MotionMagicVelocityTorqueCurrentFOC m_request;
+    private final CoastOut m_coastRequest;
     private final Follower m_followerRequest;
 
     private final StatusSignal<AngularVelocity> m_leaderVelocitySignal, m_followerVelocitySignal;
@@ -41,6 +43,8 @@ public class Hopper {
     private final FlywheelSim m_rollerSim;
     private final Notifier m_simNotifier;
 
+    private boolean m_on;
+
     public Hopper(final StatusSignalManager signalManager, final TalonFX motorLeader, final TalonFX motorFollower) {
         //region motor config
         m_motorLeader = motorLeader;
@@ -49,12 +53,18 @@ public class Hopper {
         final var cfg = new TalonFXConfiguration();
         cfg.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
         cfg.Feedback.SensorToMechanismRatio = GEARING;
-        cfg.Slot0.kP = 2.0;
+        cfg.Slot0.kP = 20.0;
         cfg.Slot0.kV = 0.0;
         cfg.Slot0.kA = 0.0;
+        cfg.TorqueCurrent.PeakForwardTorqueCurrent = 150.0;
+        cfg.TorqueCurrent.PeakReverseTorqueCurrent = -150.0;
         cfg.MotionMagic.MotionMagicAcceleration = 500.0;
         m_motorLeader.getConfigurator().apply(cfg);
         m_motorFollower.getConfigurator().apply(cfg);
+
+        m_on = false;
+
+        m_coastRequest = new CoastOut();
 
         m_request = new MotionMagicVelocityTorqueCurrentFOC(0.0);
         m_request.Slot = 0;
@@ -92,7 +102,12 @@ public class Hopper {
     }
 
     public void periodic() {
-        m_motorLeader.setControl(m_request);
+        if (m_on) {
+            m_motorLeader.setControl(m_request);
+        } else {
+            m_motorLeader.setControl(m_coastRequest);
+        }
+
         m_motorFollower.setControl(m_followerRequest);
     }
 
@@ -108,22 +123,18 @@ public class Hopper {
         m_followerSimState.setRotorVelocity(m_rollerSim.getAngularVelocity().times(GEARING));
     }
 
-    public void setVelocity(final DoubleSupplier velocitySupplier) {
-        m_request.Velocity = velocitySupplier.getAsDouble();
-    }
-
 //    public void setVelocity(final double velocity) {
 //        setVelocity(() -> velocity);
 //    }
 
-    public Command setVelocity(final double velocity) {
-        return runOnce(() -> {
-            setVelocity(() -> velocity);
-        });
+    public void setVelocity(final double velocity) {
+        m_request.Velocity = velocity;
+        m_on = true;
     }
 
     public void setIdle() {
-        setVelocity(0);
+        m_request.Velocity = 0.0;
+        m_on = false;
     }
 
     public double getVelocity() {

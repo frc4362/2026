@@ -98,7 +98,6 @@ public final class Superstructure extends SubsystemBase {
     public SystemState handleIdle() {
         m_launcher.setOff();
         m_uptake.setIdle();
-        m_hopper.setIdle();
         m_intake.setStop();
         return SystemState.IDLE;
     }
@@ -107,7 +106,6 @@ public final class Superstructure extends SubsystemBase {
         m_launcher.setVelocity(35); // TODO: tuning / interpolation
         if (m_launcher.getVelocity() > 30) {
             m_uptake.setVelocity(30);
-            m_hopper.setVelocity(30);
         }
         return SystemState.LAUNCHING;
     }

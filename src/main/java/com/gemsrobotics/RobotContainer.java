@@ -11,6 +11,7 @@ import com.gemsrobotics.subsystems.Lights;
 import com.gemsrobotics.subsystems.superstructure.*;
 import com.gemsrobotics.subsystems.swerve.PilotedDrive;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import com.gemsrobotics.subsystems.swerve.CommandSwerveDrivetrain;
 import com.gemsrobotics.subsystems.swerve.TunerConstants;
@@ -53,8 +54,8 @@ public final class RobotContainer {
                 () -> -m_joystick.getLeftX(),
                 () -> -m_joystick.getRightX()));
 
-        m_joystick.rightTrigger().onTrue(m_superstructure.getHopper().setVelocity(75));
-        m_joystick.rightTrigger().onFalse(m_superstructure.getHopper().setVelocity(0));
+        m_joystick.rightTrigger().onTrue(Commands.runOnce(() -> m_superstructure.getHopper().setVelocity(90)));
+        m_joystick.rightTrigger().onFalse(Commands.runOnce(() -> m_superstructure.getHopper().setIdle()));
         m_joystick.leftTrigger().onTrue(m_superstructure.applyWantedState(Superstructure.SystemState.INTAKING));
         m_joystick.leftTrigger().onFalse(m_superstructure.applyWantedState(Superstructure.SystemState.IDLE));
         m_joystick.a().onTrue(m_lights.setJammed());
