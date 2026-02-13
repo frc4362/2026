@@ -19,7 +19,7 @@ import static com.gemsrobotics.Constants.MAX_SPEED;
 import static java.lang.Math.abs;
 
 public class PilotedDrive extends Command {
-    private final CommandSwerveDrivetrain m_drivetrain;
+    private final CommandSwerveDrivetrain m_swerve;
     private final BooleanSupplier m_evading;
     private final DoubleSupplier m_velocityX, m_velocityY, m_rotation;
 
@@ -38,7 +38,7 @@ public class PilotedDrive extends Command {
     ) {
         addRequirements(drivetrain);
 
-        m_drivetrain = drivetrain;
+        m_swerve = drivetrain;
         m_evading = evading;
         m_velocityX = velocityX;
         m_velocityY = velocityY;
@@ -84,20 +84,20 @@ public class PilotedDrive extends Command {
         if (dbRotation == 0.0) {
             // Don't move if not commanding an input
             if (targetVelocity.getNorm() < 0.01) {
-                m_drivetrain.setControl(m_idleRequest);
+                m_swerve.setControl(m_idleRequest);
             } else {
-                m_drivetrain.setControl(m_maintainHeadingRequest
+                m_swerve.setControl(m_maintainHeadingRequest
                         .withVelocityX(targetVelocity.getX())
                         .withVelocityY(targetVelocity.getY())
                         .withTargetDirection(m_maintainHeadingGoal.orElse(Rotation2d.kZero))); // maintain heading
             }
         } else {
-            m_drivetrain.setControl(m_evasionRequest
+            m_swerve.setControl(m_evasionRequest
                     .withVelocityX(targetVelocity.getX()) // Drive forward with negative Y (forward)
                     .withVelocityY(targetVelocity.getY()) // Drive left with negative X (left)
                     .withRotationalRate(dbRotation)
                     .withEvading(m_evading.getAsBoolean()));
-            m_maintainHeadingGoal = Optional.of(m_drivetrain.getState().Pose.getRotation());
+            m_maintainHeadingGoal = Optional.of(m_swerve.getState().Pose.getRotation());
         }
     }
 
