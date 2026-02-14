@@ -34,15 +34,6 @@ public final class RobotContainer {
         m_signalManager = new StatusSignalManager();
         m_joystick = new CommandXboxController(0);
 
-        m_superstructure = new Superstructure(
-                new Launcher(m_signalManager, "left", new TalonFX(LAUNCHER_WEST, kAUX_BUS), new TalonFX(LAUNCHER_EAST, kAUX_BUS)),
-                new Hopper(m_signalManager, new TalonFX(SINGULATOR_WEST, kAUX_BUS), new TalonFX(SINGULATOR_EAST, kAUX_BUS)),
-                new Uptake(m_signalManager, new TalonFX(UPTAKE_LEADER, kAUX_BUS), new TalonFX(UPTAKE_FOLLOWER, kAUX_BUS)),
-                new Hood(m_signalManager, new TalonFX(HOOD, kAUX_BUS)),
-                new Intake(m_signalManager,  new TalonFX(INTAKE_TOP_TRANSLATION, kAUX_BUS), new TalonFX(INTAKE_DEPLOYER, kAUX_BUS))
-        );
-        m_lights = new Lights();
-
         m_robotState = new RobotState();
         m_drivetrain = TunerConstants.createDrivetrain(m_robotState, m_joystick);
         m_drivetrain.setDefaultCommand(new PilotedDrive(
@@ -51,6 +42,16 @@ public final class RobotContainer {
                 () -> -m_joystick.getLeftY(),
                 () -> -m_joystick.getLeftX(),
                 () -> -m_joystick.getRightX()));
+
+        m_superstructure = new Superstructure(
+                m_drivetrain,
+                new Launcher(m_signalManager, "left", new TalonFX(LAUNCHER_WEST, kAUX_BUS), new TalonFX(LAUNCHER_EAST, kAUX_BUS)),
+                new Hopper(m_signalManager, new TalonFX(SINGULATOR_WEST, kAUX_BUS), new TalonFX(SINGULATOR_EAST, kAUX_BUS)),
+                new Uptake(m_signalManager, new TalonFX(UPTAKE_LEADER, kAUX_BUS), new TalonFX(UPTAKE_FOLLOWER, kAUX_BUS)),
+                new Hood(m_signalManager, new TalonFX(HOOD, kAUX_BUS)),
+                new Intake(m_signalManager,  new TalonFX(INTAKE_TOP_TRANSLATION, kAUX_BUS), new TalonFX(INTAKE_DEPLOYER, kAUX_BUS))
+        );
+        m_lights = new Lights();
 
         m_joystick.rightTrigger().onTrue(Commands.runOnce(() -> m_superstructure.getHopper().setVelocity(90)));
         m_joystick.rightTrigger().onFalse(Commands.runOnce(() -> m_superstructure.getHopper().setIdle()));

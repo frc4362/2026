@@ -171,6 +171,10 @@ public final class Superstructure extends SubsystemBase {
         m_launcher.setVelocity(parameters.rps());
     }
 
+    public boolean isReadyToLaunch() {
+        return m_hood.atReference();
+    }
+
     public boolean isLaunching() {
         return m_launcher.getVelocity() > 33 && m_uptake.getVelocity() > 28 && m_hopper.getVelocity() > 28;
     }
