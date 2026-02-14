@@ -17,6 +17,7 @@ public class StatusSignalManager {
     }
 
     public void periodic() {
+        // TODO fix this
         m_publishedSignals.forEach((signal, publisher) -> {
             signal.refresh();
             publisher.set(signal.getValueAsDouble());

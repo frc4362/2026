@@ -54,10 +54,10 @@ public final class Superstructure extends SubsystemBase {
             final Intake intake
     ) {
         m_swerve = swerve;
-        m_launcher = launcher;
+        m_launcher = null;// launcher;
         m_hopper = hopper;
-        m_uptake = uptake;
-        m_hood = hood;
+        m_uptake =null;// uptake;
+        m_hood =null;// hood;
         m_intake = intake;
 
         final NetworkTable myTable = NetworkTableInstance.getDefault().getTable(NT_KEY);
@@ -89,10 +89,10 @@ public final class Superstructure extends SubsystemBase {
         m_launchAnglePublisher.set(parameters.hoodAngle());
 
         // update subsystems periodically
-        m_launcher.periodic();
+//        m_launcher.periodic();
         m_hopper.periodic();
-        m_uptake.periodic();
-        m_hood.periodic();
+//        m_uptake.periodic();
+//        m_hood.periodic();
 
         final SystemState newState = switch (m_stateWanted) {
             case IDLE -> handleIdle();
@@ -113,8 +113,8 @@ public final class Superstructure extends SubsystemBase {
     }
 
     public SystemState handleIdle() {
-        m_launcher.setOff();
-        m_uptake.setIdle();
+//        m_launcher.setOff();
+//        m_uptake.setIdle();
         m_intake.setStop();
         return SystemState.IDLE;
     }
@@ -122,9 +122,9 @@ public final class Superstructure extends SubsystemBase {
     public SystemState handleLaunching() {
         conformToLaunchParameters(getSelectedLaunchParameters());
 
-        if (m_launcher.getVelocity() > 30) {
-            m_uptake.setVelocity(30);
-        }
+//        if (m_launcher.getVelocity() > 30) {
+//            m_uptake.setVelocity(30);
+//        }
 
         return SystemState.LAUNCHING;
     }
@@ -167,16 +167,16 @@ public final class Superstructure extends SubsystemBase {
     }
 
     private void conformToLaunchParameters(final LaunchParameters parameters) {
-        m_hood.setReference(parameters.hoodAngle());
-        m_launcher.setVelocity(parameters.rps());
+//        m_hood.setReference(parameters.hoodAngle());
+//        m_launcher.setVelocity(parameters.rps());
     }
 
     public boolean isReadyToLaunch() {
-        return m_hood.atReference();
+        return false;// m_hood.atReference();
     }
 
     public boolean isLaunching() {
-        return m_launcher.getVelocity() > 33 && m_uptake.getVelocity() > 28 && m_hopper.getVelocity() > 28;
+        return false;// m_launcher.getVelocity() > 33 && m_uptake.getVelocity() > 28 && m_hopper.getVelocity() > 28;
     }
 
     public void setRetractIntake(boolean retractIntake) {
@@ -184,11 +184,11 @@ public final class Superstructure extends SubsystemBase {
     }
 
     public Rotation2d getIntakeAngle() {
-        return m_intake.getAngle();
+        return Rotation2d.kZero;// m_intake.getAngle();
     }
 
     public Rotation2d getHoodAngle() {
-        return m_hood.getLaunchAngle();
+        return Rotation2d.kZero;// m_hood.getLaunchAngle();
     }
 
     public SystemState getState() {

@@ -13,6 +13,8 @@ public final class SinMapStrategy extends LaunchStrategy {
 	// Exit angle of ball (in degrees) when hood is at "0" as measured on video
 	public static final Rotation2d HOOD_ANGLE_OFFSET = Hood.MIN_ANGLE;
 
+	// 45 : 30 : 18
+
 	@Override
 	protected LaunchParameters unsafeParametersFor(final double rangeMeters) {
 		final var x = RPS_OFFSET_FORWARD + RPS_PER_METER_FORWARD * rangeMeters;
