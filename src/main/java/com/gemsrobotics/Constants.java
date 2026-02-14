@@ -6,26 +6,32 @@ package com.gemsrobotics;
 
 import com.ctre.phoenix6.CANBus;
 import com.gemsrobotics.subsystems.swerve.TunerConstants;
+import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.geometry.Transform2d;
+import edu.wpi.first.math.geometry.Transform3d;
+import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Distance;
+import edu.wpi.first.units.measure.Mass;
 
 import static edu.wpi.first.units.Units.*;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 
-/**
- * The Constants class provides a convenient place for teams to hold robot-wide numerical or boolean
- * constants. This class should not be used for any other purpose. All constants should be declared
- * globally (i.e. public static). Do not put anything functional in this class.
- *
- * <p>It is advised to statically import this class (or one of its inner classes) wherever the
- * constants are needed, to reduce verbosity.
- */
 public final class Constants {
   public static final Distance BUMPER_DEPTH = Inches.of(3.5);
 
   public static final double MAX_SPEED = 1.0 * TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
   public static final double MAX_ANGULAR_RATE = RotationsPerSecond.of(1.5).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
+  public static final Mass ROBOT_WEIGHT = Pounds.of(115.0 + 20.0 + 13.0);
+  public static final Distance BALL_RADIUS = Inches.of(5.91).div(2.0);
+  public static final Distance ROBOT_TO_LAUNCHER_WEST_Y = Inches.of(4.77).plus(Inches.of(1.5));
+  public static final Distance ROBOT_TO_LAUNCHER_EAST_Y = ROBOT_TO_LAUNCHER_WEST_Y.unaryMinus();
+  public static final Distance ROBOT_TO_LAUNCHER_X = Inches.of(-3.231).minus(Inches.of(2.0)).minus(Inches.of(4.964 / 2.0));
+  public static final Distance ROBOT_TO_LAUNCHER_Z = Inches.of(22.826);
+  public static final Transform3d ROBOT_TO_LAUNCHER_WEST = new Transform3d(ROBOT_TO_LAUNCHER_X, ROBOT_TO_LAUNCHER_WEST_Y, ROBOT_TO_LAUNCHER_Z, new Rotation3d());
+  public static final Transform3d ROBOT_TO_LAUNCHER_EAST = new Transform3d(ROBOT_TO_LAUNCHER_X, ROBOT_TO_LAUNCHER_EAST_Y, ROBOT_TO_LAUNCHER_Z, new Rotation3d());
+  public static final Distance BALL_STREAM_WIDTH = ROBOT_TO_LAUNCHER_EAST_Y.times(2.0).plus(BALL_RADIUS.times(2.0));
 
-    public static class OperatorConstants {
+  public static class OperatorConstants {
     public static final int kDriverControllerPort = 0;
   }
 
@@ -49,6 +55,11 @@ public final class Constants {
     public static final int SWERVE_NE_ENCODER = 9;
     public static final int SWERVE_SW_ENCODER = 10;
     public static final int SWERVE_SE_ENCODER = 11;
+
+    public static final Angle SWERVE_NW_ENCODER_OFFSET = Rotations.of(-0.03857421875);
+    public static final Angle SWERVE_NE_ENCODER_OFFSET = Rotations.of(-0.46533203125);
+    public static final Angle SWERVE_SW_ENCODER_OFFSET = Rotations.of(-0.452880859375);
+    public static final Angle SWERVE_SE_ENCODER_OFFSET = Rotations.of(-0.37548828125);
 
     //--------------------aux-bus---------------------------
 

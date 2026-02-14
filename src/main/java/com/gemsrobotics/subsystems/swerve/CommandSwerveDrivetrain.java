@@ -173,7 +173,7 @@ public class CommandSwerveDrivetrain extends TunerConstants.TunerSwerveDrivetrai
             startSimThread();
         }
     }
-//
+
 //    public Command driveToPose(Pose2d target) {
 //        return startRun(() -> {
 //        }, () -> {
@@ -308,7 +308,13 @@ public class CommandSwerveDrivetrain extends TunerConstants.TunerSwerveDrivetrai
      * @return The pose at the given timestamp (or Optional.empty() if the buffer is empty).
      */
     @Override
-    public Optional<Pose2d> samplePoseAt(double timestampSeconds) {
+    public Optional<Pose2d> samplePoseAt(final double timestampSeconds) {
         return super.samplePoseAt(Utils.fpgaToCurrentTime(timestampSeconds));
+    }
+
+    public static SwerveRequest.FieldCentricFacingAngle makeAimingRequest() {
+        final SwerveRequest.FieldCentricFacingAngle aimingRequest = new FieldCentricFacingAngle();
+        aimingRequest.SteerRequestType = SwerveModule.SteerRequestType.MotionMagicExpo;
+        return aimingRequest;
     }
 }

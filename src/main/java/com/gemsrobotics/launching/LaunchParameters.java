@@ -1,4 +1,4 @@
-package com.gemsrobotics.shooting;
+package com.gemsrobotics.launching;
 
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.interpolation.Interpolatable;

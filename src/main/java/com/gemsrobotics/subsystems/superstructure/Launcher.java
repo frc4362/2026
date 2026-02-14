@@ -96,6 +96,8 @@ public class Launcher {
         signalManager.registerPublished(m_followerVelocitySignal, nt, "follower_velocity_rps");
         signalManager.registerPublished(m_followerVoltsAppliedSignal, nt, "follower_volts");
         signalManager.registerPublished(m_followerTorqueSignal, nt, "follower_torque");
+        signalManager.registerPublished(m_motorLeader.getDeviceTemp(false), nt, "leader_temperature_c");
+        signalManager.registerPublished(m_motorFollower.getDeviceTemp(false), nt, "follower_temperature_c");
         //endregion
 
         m_on = false;

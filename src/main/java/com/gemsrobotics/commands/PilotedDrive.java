@@ -1,4 +1,4 @@
-package com.gemsrobotics.subsystems.swerve;
+package com.gemsrobotics.commands;
 
 import com.ctre.phoenix6.swerve.SwerveModule;
 import com.ctre.phoenix6.swerve.SwerveRequest;
@@ -6,6 +6,8 @@ import com.gemsrobotics.Constants;
 import com.gemsrobotics.lib.math.Rotation2dPlus;
 import com.gemsrobotics.lib.math.Translation2dPlus;
 import com.gemsrobotics.lib.swerve.FieldCentricEvasion;
+import com.gemsrobotics.subsystems.swerve.CommandSwerveDrivetrain;
+import com.gemsrobotics.subsystems.swerve.TunerConstants;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -50,11 +52,7 @@ public class PilotedDrive extends Command {
                 .withSteerRequestType(SwerveModule.SteerRequestType.MotionMagicExpo)
                 .withDriveRequestType(SwerveModule.DriveRequestType.OpenLoopVoltage)
                 .withEvading(false);
-        m_maintainHeadingRequest = new SwerveRequest.FieldCentricFacingAngle()
-                .withDeadband(0.05)
-                .withRotationalDeadband(0.1)
-                .withSteerRequestType(SwerveModule.SteerRequestType.MotionMagicExpo)
-                .withDriveRequestType(SwerveModule.DriveRequestType.OpenLoopVoltage);
+        m_maintainHeadingRequest = CommandSwerveDrivetrain.makeAimingRequest();
         m_idleRequest = new SwerveRequest.Idle();
 
         m_maintainHeadingGoal = Optional.empty();

@@ -26,7 +26,7 @@ import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import java.util.function.DoubleSupplier;
 
 public final class Hood {
-    private static final double GEARING = 300.0;
+    private static final double GEARING = 171.0; // 19:9:1
     // 15 degrees forward from the vertical, or 75 degrees up from the horizon
     public static final Rotation2d MIN_ANGLE  = Rotation2d.fromDegrees(15.0);
     public static final Rotation2d MAX_ANGLE  = Rotation2d.fromDegrees(55.0);
@@ -107,6 +107,10 @@ public final class Hood {
 
     public boolean atReference() {
         return atReference(DEFAULT_TOLERANCE);
+    }
+
+    public Rotation2d getLaunchAngle() {
+        return Rotation2d.fromDegrees(90).minus(rotor2WorldAngle(m_motorRotations.getValueAsDouble()));
     }
 
     private Rotation2d rotor2WorldAngle(final double rotorValue) {

@@ -1,6 +1,10 @@
 package com.gemsrobotics.subsystems.superstructure;
 
-import com.gemsrobotics.shooting.*;
+import com.gemsrobotics.FieldConstants;
+import com.gemsrobotics.launching.*;
+import com.gemsrobotics.subsystems.swerve.CommandSwerveDrivetrain;
+import com.gemsrobotics.util.AllianceFlipUtil;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.networktables.*;
 import edu.wpi.first.wpilibj.Timer;
@@ -20,6 +24,7 @@ public final class Superstructure extends SubsystemBase {
         CLIMBED
     }
 
+    private final CommandSwerveDrivetrain m_swerve;
     private final Launcher m_launcher;
     private final Hopper m_hopper;
     private final Uptake m_uptake;
@@ -28,6 +33,8 @@ public final class Superstructure extends SubsystemBase {
 
     private final StringPublisher m_systemStatePublisher;
     private final StringPublisher m_wantedStatePublisher;
+    private final DoublePublisher m_hubDistancePublisher, m_launchVelocityPublisher;
+    private final StructPublisher<Rotation2d> m_launchAnglePublisher;
 
     private SystemState m_state;
     private SystemState m_stateWanted;
@@ -39,12 +46,14 @@ public final class Superstructure extends SubsystemBase {
     private final SendableChooser<LaunchStrategy> m_launchStrategyChooser;
 
     public Superstructure(
+            final CommandSwerveDrivetrain swerve,
             final Launcher launcher,
             final Hopper hopper,
             final Uptake uptake,
             final Hood hood,
             final Intake intake
     ) {
+        m_swerve = swerve;
         m_launcher = launcher;
         m_hopper = hopper;
         m_uptake = uptake;
@@ -54,6 +63,9 @@ public final class Superstructure extends SubsystemBase {
         final NetworkTable myTable = NetworkTableInstance.getDefault().getTable(NT_KEY);
         m_wantedStatePublisher = myTable.getStringTopic("wanted_state").publish();
         m_systemStatePublisher = myTable.getStringTopic("system_state").publish();
+        m_hubDistancePublisher = myTable.getDoubleTopic("target_distance_m").publish();
+        m_launchVelocityPublisher = myTable.getDoubleTopic("launch_velocity_rps").publish();
+        m_launchAnglePublisher = myTable.getStructTopic("launch_angle", Rotation2d.struct).publish();
 
         m_launchStrategyChooser = new SendableChooser<>();
         m_launchStrategyChooser.setDefaultOption("LookupTable", new LookupTableStrategy());
@@ -71,7 +83,12 @@ public final class Superstructure extends SubsystemBase {
     public void periodic() {
         m_systemStatePublisher.set(m_state.name());
         m_wantedStatePublisher.set(m_stateWanted.name());
+        m_hubDistancePublisher.set(getDistanceToHub());
+        final LaunchParameters parameters = getSelectedLaunchParameters();
+        m_launchVelocityPublisher.set(parameters.rps());
+        m_launchAnglePublisher.set(parameters.hoodAngle());
 
+        // update subsystems periodically
         m_launcher.periodic();
         m_hopper.periodic();
         m_uptake.periodic();
@@ -103,10 +120,12 @@ public final class Superstructure extends SubsystemBase {
     }
 
     public SystemState handleLaunching() {
-        m_launcher.setVelocity(35); // TODO: tuning / interpolation
+        conformToLaunchParameters(getSelectedLaunchParameters());
+
         if (m_launcher.getVelocity() > 30) {
             m_uptake.setVelocity(30);
         }
+
         return SystemState.LAUNCHING;
     }
 
@@ -137,16 +156,27 @@ public final class Superstructure extends SubsystemBase {
         }).until(() -> m_state == newState);
     }
 
-//    private LaunchParameters getLaunchParameters() {
-//        final Translation2d target =
-//        return m_launchStrategyChooser.getSelected().getParameters();
-//    }
-//
-//    private
+    private double getDistanceToHub() {
+        // get our hub
+        final Translation2d target = AllianceFlipUtil.apply(FieldConstants.Hub.topCenterPoint.toTranslation2d());
+        return target.getDistance(m_swerve.getState().Pose.getTranslation());
+    }
 
-    public void conformToLaunchParameters(final LaunchParameters parameters) {
+    public LaunchParameters getSelectedLaunchParameters() {
+        return m_launchStrategyChooser.getSelected().getParameters(getDistanceToHub());
+    }
+
+    private void conformToLaunchParameters(final LaunchParameters parameters) {
         m_hood.setReference(parameters.hoodAngle());
         m_launcher.setVelocity(parameters.rps());
+    }
+
+    public boolean isLaunching() {
+        return m_launcher.getVelocity() > 33 && m_uptake.getVelocity() > 28 && m_hopper.getVelocity() > 28;
+    }
+
+    public void setRetractIntake(boolean retractIntake) {
+        m_retractIntake = retractIntake;
     }
 
     public SystemState getState() {
@@ -157,15 +187,11 @@ public final class Superstructure extends SubsystemBase {
         return m_launcher;
     }
 
+    public Hood getHood() {
+        return m_hood;
+    }
+
     public Hopper getHopper() {
         return m_hopper;
-    }
-
-    public boolean isLaunching() {
-        return m_launcher.getVelocity() > 33 && m_uptake.getVelocity() > 28 && m_hopper.getVelocity() > 28;
-    }
-
-    public void setRetractIntake(boolean retractIntake) {
-        this.m_retractIntake = retractIntake;
     }
 }

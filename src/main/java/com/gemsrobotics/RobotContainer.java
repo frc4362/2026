@@ -9,15 +9,13 @@ import com.gemsrobotics.lib.StatusSignalManager;
 import com.gemsrobotics.sim.ProjectileManager;
 import com.gemsrobotics.subsystems.Lights;
 import com.gemsrobotics.subsystems.superstructure.*;
-import com.gemsrobotics.subsystems.swerve.PilotedDrive;
-import edu.wpi.first.math.geometry.Rotation2d;
+import com.gemsrobotics.commands.PilotedDrive;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import com.gemsrobotics.subsystems.swerve.CommandSwerveDrivetrain;
 import com.gemsrobotics.subsystems.swerve.TunerConstants;
 
 import static com.gemsrobotics.Constants.CAN.*;
-import static edu.wpi.first.units.Units.*;
 
 public final class RobotContainer {
     private final StatusSignalManager m_signalManager;
@@ -64,21 +62,20 @@ public final class RobotContainer {
 
         m_projectileManager = new ProjectileManager(
                 m_robotState,
-                // TODO
-                () -> MetersPerSecond.of(0.0),//m_superstructure.getLauncher()::getLaunchVelocity,
-                () -> Rotation2d.fromDegrees(75));
+                m_superstructure.getLauncher()::getLaunchVelocity,
+                m_superstructure.getHood()::getLaunchAngle);
     }
 
     public void periodic() {
         m_signalManager.periodic();
-//        m_superstructure.periodic();
+        m_superstructure.periodic();
 
         if (Robot.isSimulation()) {
             m_projectileManager.updateAll();
             // TODO
-//            if (m_superstructure.isLaunching()) {
-//                m_projectileManager.attemptSpawn();
-//            }
+            if (m_superstructure.isLaunching()) {
+                m_projectileManager.attemptSpawn();
+            }
         }
     }
 

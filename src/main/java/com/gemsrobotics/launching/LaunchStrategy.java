@@ -1,4 +1,4 @@
-package com.gemsrobotics.shooting;
+package com.gemsrobotics.launching;
 
 public abstract class LaunchStrategy {
 	protected abstract LaunchParameters unsafeParametersFor(final double rangeMeters);

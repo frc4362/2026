@@ -1,4 +1,4 @@
-package com.gemsrobotics.shooting;
+package com.gemsrobotics.launching;
 
 import com.gemsrobotics.subsystems.superstructure.Hood;
 import edu.wpi.first.math.geometry.Rotation2d;
