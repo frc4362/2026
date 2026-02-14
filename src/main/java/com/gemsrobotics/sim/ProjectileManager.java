@@ -1,5 +1,6 @@
 package com.gemsrobotics.sim;
 
+import com.gemsrobotics.Constants;
 import com.gemsrobotics.RobotState;
 import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.networktables.NetworkTable;
@@ -39,7 +40,7 @@ public class ProjectileManager {
         m_robotState = robotState;
         m_projectiles = new ArrayList<>();
 
-        final NetworkTable table = NetworkTableInstance.getDefault().getTable("projectiles");
+        final NetworkTable table = NetworkTableInstance.getDefault().getTable(Constants.SIM_VIZ_TABLE_KEY);
         m_fuelPublisher = table.getStructArrayTopic("fuel", Pose3d.struct).publish();
 
         m_launchVelocity = velocitySupplier;

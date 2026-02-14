@@ -7,9 +7,11 @@ package com.gemsrobotics;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.gemsrobotics.lib.StatusSignalManager;
 import com.gemsrobotics.sim.ProjectileManager;
+import com.gemsrobotics.sim.RobotVisualizer;
 import com.gemsrobotics.subsystems.Lights;
 import com.gemsrobotics.subsystems.superstructure.*;
 import com.gemsrobotics.commands.PilotedDrive;
+import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import com.gemsrobotics.subsystems.swerve.CommandSwerveDrivetrain;
@@ -25,6 +27,7 @@ public final class RobotContainer {
     private final Superstructure m_superstructure;
 
     private final RobotState m_robotState;
+    private final RobotVisualizer m_visualizer;
     private final CommandSwerveDrivetrain m_drivetrain;
     private final Lights m_lights;
 
@@ -34,6 +37,7 @@ public final class RobotContainer {
         m_signalManager = new StatusSignalManager();
         m_joystick = new CommandXboxController(0);
 
+        m_visualizer = new RobotVisualizer();
         m_robotState = new RobotState();
         m_drivetrain = TunerConstants.createDrivetrain(m_robotState, m_joystick);
         m_drivetrain.setDefaultCommand(new PilotedDrive(
@@ -70,6 +74,11 @@ public final class RobotContainer {
     public void periodic() {
         m_signalManager.periodic();
         m_superstructure.periodic();
+
+        m_visualizer.update(
+                m_robotState.getLatestFieldToVehicle().getValue(),
+                m_superstructure.getIntakeAngle(),
+                m_superstructure.getHoodAngle());
 
         if (Robot.isSimulation()) {
             m_projectileManager.updateAll();

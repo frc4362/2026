@@ -4,6 +4,7 @@
 
 package com.gemsrobotics;
 
+import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 
@@ -15,6 +16,7 @@ public class Robot extends TimedRobot {
     public Robot() {
         m_robotContainer = new RobotContainer();
         m_matchStateTracker = new MatchStateTracker();
+        RobotController.setBrownoutVoltage(5.0);
     }
 
     @Override

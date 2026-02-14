@@ -31,6 +31,8 @@ public final class Constants {
   public static final Transform3d ROBOT_TO_LAUNCHER_EAST = new Transform3d(ROBOT_TO_LAUNCHER_X, ROBOT_TO_LAUNCHER_EAST_Y, ROBOT_TO_LAUNCHER_Z, new Rotation3d());
   public static final Distance BALL_STREAM_WIDTH = ROBOT_TO_LAUNCHER_EAST_Y.times(2.0).plus(BALL_RADIUS.times(2.0));
 
+  public static final String SIM_VIZ_TABLE_KEY = "viz";
+
   public static class OperatorConstants {
     public static final int kDriverControllerPort = 0;
   }

@@ -183,6 +183,14 @@ public final class Superstructure extends SubsystemBase {
         m_retractIntake = retractIntake;
     }
 
+    public Rotation2d getIntakeAngle() {
+        return m_intake.getAngle();
+    }
+
+    public Rotation2d getHoodAngle() {
+        return m_hood.getLaunchAngle();
+    }
+
     public SystemState getState() {
         return m_state;
     }
