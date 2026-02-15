@@ -184,7 +184,7 @@ public final class Superstructure extends SubsystemBase {
     }
 
     public Rotation2d getIntakeAngle() {
-        return Rotation2d.kZero;// m_intake.getAngle();
+        return m_intake.getAngle();
     }
 
     public Rotation2d getHoodAngle() {
