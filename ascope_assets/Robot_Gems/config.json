@@ -1,0 +1,55 @@
+{
+  "name": "Gems",
+  "isFTC": false,
+  "rotations": [
+    {
+      "axis": "x",
+      "degrees": 90
+    },
+    {
+      "axis": "z",
+      "degrees": 90
+    }
+  ],
+  "cameras": [],
+  "components": [
+    {
+      "zeroedRotations": [
+        {
+          "axis": "x",
+          "degrees": 97
+        },
+        {
+          "axis": "y",
+          "degrees": 0
+        },
+        {
+          "axis": "z",
+          "degrees": 90
+        }
+      ],
+      "zeroedPosition": [
+        0.781,
+        -0.06,
+        0.23
+      ]
+    },
+	{
+      "zeroedRotations": [
+        {
+          "axis": "x",
+          "degrees": 90
+        },
+        {
+          "axis": "z",
+          "degrees": 90
+        }
+      ],
+      "zeroedPosition": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    }
+  ]
+}

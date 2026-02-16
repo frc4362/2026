@@ -24,9 +24,8 @@ public final  class RobotVisualizer {
     public void update(final Pose2d robotLocation, final Rotation2d intakeAngle, final Rotation2d hoodAngle) {
         final var robotLocation3d = new Pose3d(robotLocation);
         m_robotPublisher.set(new Pose3d[] {
-                robotLocation3d,
-                robotLocation3d.plus(ROBOT_TO_INTAKE).rotateBy(new Rotation3d(0.0, intakeAngle.getRadians(), 0.0)),
-                robotLocation3d.plus(ROBOT_TO_HOOD).rotateBy(new Rotation3d(0.0, hoodAngle.unaryMinus().getRadians(), 0.0))
+                new Pose3d(0.0, 0.0, 0.0, new Rotation3d(0.0, intakeAngle.getRadians(), 0.0)),
+                new Pose3d(0.0, 0.0, 0.0, new Rotation3d(0.0, hoodAngle.unaryMinus().getRadians(), 0.0))
         });
     }
 }
