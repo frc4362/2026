@@ -18,7 +18,7 @@ public class Climber extends SubsystemBase {
     public Climber(final StatusSignalManager signalManager, final TalonFX motor) {
         m_ampsSignal = motor.getTorqueCurrent();
 
-        signalManager.registerUnpublished(m_ampsSignal);
+        signalManager.register(m_ampsSignal);
     }
 
     @Override
