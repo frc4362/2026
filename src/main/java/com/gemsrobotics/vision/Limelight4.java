@@ -5,6 +5,7 @@ import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.networktables.DoubleArraySubscriber;
@@ -23,11 +24,15 @@ public final class Limelight4 {
 
     private final String m_name;
     private final DoubleArraySubscriber m_varianceTopic;
+    private final Transform3d m_robotToCamera;
     private double m_heartbeat;
 
-    public Limelight4(final String name) {
+    public Limelight4(final String name, final Transform3d robotToCamera) {
         m_name = name;
         m_varianceTopic = NetworkTableInstance.getDefault().getTable(m_name).getDoubleArrayTopic("stddevs").subscribe(new double[12]);
+        m_robotToCamera = robotToCamera;
+
+        setCameraPose(m_robotToCamera);
 
         m_heartbeat = 0.0;
     }
@@ -58,13 +63,13 @@ public final class Limelight4 {
 
         boolean hasTags = LimelightHelpers.getTV(m_name);
         double[] currentVariance = m_varianceTopic.get();
-        Optional<PoseEstimate> megatag1 = processLimelightPoseEstimate(LimelightHelpers.getBotPoseEstimate_wpiBlue(m_name), currentVariance);
-        Optional<PoseEstimate> megatag2 = processLimelightPoseEstimate(LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(m_name), currentVariance);
+        Optional<PoseEstimate> megatag1 = Optional.empty();//processLimelightPoseEstimate(LimelightHelpers.getBotPoseEstimate_wpiBlue(m_name), currentVariance);
+        Optional<PoseEstimate> megatag2 = Optional.empty();//processLimelightPoseEstimate(LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(m_name), currentVariance);
 
         return megatag1.flatMap(mt1 -> megatag2.map(mt2 -> new Outputs(hasTags, mt1, mt2, inputs)));
     }
 
-    public void setCameraPose(final Pose3d cameraPose) {
+    public void setCameraPose(final Transform3d cameraPose) {
         LimelightHelpers.setCameraPose_RobotSpace(
                 m_name,
                 cameraPose.getX(),

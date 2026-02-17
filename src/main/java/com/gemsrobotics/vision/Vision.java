@@ -30,6 +30,7 @@ public final class Vision {
         // TODO here we need to process the pose estimates
         // the gyro-fused single tag estimates, and the megatag estimates
         // can then optionally combine them into one, or just pick which to trust
+        // from there, it submits them to robot state
     }
 
     private Optional<PoseEstimate> processLimelightPoseEstimate(final LimelightHelpers.PoseEstimate poseEstimate, final double[] variance) {
