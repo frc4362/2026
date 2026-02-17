@@ -21,6 +21,7 @@ import static edu.wpi.first.units.Units.*;
 public final class Limelight4 {
     public record Inputs(Pose2d robotPose, AngularVelocity rotationRate) {}
     public record Outputs(boolean hasTags, LimelightHelpers.PoseEstimate mt1, LimelightHelpers.PoseEstimate mt2, double[] variance, Inputs captureConditions) {}
+    public record LimelightPoseEstimateWithVariance(LimelightHelpers.PoseEstimate mt, Matrix<N3, N1> variance) {}
 
     private final String m_name;
     private final DoubleArraySubscriber m_varianceTopic;
@@ -64,10 +65,10 @@ public final class Limelight4 {
         // TODO
         boolean hasTags = LimelightHelpers.getTV(m_name);
         double[] currentVariance = m_varianceTopic.get();
-        Optional<PoseEstimate> megatag1 = Optional.empty();//processLimelightPoseEstimate(LimelightHelpers.getBotPoseEstimate_wpiBlue(m_name), currentVariance);
-        Optional<PoseEstimate> megatag2 = Optional.empty();//processLimelightPoseEstimate(LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(m_name), currentVariance);
+        var mt1 = LimelightHelpers.getBotPoseEstimate_wpiBlue(m_name);
+        var mt2 = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(m_name);
 
-        return Optional.empty();//megatag1.flatMap(mt1 -> megatag2.map(mt2 -> new Outputs(hasTags, mt1, mt2, inputs)));
+        return Optional.of(new Outputs(hasTags, mt1, mt2, new double[12], inputs));
     }
 
     public void setCameraPose(final Transform3d cameraPose) {
