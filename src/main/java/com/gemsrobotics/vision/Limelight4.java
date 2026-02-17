@@ -1,27 +1,33 @@
 package com.gemsrobotics.vision;
 
 import com.gemsrobotics.Constants;
+import edu.wpi.first.math.Matrix;
+import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.math.numbers.N1;
+import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.networktables.DoubleArraySubscriber;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.units.measure.AngularVelocity;
 
+import javax.swing.text.html.Option;
 import java.util.Optional;
 
 import static edu.wpi.first.units.Units.*;
 
 public final class Limelight4 {
     public record Inputs(Pose2d robotPose, AngularVelocity rotationRate) {}
-    public record Outputs(boolean hasTags, PoseEstimate mt1, PoseEstimate mt2, Inputs captureConditions) {}
+    public record Outputs(boolean hasTags, LimelightHelpers.PoseEstimate mt1, LimelightHelpers.PoseEstimate mt2, double[] variance, Inputs captureConditions) {}
 
     private final String m_name;
-    private final NetworkTable m_table;
+    private final DoubleArraySubscriber m_varianceTopic;
     private double m_heartbeat;
 
     public Limelight4(final String name) {
         m_name = name;
-        m_table = NetworkTableInstance.getDefault().getTable(m_name);
+        m_varianceTopic = NetworkTableInstance.getDefault().getTable(m_name).getDoubleArrayTopic("stddevs").subscribe(new double[12]);
 
         m_heartbeat = 0.0;
     }
@@ -30,21 +36,8 @@ public final class Limelight4 {
         return m_name;
     }
 
-    public NetworkTable getTable() {
-        return m_table;
-    }
-
     public Optional<Outputs> update(final Inputs inputs) {
-        double newHeartbeat = LimelightHelpers.getHeartbeat(m_name);
-        // no new frame, early exit
-        if (newHeartbeat == m_heartbeat) {
-            return Optional.empty();
-        }
-
-        m_heartbeat = newHeartbeat;
-
-        boolean hasTags = LimelightHelpers.getTV(m_name);
-
+        // update robot orientation no matter what
         LimelightHelpers.SetRobotOrientation(
                 m_name,
                 inputs.robotPose.getRotation().getDegrees(),
@@ -54,11 +47,21 @@ public final class Limelight4 {
                 0.0,
                 0.0);
 
-        LimelightHelpers.PoseEstimate mt1 = LimelightHelpers.getBotPoseEstimate_wpiBlue(m_name);
-        LimelightHelpers.PoseEstimate mt2 = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(m_name);
 
-        return Optional.empty();
-//        return Optional.of(new Outputs(hasTags, new PoseEstimate(mt1.timestampSeconds, mt1.pose, ) ));
+        double newHeartbeat = LimelightHelpers.getHeartbeat(m_name);
+        // no new frame, early exit
+        if (newHeartbeat == m_heartbeat) {
+            return Optional.empty();
+        }
+
+        m_heartbeat = newHeartbeat;
+
+        boolean hasTags = LimelightHelpers.getTV(m_name);
+        double[] currentVariance = m_varianceTopic.get();
+        Optional<PoseEstimate> megatag1 = processLimelightPoseEstimate(LimelightHelpers.getBotPoseEstimate_wpiBlue(m_name), currentVariance);
+        Optional<PoseEstimate> megatag2 = processLimelightPoseEstimate(LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(m_name), currentVariance);
+
+        return megatag1.flatMap(mt1 -> megatag2.map(mt2 -> new Outputs(hasTags, mt1, mt2, inputs)));
     }
 
     public void setCameraPose(final Pose3d cameraPose) {

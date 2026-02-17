@@ -42,6 +42,16 @@ public final class Constants {
     public static final int DISABLED_THROTTLE = 100;
     // how fast the Limelight IMU filter converges on the Pigeon, default 0.001
     public static final double IMU_ALPHA = 0.001;
+
+    // Standard deviation constants
+    public static final int kMegatag1XStdDevIndex = 0;
+    public static final int kMegatag1YStdDevIndex = 1;
+    public static final int kMegatag1YawStdDevIndex = 5;
+
+    // Standard deviation array indices for Megatag2
+    public static final int kMegatag2XStdDevIndex = 6;
+    public static final int kMegatag2YStdDevIndex = 7;
+    public static final int kMegatag2YawStdDevIndex = 11;
   }
 
   public static class CAN {
