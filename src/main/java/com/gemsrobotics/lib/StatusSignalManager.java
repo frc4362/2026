@@ -9,28 +9,28 @@ import java.util.HashMap;
 
 public class StatusSignalManager {
     private final HashMap<StatusSignal<?>, DoublePublisher> m_publishedSignals;
-    private final StatusSignalCollection m_unpublishedSignals;
+    private final StatusSignalCollection m_signals;
 
     public StatusSignalManager() {
+        m_signals = new StatusSignalCollection();
         m_publishedSignals = new HashMap<>();
-        m_unpublishedSignals = new StatusSignalCollection();
     }
 
     public void periodic() {
-        // TODO fix this
+        m_signals.refreshAll();
         m_publishedSignals.forEach((signal, publisher) -> {
-            signal.refresh();
             publisher.set(signal.getValueAsDouble());
         });
-        m_unpublishedSignals.refreshAll();
     }
 
     public void registerPublished(StatusSignal<?> signal, NetworkTable nt, String ntTopic) {
+        register(signal);
+
         final DoublePublisher publisher = nt.getDoubleTopic(ntTopic).publish();
         m_publishedSignals.put(signal, publisher);
     }
 
-    public void registerUnpublished(StatusSignal<?>... signals) {
-        m_unpublishedSignals.addSignals(signals);
+    public void register(StatusSignal<?>... signals) {
+        m_signals.addSignals(signals);
     }
 }
