@@ -61,12 +61,13 @@ public final class Limelight4 {
 
         m_heartbeat = newHeartbeat;
 
+        // TODO
         boolean hasTags = LimelightHelpers.getTV(m_name);
         double[] currentVariance = m_varianceTopic.get();
         Optional<PoseEstimate> megatag1 = Optional.empty();//processLimelightPoseEstimate(LimelightHelpers.getBotPoseEstimate_wpiBlue(m_name), currentVariance);
         Optional<PoseEstimate> megatag2 = Optional.empty();//processLimelightPoseEstimate(LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(m_name), currentVariance);
 
-        return megatag1.flatMap(mt1 -> megatag2.map(mt2 -> new Outputs(hasTags, mt1, mt2, inputs)));
+        return Optional.empty();//megatag1.flatMap(mt1 -> megatag2.map(mt2 -> new Outputs(hasTags, mt1, mt2, inputs)));
     }
 
     public void setCameraPose(final Transform3d cameraPose) {
