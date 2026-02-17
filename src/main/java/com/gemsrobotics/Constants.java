@@ -37,6 +37,13 @@ public final class Constants {
     public static final int kDriverControllerPort = 0;
   }
 
+  public static class Vision {
+    // skips N frames and then processes one
+    public static final int DISABLED_THROTTLE = 100;
+    // how fast the Limelight IMU filter converges on the Pigeon, default 0.001
+    public static final double IMU_ALPHA = 0.001;
+  }
+
   public static class CAN {
     public static final CANBus kMAIN_BUS = new CANBus("main");
     public static final CANBus kAUX_BUS = new CANBus("aux");

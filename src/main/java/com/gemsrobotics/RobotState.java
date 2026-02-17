@@ -4,10 +4,13 @@ import com.gemsrobotics.lib.ConcurrentTimeInterpolatableBuffer;
 import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.units.Units;
+import edu.wpi.first.units.measure.AngularVelocity;
 
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+
+import static edu.wpi.first.units.Units.RadiansPerSecond;
 
 public class RobotState {
 	private static final double LOOKBACK_TIME_SECONDS = 1.0;
@@ -56,6 +59,10 @@ public class RobotState {
 
 	public Optional<Pose2d> getFieldToVehicle(final double timeSeconds) {
 		return m_fieldToVehicle.getSample(timeSeconds);
+	}
+
+	public Optional<AngularVelocity> getAngularVelocity(final double timeSeconds) {
+		return m_vehicleAngularVelocity.getSample(timeSeconds).map(RadiansPerSecond::of);
 	}
 
 	public Pose2d getPredictedFieldToVehicle(final double lookaheadTimeSeconds) {
