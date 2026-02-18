@@ -1,29 +1,38 @@
 package com.gemsrobotics;
 
 import com.gemsrobotics.lib.ConcurrentTimeInterpolatableBuffer;
+import com.gemsrobotics.vision.PoseEstimate;
 import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.units.Units;
 import edu.wpi.first.units.measure.AngularVelocity;
 
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 
-public class RobotState {
+public final class RobotState {
 	private static final double LOOKBACK_TIME_SECONDS = 1.0;
+
+	private final Consumer<PoseEstimate> m_visionPoseEstimateConsumer;
 
 	// Pose2d(X meters, Y meters, theta Rotation)
 	private final ConcurrentTimeInterpolatableBuffer<Pose2d> m_fieldToVehicle;
 	// units in radians per second
 	private final ConcurrentTimeInterpolatableBuffer<Double> m_vehicleAngularVelocity;
 
+	private Pose2d m_lastVisionPoseEstimate;
+	private double m_lastVisionPoseEstimateTimestamp;
 	private ChassisSpeeds m_recentVehicleRelativeVelocity;
 	private ChassisSpeeds m_recentFieldRelativeVelocity;
 
-	public RobotState() {
+	public RobotState(final Consumer<PoseEstimate> visionEstimateConsumer) {
+		m_visionPoseEstimateConsumer = visionEstimateConsumer;
+		m_lastVisionPoseEstimate = Pose2d.kZero;
+		m_lastVisionPoseEstimateTimestamp = 0.0;
+
 		m_fieldToVehicle = ConcurrentTimeInterpolatableBuffer.createBuffer(LOOKBACK_TIME_SECONDS);
 		m_fieldToVehicle.addSample(0.0, Pose2d.kZero);
 
@@ -31,6 +40,16 @@ public class RobotState {
 		m_vehicleAngularVelocity.addSample(0.0, 0.0);
 		m_recentVehicleRelativeVelocity = new ChassisSpeeds();
 		m_recentFieldRelativeVelocity = new ChassisSpeeds();
+	}
+
+	public void updatePoseEstimate(final PoseEstimate poseEstimate) {
+		m_lastVisionPoseEstimate = poseEstimate.fieldToVehicle();
+		m_lastVisionPoseEstimateTimestamp = poseEstimate.timestampSeconds();
+		m_visionPoseEstimateConsumer.accept(poseEstimate);
+	}
+
+	public double getLastVisionPoseEstimateTimestamp() {
+		return m_lastVisionPoseEstimateTimestamp;
 	}
 
 	public void addDriveSample(
@@ -76,5 +95,18 @@ public class RobotState {
 		delta = delta.times(lookaheadTimeSeconds);
 		// integrate the new arc of motion
 		return currentFieldToRobot.getValue().exp(new Twist2d(delta.vxMetersPerSecond, delta.vyMetersPerSecond, delta.omegaRadiansPerSecond));
+	}
+
+	private Optional<Double> getMaxAbsValueInRange(
+			final ConcurrentTimeInterpolatableBuffer<Double> buffer,
+			final double startTime,
+			final double endTime
+	) {
+		var range = buffer.getInternalBuffer().subMap(startTime, endTime).values();
+		return range.stream().map(Math::abs).max(Double::compare);
+	}
+
+	public Optional<Double> getMaxAbsVehicleAngularVelocity(final double startTime, final double endTime) {
+		return getMaxAbsValueInRange(m_vehicleAngularVelocity, startTime, endTime);
 	}
 }

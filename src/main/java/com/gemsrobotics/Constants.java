@@ -10,6 +10,7 @@ import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.Mass;
 
@@ -38,6 +39,7 @@ public final class Constants {
   }
 
   public static class Vision {
+    public static final double HIGH_VARIANCE = 1_000_000.0;
     // skips N frames and then processes one
     public static final int DISABLED_THROTTLE = 100;
     // how fast the Limelight IMU filter converges on the Pigeon, default 0.001
@@ -52,6 +54,11 @@ public final class Constants {
     public static final int kMegatag2XStdDevIndex = 6;
     public static final int kMegatag2YStdDevIndex = 7;
     public static final int kMegatag2YawStdDevIndex = 11;
+
+    public static final double ACCEPTABLE_AMBIGUITY = 0.2;
+
+    public static final double YAW_LOOKBACK_SECONDS = 0.1;
+    public static final AngularVelocity HIGH_YAW_RATE = RadiansPerSecond.of(4);
   }
 
   public static class CAN {

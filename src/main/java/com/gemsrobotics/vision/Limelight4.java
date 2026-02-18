@@ -20,8 +20,7 @@ import static edu.wpi.first.units.Units.*;
 
 public final class Limelight4 {
     public record Inputs(Pose2d robotPose, AngularVelocity rotationRate) {}
-    public record Outputs(boolean hasTags, LimelightHelpers.PoseEstimate mt1, LimelightHelpers.PoseEstimate mt2, double[] variance, Inputs captureConditions) {}
-    public record LimelightPoseEstimateWithVariance(LimelightHelpers.PoseEstimate mt, Matrix<N3, N1> variance) {}
+    public record Outputs(boolean hasTags, LimelightPoseEstimateWithVariance mt1, LimelightPoseEstimateWithVariance mt2, Inputs captureConditions) {}
 
     private final String m_name;
     private final DoubleArraySubscriber m_varianceTopic;
@@ -53,7 +52,6 @@ public final class Limelight4 {
                 0.0,
                 0.0);
 
-
         double newHeartbeat = LimelightHelpers.getHeartbeat(m_name);
         // no new frame, early exit
         if (newHeartbeat == m_heartbeat) {
@@ -62,16 +60,23 @@ public final class Limelight4 {
 
         m_heartbeat = newHeartbeat;
 
-        // TODO
         boolean hasTags = LimelightHelpers.getTV(m_name);
-        double[] currentVariance = m_varianceTopic.get();
-        var mt1 = LimelightHelpers.getBotPoseEstimate_wpiBlue(m_name);
-        var mt2 = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(m_name);
+        double[] v = m_varianceTopic.get();
+        Matrix<N3, N1> varianceMt1 = VecBuilder.fill(
+                v[Constants.Vision.kMegatag1XStdDevIndex],
+                v[Constants.Vision.kMegatag1YStdDevIndex],
+                v[Constants.Vision.kMegatag1YawStdDevIndex]);
+        var mt1 = new LimelightPoseEstimateWithVariance(LimelightHelpers.getBotPoseEstimate_wpiBlue(m_name), varianceMt1);
+        Matrix<N3, N1> varianceMt2 = VecBuilder.fill(
+                v[Constants.Vision.kMegatag2XStdDevIndex],
+                v[Constants.Vision.kMegatag2YStdDevIndex],
+                v[Constants.Vision.kMegatag2YawStdDevIndex]);
+        var mt2 = new LimelightPoseEstimateWithVariance(LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(m_name), varianceMt2);
 
-        return Optional.of(new Outputs(hasTags, mt1, mt2, new double[12], inputs));
+        return Optional.of(new Outputs(hasTags, mt1, mt2, inputs));
     }
 
-    public void setCameraPose(final Transform3d cameraPose) {
+    private void setCameraPose(final Transform3d cameraPose) {
         LimelightHelpers.setCameraPose_RobotSpace(
                 m_name,
                 cameraPose.getX(),
