@@ -8,9 +8,7 @@ import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
-import edu.wpi.first.networktables.DoubleArraySubscriber;
-import edu.wpi.first.networktables.NetworkTable;
-import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.networktables.*;
 import edu.wpi.first.units.measure.AngularVelocity;
 
 import javax.swing.text.html.Option;
@@ -25,20 +23,28 @@ public final class Limelight4 {
     private final String m_name;
     private final DoubleArraySubscriber m_varianceTopic;
     private final Transform3d m_robotToCamera;
+
+    private final NetworkTable m_networkTable;
+    private final DoublePublisher m_heartbeatPublisher;
+    private final BooleanPublisher m_hasTagsPublisher;
     private double m_heartbeat;
 
-    public Limelight4(final String name, final Transform3d robotToCamera) {
+    public Limelight4(final NetworkTable baseTable, final String name, final Transform3d robotToCamera) {
         m_name = name;
         m_varianceTopic = NetworkTableInstance.getDefault().getTable(m_name).getDoubleArrayTopic("stddevs").subscribe(new double[12]);
         m_robotToCamera = robotToCamera;
+
+        m_networkTable = baseTable.getSubTable(name);
+        m_heartbeatPublisher = m_networkTable.getDoubleTopic("heartbeat").publish();
+        m_hasTagsPublisher = m_networkTable.getBooleanTopic("has_tags").publish();
 
         setCameraPose(m_robotToCamera);
 
         m_heartbeat = 0.0;
     }
 
-    public String getName() {
-        return m_name;
+    public NetworkTable getNetworkTable() {
+        return m_networkTable;
     }
 
     public Optional<Outputs> update(final Inputs inputs) {
@@ -59,9 +65,12 @@ public final class Limelight4 {
         }
 
         m_heartbeat = newHeartbeat;
+        m_heartbeatPublisher.set(m_heartbeat);
 
-        boolean hasTags = LimelightHelpers.getTV(m_name);
-        double[] v = m_varianceTopic.get();
+        final boolean hasTags = LimelightHelpers.getTV(m_name);
+        m_hasTagsPublisher.set(hasTags);
+
+        final double[] v = m_varianceTopic.get();
         Matrix<N3, N1> varianceMt1 = VecBuilder.fill(
                 v[Constants.Vision.kMegatag1XStdDevIndex],
                 v[Constants.Vision.kMegatag1YStdDevIndex],

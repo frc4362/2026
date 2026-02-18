@@ -8,8 +8,7 @@ import edu.wpi.first.math.numbers.N3;
 public record PoseEstimate(
         double timestampSeconds,
         Pose2d fieldToVehicle,
-		double quality,
         Matrix<N3, N1> variance,
-        int numTags
+        int tagCount
 ) {
 }

@@ -39,6 +39,12 @@ public final class Constants {
   }
 
   public static class Vision {
+    public static final String LIMELIGHT_LAUNCHER_NAME = "limelight-launcher";
+    public static final String LIMELIGHT_CLIMBER_NAME = "limelight-climber";
+
+    public static final Transform3d LIMELIGHT_LAUNCHER_TRANSFORM = new Transform3d();
+    public static final Transform3d LIMELIGHT_CLIMBER_TRANSFORM = new Transform3d();
+
     public static final double HIGH_VARIANCE = 1_000_000.0;
     // skips N frames and then processes one
     public static final int DISABLED_THROTTLE = 100;
