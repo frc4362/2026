@@ -18,33 +18,44 @@ import static edu.wpi.first.units.Units.*;
 
 public final class Limelight4 {
     public record Inputs(Pose2d robotPose, AngularVelocity rotationRate) {}
-    public record Outputs(boolean hasTags, LimelightPoseEstimateWithVariance mt1, LimelightPoseEstimateWithVariance mt2, Inputs captureConditions) {}
+    public record Outputs(String cameraName, double heartbeat, boolean hasTags, LimelightPoseEstimateWithVariance mt1, LimelightPoseEstimateWithVariance mt2, Inputs captureConditions) {
+        public Optional<LimelightPoseEstimateWithVariance> getBestPoseEstimate() {
+            if (mt1.isInvalid() && mt2.isInvalid()) {
+                return Optional.empty();
+            } else if (mt1.isInvalid()) {
+                return Optional.of(mt2);
+            } else if (mt2.isValid()) {
+                return Optional.of(mt1);
+            } else if (mt2.estimate().tagCount >= 2) {
+                return Optional.of(mt2);
+            } else if (mt1.estimate().tagCount > mt2.estimate().tagCount) {
+                return Optional.of(mt1);
+            } else {
+                return Optional.of(mt2);
+            }
+        }
+    }
 
     private final String m_name;
     private final DoubleArraySubscriber m_varianceTopic;
     private final Transform3d m_robotToCamera;
-
-    private final NetworkTable m_networkTable;
-    private final DoublePublisher m_heartbeatPublisher;
-    private final BooleanPublisher m_hasTagsPublisher;
     private double m_heartbeat;
 
-    public Limelight4(final NetworkTable baseTable, final String name, final Transform3d robotToCamera) {
+    public Limelight4(final String name, final Transform3d robotToCamera) {
         m_name = name;
-        m_varianceTopic = NetworkTableInstance.getDefault().getTable(m_name).getDoubleArrayTopic("stddevs").subscribe(new double[12]);
+        m_varianceTopic = NetworkTableInstance.getDefault()
+                .getTable(m_name)
+                .getDoubleArrayTopic("stddevs")
+                .subscribe(new double[12]);
         m_robotToCamera = robotToCamera;
-
-        m_networkTable = baseTable.getSubTable(name);
-        m_heartbeatPublisher = m_networkTable.getDoubleTopic("heartbeat").publish();
-        m_hasTagsPublisher = m_networkTable.getBooleanTopic("has_tags").publish();
 
         setCameraPose(m_robotToCamera);
 
         m_heartbeat = 0.0;
     }
 
-    public NetworkTable getNetworkTable() {
-        return m_networkTable;
+    public String getName() {
+        return m_name;
     }
 
     public Optional<Outputs> update(final Inputs inputs) {
@@ -65,24 +76,22 @@ public final class Limelight4 {
         }
 
         m_heartbeat = newHeartbeat;
-        m_heartbeatPublisher.set(m_heartbeat);
-
-        final boolean hasTags = LimelightHelpers.getTV(m_name);
-        m_hasTagsPublisher.set(hasTags);
 
         final double[] v = m_varianceTopic.get();
-        Matrix<N3, N1> varianceMt1 = VecBuilder.fill(
+        final Matrix<N3, N1> varianceMt1 = VecBuilder.fill(
                 v[Constants.Vision.kMegatag1XStdDevIndex],
                 v[Constants.Vision.kMegatag1YStdDevIndex],
                 v[Constants.Vision.kMegatag1YawStdDevIndex]);
-        var mt1 = new LimelightPoseEstimateWithVariance(LimelightHelpers.getBotPoseEstimate_wpiBlue(m_name), varianceMt1);
-        Matrix<N3, N1> varianceMt2 = VecBuilder.fill(
+        final var mt1 = new LimelightPoseEstimateWithVariance(LimelightHelpers.getBotPoseEstimate_wpiBlue(m_name), varianceMt1);
+        final Matrix<N3, N1> varianceMt2 = VecBuilder.fill(
                 v[Constants.Vision.kMegatag2XStdDevIndex],
                 v[Constants.Vision.kMegatag2YStdDevIndex],
                 v[Constants.Vision.kMegatag2YawStdDevIndex]);
-        var mt2 = new LimelightPoseEstimateWithVariance(LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(m_name), varianceMt2);
+        final var mt2 = new LimelightPoseEstimateWithVariance(LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(m_name), varianceMt2);
 
-        return Optional.of(new Outputs(hasTags, mt1, mt2, inputs));
+        final boolean hasTags = (mt1.estimate().tagCount + mt2.estimate().tagCount) > 0;
+
+        return Optional.of(new Outputs(m_name, m_heartbeat, hasTags, mt1, mt2, inputs));
     }
 
     private void setCameraPose(final Transform3d cameraPose) {

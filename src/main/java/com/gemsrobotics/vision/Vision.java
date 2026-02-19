@@ -13,10 +13,8 @@ import edu.wpi.first.networktables.NetworkTableInstance;
 
 import java.util.*;
 import java.util.function.Supplier;
-import java.util.stream.IntStream;
 
 import static edu.wpi.first.units.Units.RadiansPerSecond;
-import static sun.util.locale.LocaleUtils.isEmpty;
 
 public final class Vision {
     private final RobotState m_robotState;
@@ -25,6 +23,9 @@ public final class Vision {
     private final Supplier<Limelight4.Inputs> m_inputSupplier;
 
     private final NetworkTable m_table, m_camerasTable;
+    private final Map<String, VisionProcessingResultsLogger> m_cameraLoggers;
+
+    private boolean m_hasBeenEnabled;
 
     public Vision(final RobotState robotState, final Supplier<Limelight4.Inputs> inputSupplier) {
         m_robotState = robotState;
@@ -33,13 +34,22 @@ public final class Vision {
         m_table = NetworkTableInstance.getDefault().getTable("vision");
         m_camerasTable = m_table.getSubTable("cameras");
 
-        m_cameraLauncher = new Limelight4(m_camerasTable, Constants.Vision.LIMELIGHT_LAUNCHER_NAME, Constants.Vision.LIMELIGHT_LAUNCHER_TRANSFORM);
-        m_cameraClimber = new Limelight4(m_camerasTable, Constants.Vision.LIMELIGHT_CLIMBER_NAME, Constants.Vision.LIMELIGHT_CLIMBER_TRANSFORM);
+        m_cameraLauncher = new Limelight4(Constants.Vision.LIMELIGHT_LAUNCHER_NAME, Constants.Vision.LIMELIGHT_LAUNCHER_TRANSFORM);
+        m_cameraClimber = new Limelight4(Constants.Vision.LIMELIGHT_CLIMBER_NAME, Constants.Vision.LIMELIGHT_CLIMBER_TRANSFORM);
+
         m_cameras =  Arrays.asList(m_cameraLauncher, m_cameraClimber);
+        m_cameraLoggers = new HashMap<>(m_cameras.size());
+        m_cameras.forEach(camera -> {
+            final String name = camera.getName();
+            m_cameraLoggers.put(name, new VisionProcessingResultsLogger(m_camerasTable, name));
+        });
+
+        m_hasBeenEnabled = false;
     }
 
     public void configureCamerasEnabled() {
         m_cameras.forEach(Limelight4::configureEnabled);
+        m_hasBeenEnabled = true;
     }
 
     public void configureCamerasDisabled() {
@@ -51,6 +61,8 @@ public final class Vision {
         final Optional<Limelight4.Outputs> outputsLauncher = m_cameraLauncher.update(inputs);
         final Optional<Limelight4.Outputs> outputsClimber = m_cameraLauncher.update(inputs);
 
+
+
         // TODO here we need to process the pose estimates
         // the gyro-fused single tag estimates, and the megatag estimates
         // can then optionally combine them into one, or just pick which to trust
@@ -59,13 +71,21 @@ public final class Vision {
 //        m_robotState.updatePoseEstimate
     }
 
-    private Optional<PoseEstimate> processCamera(final Limelight4.Outputs outputs) {
-
+    private Optional<PoseEstimate> processCameraOutputs(final Limelight4.Outputs outputs) {
         if (!outputs.hasTags()) {
             return Optional.empty();
         }
 
+        final Optional<PoseEstimate> megatagEstimate = outputs.getBestPoseEstimate()
+                .filter(b -> b.estimate().tagCount > 1)
+                .flatMap(this::processLimelightPoseEstimate);
 
+        final LimelightPoseEstimateWithVariance mt1estimate = outputs.mt1();
+        final Optional<PoseEstimate> gyroFusedEstimate = processGyroFusedPoseEstimate(mt1estimate);
+
+
+
+        return Optional.empty();
     }
 
     // we are assuming that all the pose estimates are independent, and do not share a source of error ie. field layout
@@ -226,7 +246,7 @@ public final class Vision {
     }
 
     private Optional<PoseEstimate> processLimelightPoseEstimate(final LimelightPoseEstimateWithVariance poseEstimateWithVariance) {
-        final var poseEstimate = poseEstimateWithVariance.mt();
+        final var poseEstimate = poseEstimateWithVariance.estimate();
         // if we have already used more recent information, this is not a valid pose estimate
         if (poseEstimate.timestampSeconds <= m_robotState.getLastVisionPoseEstimateTimestamp()) {
             return Optional.empty();
@@ -262,7 +282,7 @@ public final class Vision {
     }
 
     private Optional<PoseEstimate> processGyroFusedPoseEstimate(final LimelightPoseEstimateWithVariance poseEstimateWithVariance) {
-        final var poseEstimate = poseEstimateWithVariance.mt();
+        final var poseEstimate = poseEstimateWithVariance.estimate();
         // if we have already used more recent information, this is not a valid pose estimate
         if (poseEstimate.timestampSeconds <= m_robotState.getLastVisionPoseEstimateTimestamp()) {
             return Optional.empty();

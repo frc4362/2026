@@ -16,6 +16,7 @@ import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotController;
@@ -38,6 +39,8 @@ public class Hopper {
 
     private final StatusSignal<AngularVelocity> m_leaderVelocitySignal, m_followerVelocitySignal;
     private final StatusSignal<Voltage> m_leaderVoltsAppliedSignal, m_followerVoltsAppliedSignal;
+    private final StatusSignal<Current> m_leaderStatorAmpsSignal, m_leaderSupplyAmpsSignal,
+            m_followerStatorAmpsSignal, m_followerSupplyAmpsSignal;
 
     private final TalonFXSimState m_leaderSimState, m_followerSimState;
     private final FlywheelSim m_rollerSim;
@@ -77,7 +80,7 @@ public class Hopper {
 
         final DCMotor m_motorModel = DCMotor.getKrakenX60Foc(2);
         m_rollerSim = new FlywheelSim(
-                LinearSystemId.createFlywheelSystem(m_motorModel, .001, GEARING),
+                LinearSystemId.createFlywheelSystem(m_motorModel, 0.001, GEARING),
                 m_motorModel,
                 0.01);
 
@@ -90,14 +93,22 @@ public class Hopper {
         //region logging code
         m_leaderVelocitySignal = m_motorLeader.getVelocity(false);
         m_leaderVoltsAppliedSignal = m_motorLeader.getMotorVoltage(false);
+        m_leaderStatorAmpsSignal = m_motorLeader.getStatorCurrent(false);
+        m_leaderSupplyAmpsSignal = m_motorLeader.getSupplyCurrent(false);
         m_followerVelocitySignal = m_motorFollower.getVelocity(false);
         m_followerVoltsAppliedSignal = m_motorFollower.getMotorVoltage(false);
+        m_followerStatorAmpsSignal = m_motorFollower.getStatorCurrent(false);
+        m_followerSupplyAmpsSignal = m_motorFollower.getSupplyCurrent(false);
 
         final NetworkTable nt = NetworkTableInstance.getDefault().getTable("hopper");
         signalManager.registerPublished(m_leaderVelocitySignal, nt, "leader_velocity_rps");
         signalManager.registerPublished(m_leaderVoltsAppliedSignal, nt, "leader_volts");
+        signalManager.registerPublished(m_leaderStatorAmpsSignal, nt, "leader_stator_amps");
+        signalManager.registerPublished(m_leaderSupplyAmpsSignal, nt, "leader_supply_amps");
         signalManager.registerPublished(m_followerVelocitySignal, nt, "follower_velocity_rps");
         signalManager.registerPublished(m_followerVoltsAppliedSignal, nt, "follower_volts");
+        signalManager.registerPublished(m_followerStatorAmpsSignal, nt, "follower_stator_amps");
+        signalManager.registerPublished(m_followerSupplyAmpsSignal, nt, "follower_supply_amps");
         //endregion
     }
 

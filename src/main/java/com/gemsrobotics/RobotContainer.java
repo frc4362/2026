@@ -40,7 +40,8 @@ public final class RobotContainer {
         m_joystick = new CommandXboxController(0);
 
         m_visualizer = new RobotVisualizer();
-        m_robotState = new RobotState();
+        // TODO make a real consumer
+        m_robotState = new RobotState(estimate -> {});
         m_drivetrain = TunerConstants.createDrivetrain(m_robotState, m_joystick);
         m_drivetrain.setDefaultCommand(new PilotedDrive(
                 m_drivetrain,

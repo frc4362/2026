@@ -13,6 +13,7 @@ import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.units.measure.*;
 import com.gemsrobotics.Constants;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -24,15 +25,25 @@ public final class TunerConstants {
 
     // The steer motor uses any SwerveModule.SteerRequestType control request with the
     // output type specified by SwerveModuleConstants.SteerMotorClosedLoopOutput
+    private static final double SUPPLY_VOLTAGE = 12.0;
+    private static final double X44_RPS = RadiansPerSecond.of(DCMotor.getKrakenX44Foc(1).freeSpeedRadPerSec).in(RotationsPerSecond);
+
     private static final Slot0Configs steerGains = new Slot0Configs()
-        .withKP(100).withKI(0).withKD(15)
-        .withKS(0.1).withKV(0.0).withKA(0)
+        .withKP(100)
+        .withKI(0)
+        .withKD(0.5)
+        .withKS(0.1)
+        .withKV(SUPPLY_VOLTAGE / X44_RPS)
+        .withKA(0)
         .withStaticFeedforwardSign(StaticFeedforwardSignValue.UseClosedLoopSign);
     // When using closed-loop control, the drive motor uses the control
     // output type specified by SwerveModuleConstants.DriveMotorClosedLoopOutput
     private static final Slot0Configs driveGains = new Slot0Configs()
-        .withKP(10.0).withKI(0).withKD(0)
-        .withKS(1.0).withKV(0);
+        .withKP(10.0)
+        .withKI(0)
+        .withKD(0)
+        .withKS(1.0)
+        .withKV(0);
 
     // The closed-loop output type to use for the steer motors;
     // This affects the PID/FF gains for the steer motors
