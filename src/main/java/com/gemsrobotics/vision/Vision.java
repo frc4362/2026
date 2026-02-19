@@ -58,17 +58,29 @@ public final class Vision {
 
     public void update() {
         var inputs = m_inputSupplier.get();
-        final Optional<Limelight4.Outputs> outputsLauncher = m_cameraLauncher.update(inputs);
-        final Optional<Limelight4.Outputs> outputsClimber = m_cameraLauncher.update(inputs);
+        final List<PoseEstimate> estimates = m_cameras.stream()
+                .flatMap(camera -> camera.update(inputs).stream())
+                .map(this::processCameraOutputs)
+                .flatMap(Optional::stream)
+                .toList();
 
+        // TODO give to the robot state either the one pose estimate available, or the fused pose estimate
+        // make sure to log if its accepted
 
+        PoseEstimate acceptedEstimate = null;
+        if (estimates.size() == 1) {
+            acceptedEstimate = estimates.get(0);
+        } else if (estimates.size() > 1) {
+            final Optional<PoseEstimate> fusedEstimate = fusePoseEstimates(estimates);
+            if (fusedEstimate.isPresent()) {
+                acceptedEstimate = fusedEstimate.get();
+            }
+        }
 
-        // TODO here we need to process the pose estimates
-        // the gyro-fused single tag estimates, and the megatag estimates
-        // can then optionally combine them into one, or just pick which to trust
-        // from there, it submits them to robot state
-
-//        m_robotState.updatePoseEstimate
+        if (acceptedEstimate != null) {
+            m_robotState.updatePoseEstimate(acceptedEstimate);
+            // TODO log the pose estimate struct
+        }
     }
 
     private Optional<PoseEstimate> processCameraOutputs(final Limelight4.Outputs outputs) {
@@ -82,10 +94,18 @@ public final class Vision {
 
         final LimelightPoseEstimateWithVariance mt1estimate = outputs.mt1();
         final Optional<PoseEstimate> gyroFusedEstimate = processGyroFusedPoseEstimate(mt1estimate);
+        final Optional<PoseEstimate> selectedEstimate = megatagEstimate.or(() -> gyroFusedEstimate);
 
+        selectedEstimate.ifPresent(estimate -> {
+            final var logger = m_cameraLoggers.get(outputs.cameraName());
+            if (!Objects.isNull(logger)) {
+                logger.log(estimate.timestampSeconds(),
+                        megatagEstimate.map(PoseEstimate::fieldToVehicle),
+                        gyroFusedEstimate.map(PoseEstimate::fieldToVehicle));
+            }
+        });
 
-
-        return Optional.empty();
+        return selectedEstimate;
     }
 
     // we are assuming that all the pose estimates are independent, and do not share a source of error ie. field layout
