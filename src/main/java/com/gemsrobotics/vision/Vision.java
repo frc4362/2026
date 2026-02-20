@@ -10,6 +10,7 @@ import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.networktables.StructPublisher;
 
 import java.util.*;
 import java.util.function.Supplier;
@@ -23,7 +24,7 @@ public final class Vision {
     private final Supplier<Limelight4.Inputs> m_inputSupplier;
 
     private final NetworkTable m_table, m_camerasTable;
-    private final Map<String, VisionProcessingResultsLogger> m_cameraLoggers;
+    private final StructPublisher<PoseEstimate> m_acceptedEstimatePublisher;
 
     private boolean m_hasBeenEnabled;
 
@@ -33,16 +34,12 @@ public final class Vision {
 
         m_table = NetworkTableInstance.getDefault().getTable("vision");
         m_camerasTable = m_table.getSubTable("cameras");
+        m_acceptedEstimatePublisher = m_table.getStructTopic("accepted_estimate", PoseEstimate.struct).publish();
 
-        m_cameraLauncher = new Limelight4(Constants.Vision.LIMELIGHT_LAUNCHER_NAME, Constants.Vision.LIMELIGHT_LAUNCHER_TRANSFORM);
-        m_cameraClimber = new Limelight4(Constants.Vision.LIMELIGHT_CLIMBER_NAME, Constants.Vision.LIMELIGHT_CLIMBER_TRANSFORM);
+        m_cameraLauncher = new Limelight4(m_camerasTable, Constants.Vision.LIMELIGHT_LAUNCHER_NAME, Constants.Vision.LIMELIGHT_LAUNCHER_TRANSFORM);
+        m_cameraClimber = new Limelight4(m_camerasTable, Constants.Vision.LIMELIGHT_CLIMBER_NAME, Constants.Vision.LIMELIGHT_CLIMBER_TRANSFORM);
 
         m_cameras =  Arrays.asList(m_cameraLauncher, m_cameraClimber);
-        m_cameraLoggers = new HashMap<>(m_cameras.size());
-        m_cameras.forEach(camera -> {
-            final String name = camera.getName();
-            m_cameraLoggers.put(name, new VisionProcessingResultsLogger(m_camerasTable, name));
-        });
 
         m_hasBeenEnabled = false;
     }
@@ -59,13 +56,9 @@ public final class Vision {
     public void update() {
         var inputs = m_inputSupplier.get();
         final List<PoseEstimate> estimates = m_cameras.stream()
-                .flatMap(camera -> camera.update(inputs).stream())
-                .map(this::processCameraOutputs)
+                .map(camera -> processCamera(camera, inputs))
                 .flatMap(Optional::stream)
                 .toList();
-
-        // TODO give to the robot state either the one pose estimate available, or the fused pose estimate
-        // make sure to log if its accepted
 
         PoseEstimate acceptedEstimate = null;
         if (estimates.size() == 1) {
@@ -79,33 +72,31 @@ public final class Vision {
 
         if (acceptedEstimate != null) {
             m_robotState.updatePoseEstimate(acceptedEstimate);
-            // TODO log the pose estimate struct
+            m_acceptedEstimatePublisher.set(acceptedEstimate);
         }
     }
 
-    private Optional<PoseEstimate> processCameraOutputs(final Limelight4.Outputs outputs) {
-        if (!outputs.hasTags()) {
-            return Optional.empty();
-        }
-
-        final Optional<PoseEstimate> megatagEstimate = outputs.getBestPoseEstimate()
-                .filter(b -> b.estimate().tagCount > 1)
-                .flatMap(this::processLimelightPoseEstimate);
-
-        final LimelightPoseEstimateWithVariance mt1estimate = outputs.mt1();
-        final Optional<PoseEstimate> gyroFusedEstimate = processGyroFusedPoseEstimate(mt1estimate);
-        final Optional<PoseEstimate> selectedEstimate = megatagEstimate.or(() -> gyroFusedEstimate);
-
-        selectedEstimate.ifPresent(estimate -> {
-            final var logger = m_cameraLoggers.get(outputs.cameraName());
-            if (!Objects.isNull(logger)) {
-                logger.log(estimate.timestampSeconds(),
-                        megatagEstimate.map(PoseEstimate::fieldToVehicle),
-                        gyroFusedEstimate.map(PoseEstimate::fieldToVehicle));
+    private Optional<PoseEstimate> processCamera(final Limelight4 camera, final Limelight4.Inputs inputs) {
+        return camera.update(inputs).flatMap(outputs -> {
+            if (!outputs.hasTags()) {
+                return Optional.empty();
             }
-        });
 
-        return selectedEstimate;
+            final Optional<PoseEstimate> megatagEstimate = outputs.getBestPoseEstimate()
+                    .filter(b -> b.estimate().tagCount > 1)
+                    .flatMap(this::processLimelightPoseEstimate);
+
+            final LimelightPoseEstimateWithVariance mt1estimate = outputs.mt1();
+            final Optional<PoseEstimate> gyroFusedEstimate = processGyroFusedPoseEstimate(mt1estimate);
+            final Optional<PoseEstimate> selectedEstimate = megatagEstimate.or(() -> gyroFusedEstimate);
+
+            selectedEstimate.ifPresent(estimate ->
+                camera.getLogger().log(estimate.timestampSeconds(),
+                    megatagEstimate.map(PoseEstimate::fieldToVehicle),
+                    gyroFusedEstimate.map(PoseEstimate::fieldToVehicle)));
+
+            return selectedEstimate;
+        });
     }
 
     // we are assuming that all the pose estimates are independent, and do not share a source of error ie. field layout
@@ -262,7 +253,8 @@ public final class Vision {
                 mostRecentPoseEstimate.timestampSeconds(),
                 fusedPose,
                 fusedVariance,
-                totalTagCount));
+                totalTagCount,
+                true));
     }
 
     private Optional<PoseEstimate> processLimelightPoseEstimate(final LimelightPoseEstimateWithVariance poseEstimateWithVariance) {

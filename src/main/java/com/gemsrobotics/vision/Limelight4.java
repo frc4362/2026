@@ -17,6 +17,8 @@ import java.util.Optional;
 import static edu.wpi.first.units.Units.*;
 
 public final class Limelight4 {
+    private static final String STD_DEVS_KEY = "stddevs";
+
     public record Inputs(Pose2d robotPose, AngularVelocity rotationRate) {}
     public record Outputs(String cameraName, double heartbeat, boolean hasTags, LimelightPoseEstimateWithVariance mt1, LimelightPoseEstimateWithVariance mt2, Inputs captureConditions) {
         public Optional<LimelightPoseEstimateWithVariance> getBestPoseEstimate() {
@@ -39,23 +41,22 @@ public final class Limelight4 {
     private final String m_name;
     private final DoubleArraySubscriber m_varianceTopic;
     private final Transform3d m_robotToCamera;
+    // we want each Limelight to log individually, so pragmatically it is useful for it to own its own logger
+    private final VisionProcessingResultsLogger m_logger;
     private double m_heartbeat;
 
-    public Limelight4(final String name, final Transform3d robotToCamera) {
+    public Limelight4(final NetworkTable outputsTable, final String name, final Transform3d robotToCamera) {
         m_name = name;
         m_varianceTopic = NetworkTableInstance.getDefault()
                 .getTable(m_name)
-                .getDoubleArrayTopic("stddevs")
+                .getDoubleArrayTopic(STD_DEVS_KEY)
                 .subscribe(new double[12]);
         m_robotToCamera = robotToCamera;
 
         setCameraPose(m_robotToCamera);
 
+        m_logger = new VisionProcessingResultsLogger(outputsTable, name);
         m_heartbeat = 0.0;
-    }
-
-    public String getName() {
-        return m_name;
     }
 
     public Optional<Outputs> update(final Inputs inputs) {
@@ -117,5 +118,13 @@ public final class Limelight4 {
         LimelightHelpers.SetFiducialDownscalingOverride(m_name, 1.0f);
         LimelightHelpers.SetIMUMode(m_name, 1);
         LimelightHelpers.SetThrottle(m_name, Constants.Vision.DISABLED_THROTTLE);
+    }
+
+    public String getName() {
+        return m_name;
+    }
+
+    public VisionProcessingResultsLogger getLogger() {
+        return m_logger;
     }
 }
