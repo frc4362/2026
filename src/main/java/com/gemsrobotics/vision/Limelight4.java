@@ -120,10 +120,6 @@ public final class Limelight4 {
         LimelightHelpers.SetThrottle(m_name, Constants.Vision.DISABLED_THROTTLE);
     }
 
-    public String getName() {
-        return m_name;
-    }
-
     public VisionProcessingResultsLogger getLogger() {
         return m_logger;
     }

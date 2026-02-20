@@ -9,7 +9,6 @@ import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.util.struct.Struct;
 
 import java.nio.ByteBuffer;
-import java.util.Objects;
 
 public final class PoseEstimate {
     private final double timestampSeconds;

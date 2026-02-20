@@ -12,6 +12,7 @@ import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructPublisher;
 
+import javax.swing.text.html.Option;
 import java.util.*;
 import java.util.function.Supplier;
 
@@ -157,7 +158,7 @@ public final class Vision {
     }
 
     // we are assuming that all the pose estimates are independent, and do not share a source of error ie. field layout
-    private Optional<PoseEstimate> fusePoseEstimates(List<PoseEstimate> visionEstimates) {
+    private Optional<PoseEstimate> fusePoseEstimates(final List<PoseEstimate> visionEstimates) {
         // ensure the estimates are all in order
         visionEstimates.sort(Comparator.comparing(PoseEstimate::timestampSeconds));
 
@@ -266,6 +267,11 @@ public final class Vision {
 
         // if we don't see any tags, this is not a valid pose estimate
         if (poseEstimate.rawFiducials.length < 1) {
+            return Optional.empty();
+        }
+
+        // if we're within a centimeter of the origin, we can assume this is pretty much a null reading
+        if (poseEstimate.pose.getTranslation().getSquaredNorm() < 0.1) {
             return Optional.empty();
         }
 

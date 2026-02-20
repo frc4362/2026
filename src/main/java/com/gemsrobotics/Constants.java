@@ -98,12 +98,14 @@ public final class Constants {
     public static final int INTAKE_TOP_TRANSLATION = 30;
     public static final int INTAKE_BOTTOM_TRANSLATION = 31;
     public static final int INTAKE_DEPLOYER = 32;
-    public static final int LAUNCHER_WEST = 33;
-    public static final int LAUNCHER_EAST = 34;
+    public static final int LAUNCHER_LOWER_WEST = 33;
+    public static final int LAUNCHER_UPPER_WEST = 34;
+    public static final int LAUNCHER_LOWER_EAST = 43;
+    public static final int LAUNCHER_UPPER_EAST = 44;
     public static final int SINGULATOR_WEST = 35;
     public static final int SINGULATOR_EAST = 36;
-    public static final int UPTAKE_LEADER = 37; // TODO: rename to give spatial information
-    public static final int UPTAKE_FOLLOWER = 38; // TODO: rename to give spatial information
+    public static final int UPTAKE_WEST = 37;
+    public static final int UPTAKE_EAST = 38;
     public static final int HOOD = 39;
   }
 }
