@@ -2,20 +2,24 @@ package com.gemsrobotics.vision;
 
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.Nat;
+import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 
 import edu.wpi.first.util.struct.Struct;
+import edu.wpi.first.util.struct.StructSerializable;
 
 import java.nio.ByteBuffer;
 
-public final class PoseEstimate {
+public final class PoseEstimate implements StructSerializable {
     private final double timestampSeconds;
     private final Pose2d fieldToVehicle;
     private final Matrix<N3, N1> variance;
     private final int tagCount;
 	private final boolean isFusedEstimate;
+
+	public static final PoseEstimate NULL = new PoseEstimate(Double.NaN, Pose2d.kZero, VecBuilder.fill(0.0, 0.0, 0.0), 0);
 
     public PoseEstimate(
             final double timestampSeconds,
@@ -94,7 +98,7 @@ public final class PoseEstimate {
 
 		@Override
 		public String getSchema() {
-			return "double timestampSeconds; Pose2d fieldToVehicle; " + VARIANCE_MAT_STRUCT.getTypeName() + "; int tagCount; boolean isFusedEstimate";
+			return "double timestampSeconds; Pose2d fieldToVehicle; " + VARIANCE_MAT_STRUCT.getTypeName() + " variance; int tagCount; boolean isFusedEstimate";
 		}
 
 		@Override

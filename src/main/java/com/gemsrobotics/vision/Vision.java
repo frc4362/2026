@@ -83,18 +83,15 @@ public final class Vision {
                 return Optional.empty();
             }
 
+            // use the MT2 estimate if we have 2 or more tags. otherwise, use MT1 fused with the robot's gyro
             final Optional<PoseEstimate> megatagEstimate = outputs.getBestPoseEstimate()
                     .filter(b -> b.estimate().tagCount > 1)
                     .flatMap(this::processLimelightPoseEstimate);
-
-            final LimelightPoseEstimateWithVariance mt1estimate = outputs.mt1();
-            final Optional<PoseEstimate> gyroFusedEstimate = processGyroFusedPoseEstimate(mt1estimate);
+            final Optional<PoseEstimate> gyroFusedEstimate = processGyroFusedPoseEstimate(outputs.mt1());
             final Optional<PoseEstimate> selectedEstimate = megatagEstimate.or(() -> gyroFusedEstimate);
 
             selectedEstimate.ifPresent(estimate ->
-                camera.getLogger().log(estimate.timestampSeconds(),
-                    megatagEstimate.map(PoseEstimate::fieldToVehicle),
-                    gyroFusedEstimate.map(PoseEstimate::fieldToVehicle)));
+                camera.getLogger().log(estimate.timestampSeconds(), megatagEstimate, gyroFusedEstimate));
 
             return selectedEstimate;
         });
