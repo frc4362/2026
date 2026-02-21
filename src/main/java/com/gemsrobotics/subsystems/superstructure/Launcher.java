@@ -8,6 +8,7 @@ import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.sim.TalonFXSimState;
 import com.gemsrobotics.Robot;
+import com.gemsrobotics.lib.Flywheel;
 import com.gemsrobotics.lib.StatusSignalManager;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
@@ -26,48 +27,19 @@ import static edu.wpi.first.units.Units.*;
 public class Launcher {
     private static final Distance WHEEL_CIRCUMFERENCE = Inches.of(2).times(2 * Math.PI);
     private static final double SCRUB_FACTOR = 0.7;
-    private static final double GEARING = 1.2;
+    private static final double GEARING = 1;
     private static final double SIM_UPDATE_SECONDS = 0.001;
 
-    private final TalonFX m_motorLeader, m_motorFollower;
-    private final MotionMagicVelocityTorqueCurrentFOC m_request;
-    private final CoastOut m_coastRequest;
-    private final Follower m_followerRequest;
+    private final Flywheel m_wheelLower, m_wheelUpper;
 
-    private final StatusSignal<AngularVelocity> m_leaderVelocitySignal, m_followerVelocitySignal;
-    private final StatusSignal<Voltage> m_leaderVoltsAppliedSignal, m_followerVoltsAppliedSignal;
-    private final StatusSignal<Current> m_leaderTorqueSignal, m_followerTorqueSignal;
-
-    private final TalonFXSimState m_leaderSimState, m_followerSimState;
     private final FlywheelSim m_flywheelSim;
     private final Notifier m_simNotifier;
 
     private boolean m_on;
 
-    public Launcher(final StatusSignalManager signalManager, final String ntName, final TalonFX motorLeader, final TalonFX motorFollower) {
-        //region motor config
-        m_motorLeader = motorLeader;
-        m_motorFollower = motorFollower;
-
-        final var cfg = new TalonFXConfiguration();
-        cfg.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
-        cfg.Feedback.SensorToMechanismRatio = GEARING;
-        cfg.Slot0.kP = 100.0;
-        cfg.Slot0.kV = 0.0;
-        cfg.Slot0.kA = 1.0;
-        cfg.MotionMagic.MotionMagicAcceleration = 1000.0;
-        m_motorLeader.getConfigurator().apply(cfg);
-        m_motorFollower.getConfigurator().apply(cfg);
-
-        m_request = new MotionMagicVelocityTorqueCurrentFOC(0.0);
-        m_request.Slot = 0;
-        m_followerRequest = new Follower(m_motorLeader.getDeviceID(), MotorAlignmentValue.Opposed);
-        m_coastRequest = new CoastOut();
-        //endregion
-
-        //region sim code
-        m_leaderSimState = m_motorLeader.getSimState();
-        m_followerSimState = m_motorFollower.getSimState();
+    public Launcher(final StatusSignalManager signalManager, final String ntName, final Flywheel wheelLower, final Flywheel wheelUpper) {
+        m_wheelLower = wheelLower;
+        m_wheelUpper = wheelUpper;
 
         final DCMotor m_motorModel = DCMotor.getKrakenX60Foc(2);
         m_flywheelSim = new FlywheelSim(
@@ -80,53 +52,24 @@ public class Launcher {
             m_simNotifier.startPeriodic(0.001);
         }
         //endregion
-
-        //region logging code
-        m_leaderVelocitySignal = m_motorLeader.getVelocity(false);
-        m_leaderVoltsAppliedSignal = m_motorLeader.getMotorVoltage(false);
-        m_leaderTorqueSignal = m_motorLeader.getTorqueCurrent(false);
-        m_followerVelocitySignal = m_motorFollower.getVelocity(false);
-        m_followerVoltsAppliedSignal = m_motorFollower.getMotorVoltage(false);
-        m_followerTorqueSignal = m_motorFollower.getTorqueCurrent(false);
-
-        final NetworkTable nt = NetworkTableInstance.getDefault().getTable("launcher/" + ntName);
-        signalManager.registerPublished(m_leaderVelocitySignal, nt, "leader_velocity_rps");
-        signalManager.registerPublished(m_leaderVoltsAppliedSignal, nt, "leader_volts");
-        signalManager.registerPublished(m_leaderTorqueSignal, nt, "leader_torque");
-        signalManager.registerPublished(m_followerVelocitySignal, nt, "follower_velocity_rps");
-        signalManager.registerPublished(m_followerVoltsAppliedSignal, nt, "follower_volts");
-        signalManager.registerPublished(m_followerTorqueSignal, nt, "follower_torque");
-        signalManager.registerPublished(m_motorLeader.getDeviceTemp(false), nt, "leader_temperature_c");
-        signalManager.registerPublished(m_motorFollower.getDeviceTemp(false), nt, "follower_temperature_c");
-        //endregion
-
         m_on = false;
     }
 
-    public void periodic() {
-        m_motorLeader.setControl(m_on ? m_request : m_coastRequest);
-        m_motorFollower.setControl(m_followerRequest);
-    }
-
     private void simulationPeriodic() { // Called by the Notifier earlier in this class
-        m_leaderSimState.setSupplyVoltage(RobotController.getBatteryVoltage());
-        m_followerSimState.setSupplyVoltage(RobotController.getBatteryVoltage());
-
-        var voltage = m_leaderSimState.getMotorVoltage();
-        m_flywheelSim.setInputVoltage(voltage);
-        m_flywheelSim.update(SIM_UPDATE_SECONDS);
-
-        m_leaderSimState.setRotorVelocity(m_flywheelSim.getAngularVelocity().times(GEARING));
-        m_followerSimState.setRotorVelocity(m_flywheelSim.getAngularVelocity().times(GEARING));
+//        m_leaderSimState.setSupplyVoltage(RobotController.getBatteryVoltage());
+//        m_followerSimState.setSupplyVoltage(RobotController.getBatteryVoltage());
+//
+//        var voltage = m_leaderSimState.getMotorVoltage();
+//        m_flywheelSim.setInputVoltage(voltage);
+//        m_flywheelSim.update(SIM_UPDATE_SECONDS);
+//
+//        m_leaderSimState.setRotorVelocity(m_flywheelSim.getAngularVelocity().times(GEARING));
+//        m_followerSimState.setRotorVelocity(m_flywheelSim.getAngularVelocity().times(GEARING));
     }
 
-    public void setVelocity(final DoubleSupplier velocitySupplier) {
-        m_on = true;
-        m_request.Velocity = velocitySupplier.getAsDouble();
-    }
-
-    public void setVelocity(final double velocity) {
-        setVelocity(() -> velocity);
+    public void setLinearVelocity(final double velocity) {
+        m_wheelLower.setLinearVelocity(velocity);
+        m_wheelUpper.setLinearVelocity(velocity);
     }
 
     public void setOff() {
@@ -134,10 +77,10 @@ public class Launcher {
     }
 
     public double getVelocity() {
-        return m_leaderVelocitySignal.getValueAsDouble();
+        return m_wheelLower.getAngularVelocity();
     }
 
     public LinearVelocity getLaunchVelocity() {
-        return MetersPerSecond.of(m_leaderVelocitySignal.getValueAsDouble() * WHEEL_CIRCUMFERENCE.in(Meters) * SCRUB_FACTOR);
+        return MetersPerSecond.of(getVelocity() * WHEEL_CIRCUMFERENCE.in(Meters) * SCRUB_FACTOR);
     }
 }

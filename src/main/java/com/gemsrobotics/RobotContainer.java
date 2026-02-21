@@ -4,7 +4,9 @@
 
 package com.gemsrobotics;
 
+import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.gemsrobotics.lib.Flywheel;
 import com.gemsrobotics.lib.StatusSignalManager;
 import com.gemsrobotics.sim.ProjectileManager;
 import com.gemsrobotics.sim.RobotVisualizer;
@@ -52,7 +54,7 @@ public final class RobotContainer {
 
         m_superstructure = new Superstructure(
                 m_drivetrain,
-                null,//new Launcher(m_signalManager, "left", new TalonFX(LAUNCHER_WEST, kAUX_BUS), new TalonFX(LAUNCHER_EAST, kAUX_BUS)),
+                null,//new Launcher(m_signalManager, "left", , new TalonFX(LAUNCHER_EAST, kAUX_BUS)),
                 new Hopper(m_signalManager, new TalonFX(SINGULATOR_WEST, kAUX_BUS), new TalonFX(SINGULATOR_EAST, kAUX_BUS)),
                 null,//new Uptake(m_signalManager, new TalonFX(UPTAKE_LEADER, kAUX_BUS), new TalonFX(UPTAKE_FOLLOWER, kAUX_BUS)),
                 null,//new Hood(m_signalManager, new TalonFX(HOOD, kAUX_BUS)),
@@ -88,6 +90,12 @@ public final class RobotContainer {
                 m_projectileManager.attemptSpawn();
             }
         }
+    }
+
+    private Flywheel makeLowerWheel() {
+//        final TalonFX motor = new TalonFX(LAUNCHER_LOWER_EAST, kAUX_BUS);
+        final TalonFXConfiguration cfg = new TalonFXConfiguration();
+        return null;
     }
 
     public RobotState getRobotState() {

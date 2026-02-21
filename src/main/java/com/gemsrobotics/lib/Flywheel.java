@@ -79,4 +79,8 @@ public class Flywheel {
     public void setOff() {
         m_motorLeader.setControl(m_coastRequest);
     }
+
+    public double getAngularVelocity() {
+        return m_leaderVelocitySignal.getValueAsDouble();
+    }
 }
