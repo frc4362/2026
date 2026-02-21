@@ -8,6 +8,7 @@ import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.CoastOut;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.InvertedValue;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
@@ -32,6 +33,7 @@ public class Robot extends TimedRobot {
         final TalonFXConfiguration cfg = new TalonFXConfiguration();
         cfg.CurrentLimits.StatorCurrentLimitEnable = true;
         cfg.CurrentLimits.StatorCurrentLimit = 80;
+        cfg.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
         m_launcherUpper.getConfigurator().apply(cfg);
         m_launcherLower.getConfigurator().apply(cfg);
         m_uptake.getConfigurator().apply(cfg);
@@ -47,7 +49,11 @@ public class Robot extends TimedRobot {
     public void disabledInit() {}
 
     @Override
-    public void disabledPeriodic() {}
+    public void disabledPeriodic() {
+        m_launcherLower.setControl(new CoastOut());
+        m_launcherUpper.setControl(new CoastOut());
+        m_uptake.setControl(new CoastOut());
+    }
 
     @Override
     public void autonomousInit() {}
@@ -63,9 +69,9 @@ public class Robot extends TimedRobot {
         var joystick = m_robotContainer.getPilot();
 
         if (joystick.a().getAsBoolean()) {
-            m_launcherLower.setControl(new VoltageOut(6.0));
-            m_launcherUpper.setControl(new VoltageOut(9.0));
-            m_uptake.setControl(new VoltageOut(6));
+            m_launcherLower.setControl(new VoltageOut(3.0));
+            m_launcherUpper.setControl(new VoltageOut(5.0));
+            m_uptake.setControl(new VoltageOut(6.0));
         } else {
             m_launcherLower.setControl(new CoastOut());
             m_launcherUpper.setControl(new CoastOut());
