@@ -35,8 +35,6 @@ public class Launcher {
     private final FlywheelSim m_flywheelSim;
     private final Notifier m_simNotifier;
 
-    private boolean m_on;
-
     public Launcher(final StatusSignalManager signalManager, final String ntName, final Flywheel wheelLower, final Flywheel wheelUpper) {
         m_wheelLower = wheelLower;
         m_wheelUpper = wheelUpper;
@@ -52,7 +50,6 @@ public class Launcher {
             m_simNotifier.startPeriodic(0.001);
         }
         //endregion
-        m_on = false;
     }
 
     private void simulationPeriodic() { // Called by the Notifier earlier in this class
@@ -72,15 +69,25 @@ public class Launcher {
         m_wheelUpper.setLinearVelocity(velocity);
     }
 
-    public void setOff() {
-        m_on = false;
+    public void setAngularVelocity(final double angularVelocity) {
+        m_wheelLower.setAngularVelocity(angularVelocity);
+        m_wheelUpper.setAngularVelocity(angularVelocity * 2.2);
     }
 
-    public double getVelocity() {
+    public void setOff() {
+        m_wheelLower.setOff();
+        m_wheelUpper.setOff();
+    }
+
+    public double getAngularVelocity() {
         return m_wheelLower.getAngularVelocity();
     }
 
     public LinearVelocity getLaunchVelocity() {
-        return MetersPerSecond.of(getVelocity() * WHEEL_CIRCUMFERENCE.in(Meters) * SCRUB_FACTOR);
+        return MetersPerSecond.of(getAngularVelocity() * WHEEL_CIRCUMFERENCE.in(Meters) * SCRUB_FACTOR);
+    }
+
+    public boolean isAtReference() {
+        return m_wheelLower.isAtReference() && m_wheelUpper.isAtReference();
     }
 }

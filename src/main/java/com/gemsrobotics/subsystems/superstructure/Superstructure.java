@@ -25,9 +25,9 @@ public final class Superstructure extends SubsystemBase {
     }
 
     private final CommandSwerveDrivetrain m_swerve;
-    private final Launcher m_launcher;
+    private final Launcher m_launcherEast;
     private final Hopper m_hopper;
-    private final Uptake m_uptake;
+    private final Uptake m_uptakeEast;
     private final Hood m_hood;
     private final Intake m_intake;
 
@@ -47,17 +47,17 @@ public final class Superstructure extends SubsystemBase {
 
     public Superstructure(
             final CommandSwerveDrivetrain swerve,
-            final Launcher launcher,
+            final Launcher launcherEast,
             final Hopper hopper,
-            final Uptake uptake,
+            final Uptake uptakeEast,
             final Hood hood,
             final Intake intake
     ) {
         m_swerve = swerve;
-        m_launcher = null;// launcher;
+        m_launcherEast = launcherEast; // launcher;
         m_hopper = hopper;
-        m_uptake =null;// uptake;
-        m_hood =null;// hood;
+        m_uptakeEast = uptakeEast;// uptake;
+        m_hood = null;// hood;
         m_intake = intake;
 
         final NetworkTable myTable = NetworkTableInstance.getDefault().getTable(NT_KEY);
@@ -68,9 +68,9 @@ public final class Superstructure extends SubsystemBase {
         m_launchAnglePublisher = myTable.getStructTopic("launch_angle", Rotation2d.struct).publish();
 
         m_launchStrategyChooser = new SendableChooser<>();
-        m_launchStrategyChooser.setDefaultOption("LookupTable", new LookupTableStrategy());
+        m_launchStrategyChooser.addOption("LookupTable", new LookupTableStrategy());
         m_launchStrategyChooser.addOption("SinMap", new SinMapStrategy());
-        m_launchStrategyChooser.addOption("TunedLaunch", new TunedLaunchStrategy(myTable));
+        m_launchStrategyChooser.setDefaultOption("TunedLaunch", new TunedLaunchStrategy(myTable));
         SmartDashboard.putData("Launch Strategy", m_launchStrategyChooser);
 
         m_state = SystemState.IDLE;
@@ -91,7 +91,7 @@ public final class Superstructure extends SubsystemBase {
         // update subsystems periodically
 //        m_launcher.periodic();
         m_hopper.periodic();
-//        m_uptake.periodic();
+        m_uptakeEast.periodic();
 //        m_hood.periodic();
 
         final SystemState newState = switch (m_stateWanted) {
@@ -113,34 +113,55 @@ public final class Superstructure extends SubsystemBase {
     }
 
     public SystemState handleIdle() {
-//        m_launcher.setOff();
-//        m_uptake.setIdle();
         m_intake.setStop();
+        m_launcherEast.setOff();
+        m_uptakeEast.setIdle();
+        m_hopper.setIdle();
         return SystemState.IDLE;
     }
 
+    private boolean m_isSpunUp = false;
     public SystemState handleLaunching() {
-        conformToLaunchParameters(getSelectedLaunchParameters());
+        if (m_stateChanged) {
+            m_isSpunUp = false;
+        }
 
-//        if (m_launcher.getVelocity() > 30) {
-//            m_uptake.setVelocity(30);
-//        }
+        conformToLaunchParameters(getSelectedLaunchParameters());
+//
+//        m_intake.setStop();
+//        m_launcherEast.setLinearVelocity(30);
+        if (m_isSpunUp || m_launcherEast.isAtReference()) {
+            m_uptakeEast.setVoltage(11);
+            m_hopper.setVelocity(66);
+            m_isSpunUp = true;
+        }
 
         return SystemState.LAUNCHING;
     }
 
     public SystemState handleIntaking() {
+        //m_intake.setDeploy();
         m_intake.setIntaking();
         m_intake.setRetract();
-        //m_intake.setDeploy();
+        m_launcherEast.setOff();
+        m_uptakeEast.setIdle();
+        m_hopper.setIdle();
         return SystemState.INTAKING;
     }
 
     public SystemState handleClimbing() {
+        m_intake.setStop();
+        m_launcherEast.setOff();
+        m_uptakeEast.setIdle();
+        m_hopper.setIdle();
         return SystemState.CLIMBING;
     }
 
     public SystemState handleClimbed() {
+        m_intake.setStop();
+        m_launcherEast.setOff();
+        m_uptakeEast.setIdle();
+        m_hopper.setIdle();
         return SystemState.CLIMBED;
     }
 
@@ -168,7 +189,7 @@ public final class Superstructure extends SubsystemBase {
 
     private void conformToLaunchParameters(final LaunchParameters parameters) {
 //        m_hood.setReference(parameters.hoodAngle());
-//        m_launcher.setVelocity(parameters.rps());
+        m_launcherEast.setAngularVelocity(parameters.rps());
     }
 
     public boolean isReadyToLaunch() {
@@ -196,7 +217,7 @@ public final class Superstructure extends SubsystemBase {
     }
 
     public Launcher getLauncher() {
-        return m_launcher;
+        return m_launcherEast;
     }
 
     public Hood getHood() {

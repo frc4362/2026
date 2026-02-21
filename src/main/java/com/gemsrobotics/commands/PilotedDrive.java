@@ -21,6 +21,7 @@ import static com.gemsrobotics.Constants.MAX_SPEED;
 import static java.lang.Math.abs;
 
 public class PilotedDrive extends Command {
+    public static final SwerveRequest.Idle IDLE_REQUEST = new SwerveRequest.Idle();
     private final CommandSwerveDrivetrain m_swerve;
     private final BooleanSupplier m_evading;
     private final DoubleSupplier m_velocityX, m_velocityY, m_rotation;
@@ -65,19 +66,24 @@ public class PilotedDrive extends Command {
     @Override
     public void execute() {
         // Correct travel direction to nearest 90deg if close to it
-        double stickMagnitude = new Translation2dPlus(m_velocityX.getAsDouble(), m_velocityY.getAsDouble()).getNorm();
-        stickMagnitude = MathUtil.applyDeadband(Math.pow(stickMagnitude, 1.5), 0.025, 1.0); // Scale for low-range movements
-
-        Rotation2dPlus stickDirection = new Rotation2dPlus(m_velocityX.getAsDouble(), m_velocityY.getAsDouble());
-        final var nearestPole = stickDirection.getNearestPole();
-        if (abs(stickDirection.minus(nearestPole).getDegrees()) < 5) {
-            stickDirection = nearestPole;
-        }
-
-        final Translation2dPlus targetVelocity = new Translation2dPlus(stickMagnitude * MAX_SPEED, stickDirection);
+        double translationMagnitude = new Translation2dPlus(m_velocityX.getAsDouble(), m_velocityY.getAsDouble()).getNorm();
+        translationMagnitude = MathUtil.applyDeadband(Math.pow(translationMagnitude, 1.5), 0.025, 1.0); // Scale for low-range movements
 
         // Maintain drive heading unless turning
         final var dbRotation = MathUtil.applyDeadband(m_rotation.getAsDouble(), 0.025, 1.0) * MAX_ANGULAR_RATE;
+
+        if (dbRotation == 0.0 && translationMagnitude == 0.0) {
+            m_swerve.setControl(IDLE_REQUEST);
+            return;
+        }
+
+        Rotation2dPlus translationDirection = new Rotation2dPlus(m_velocityX.getAsDouble(), m_velocityY.getAsDouble());
+        final var nearestPole = translationDirection.getNearestPole();
+        if (abs(translationDirection.minus(nearestPole).getDegrees()) < 5) {
+            translationDirection = nearestPole;
+        }
+
+        final Translation2dPlus targetVelocity = new Translation2dPlus(translationMagnitude * MAX_SPEED, translationDirection);
 
         if (dbRotation == 0.0) {
             // Don't move if not commanding an input

@@ -12,8 +12,11 @@ public final class TunedLaunchStrategy extends LaunchStrategy {
 	private final DoubleSubscriber m_hoodAngleSubscriber, m_rpsSubscriber;
 
 	public TunedLaunchStrategy(final NetworkTable nt) {
-		m_hoodAngleSubscriber = nt.getDoubleTopic("hood_angle_degrees").subscribe(Hood.MIN_ANGLE.getDegrees());
-		m_rpsSubscriber = nt.getDoubleTopic("velocity_rps").subscribe(0.0);
+		m_hoodAngleSubscriber = nt.getDoubleTopic("set_hood_angle_degrees").subscribe(Hood.MIN_ANGLE.getDegrees());
+		m_rpsSubscriber = nt.getDoubleTopic("set_velocity_rps").subscribe(0.0);
+
+		m_hoodAngleSubscriber.getTopic().publish().set(Hood.MIN_ANGLE.getDegrees());
+		m_rpsSubscriber.getTopic().publish().set(0.0);
 	}
 
 	@Override

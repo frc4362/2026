@@ -6,6 +6,7 @@ package com.gemsrobotics;
 
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.InvertedValue;
 import com.gemsrobotics.lib.Flywheel;
 import com.gemsrobotics.lib.StatusSignalManager;
 import com.gemsrobotics.sim.ProjectileManager;
@@ -15,13 +16,14 @@ import com.gemsrobotics.subsystems.superstructure.*;
 import com.gemsrobotics.commands.PilotedDrive;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import com.gemsrobotics.subsystems.swerve.CommandSwerveDrivetrain;
 import com.gemsrobotics.subsystems.swerve.TunerConstants;
 
 import static com.gemsrobotics.Constants.CAN.*;
-import static edu.wpi.first.units.Units.MetersPerSecond;
+import static edu.wpi.first.units.Units.*;
 
 public final class RobotContainer {
     private final StatusSignalManager m_signalManager;
@@ -54,15 +56,19 @@ public final class RobotContainer {
 
         m_superstructure = new Superstructure(
                 m_drivetrain,
-                null,//new Launcher(m_signalManager, "left", , new TalonFX(LAUNCHER_EAST, kAUX_BUS)),
+                new Launcher(m_signalManager, "east_launcher", makeLowerWheel(), makeUpperWheel()),
                 new Hopper(m_signalManager, new TalonFX(SINGULATOR_WEST, kAUX_BUS), new TalonFX(SINGULATOR_EAST, kAUX_BUS)),
-                null,//new Uptake(m_signalManager, new TalonFX(UPTAKE_LEADER, kAUX_BUS), new TalonFX(UPTAKE_FOLLOWER, kAUX_BUS)),
+                new Uptake(m_signalManager,"east_uptake", new TalonFX(UPTAKE_EAST, kAUX_BUS), new TalonFX(UPTAKE_WEST, kAUX_BUS)),
                 null,//new Hood(m_signalManager, new TalonFX(HOOD, kAUX_BUS)),
                 new Intake(m_signalManager,  new TalonFX(INTAKE_TOP_TRANSLATION, kAUX_BUS), new TalonFX(INTAKE_DEPLOYER, kAUX_BUS)));
         m_lights =null;// new Lights();
 
-        m_joystick.rightTrigger().onTrue(Commands.runOnce(() -> m_superstructure.getHopper().setVelocity(90)));
-        m_joystick.rightTrigger().onFalse(Commands.runOnce(() -> m_superstructure.getHopper().setIdle()));
+//        m_joystick.rightTrigger().onTrue(Commands.runOnce(() -> m_superstructure.getHopper().setVelocity(90)));
+//        m_joystick.rightTrigger().onFalse(Commands.runOnce(() -> m_superstructure.getHopper().setIdle()));
+
+        m_joystick.rightTrigger().onTrue(m_superstructure.applyWantedState(Superstructure.SystemState.LAUNCHING));
+        m_joystick.rightTrigger().onFalse(m_superstructure.applyWantedState(Superstructure.SystemState.IDLE));
+
         m_joystick.leftTrigger().onTrue(m_superstructure.applyWantedState(Superstructure.SystemState.INTAKING));
         m_joystick.leftTrigger().onFalse(m_superstructure.applyWantedState(Superstructure.SystemState.IDLE));
 //        m_joystick.a().onTrue(m_lights.setJammed());
@@ -93,9 +99,41 @@ public final class RobotContainer {
     }
 
     private Flywheel makeLowerWheel() {
-//        final TalonFX motor = new TalonFX(LAUNCHER_LOWER_EAST, kAUX_BUS);
+        final TalonFX motor = new TalonFX(LAUNCHER_LOWER_EAST, kAUX_BUS);
         final TalonFXConfiguration cfg = new TalonFXConfiguration();
-        return null;
+        cfg.CurrentLimits.StatorCurrentLimitEnable = true;
+        cfg.CurrentLimits.StatorCurrentLimit = 80;
+        cfg.Feedback.SensorToMechanismRatio = 1.0;
+        cfg.Slot0.kP = 8.0;
+        cfg.Slot0.kS = 4.0;
+        cfg.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+        motor.getConfigurator().apply(cfg);
+        return new Flywheel(
+                NetworkTableInstance.getDefault().getTable("launcher_east"),
+                "lower_wheel",
+                m_signalManager,
+                Inches.of(2.0),
+                motor
+        );
+    }
+
+    private Flywheel makeUpperWheel() {
+        final TalonFX motor = new TalonFX(LAUNCHER_UPPER_EAST, kAUX_BUS);
+        final TalonFXConfiguration cfg = new TalonFXConfiguration();
+        cfg.CurrentLimits.StatorCurrentLimitEnable = true;
+        cfg.CurrentLimits.StatorCurrentLimit = 80;
+        cfg.Feedback.SensorToMechanismRatio = 1.0 / 2.5;
+        cfg.Slot0.kP = 6.0;
+        cfg.Slot0.kS = 23.0;
+        cfg.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+        motor.getConfigurator().apply(cfg);
+        return new Flywheel(
+                NetworkTableInstance.getDefault().getTable("launcher_east"),
+                "upper_wheel",
+                m_signalManager,
+                Inches.of(1.0),
+                motor
+        );
     }
 
     public RobotState getRobotState() {

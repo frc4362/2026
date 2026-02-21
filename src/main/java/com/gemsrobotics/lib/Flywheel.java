@@ -3,6 +3,7 @@ package com.gemsrobotics.lib;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.controls.CoastOut;
 import com.ctre.phoenix6.controls.MotionMagicVelocityTorqueCurrentFOC;
+import com.ctre.phoenix6.controls.VelocityTorqueCurrentFOC;
 import com.ctre.phoenix6.hardware.TalonFX;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
@@ -18,7 +19,7 @@ public class Flywheel {
     private final TalonFX m_motorLeader;
     //private final TalonFX[] m_motorFollowers;
 
-    private final MotionMagicVelocityTorqueCurrentFOC m_request;
+    private final VelocityTorqueCurrentFOC m_request;
     private final CoastOut m_coastRequest;
 
     private final StatusSignal<AngularVelocity> m_leaderVelocitySignal;
@@ -36,21 +37,23 @@ public class Flywheel {
         m_motorLeader = motorLeader;
         //m_motorFollowers = motorFollowers;
 
-        m_request = new MotionMagicVelocityTorqueCurrentFOC(0);
+        m_request = new VelocityTorqueCurrentFOC(0);
 
         m_coastRequest = new CoastOut();
 
-        m_leaderVelocitySignal = m_motorLeader.getVelocity();
-        m_leaderVelocityReferenceSignal = m_motorLeader.getClosedLoopReference();
-        m_leaderSupplyCurrentSignal = m_motorLeader.getSupplyCurrent();
-        m_leaderStatorCurrentSignal = m_motorLeader.getStatorCurrent();
-        m_leaderTemperatureSignal = m_motorLeader.getDeviceTemp();
+        m_leaderVelocitySignal = m_motorLeader.getVelocity(false);
+        m_leaderVelocityReferenceSignal = m_motorLeader.getClosedLoopReference(false);
+        m_leaderSupplyCurrentSignal = m_motorLeader.getSupplyCurrent(false);
+        m_leaderStatorCurrentSignal = m_motorLeader.getStatorCurrent(false);
+        m_leaderTemperatureSignal = m_motorLeader.getDeviceTemp(false);
 
-        signalManager.registerPublished(m_leaderVelocitySignal, nt, "leader_velocity_rps");
-        signalManager.registerPublished(m_leaderVelocityReferenceSignal, nt, "leader_velocity_reference_rps");
-        signalManager.registerPublished(m_leaderSupplyCurrentSignal, nt, "leader_supply_current_amps");
-        signalManager.registerPublished(m_leaderStatorCurrentSignal, nt, "leader_stator_current_amps");
-        signalManager.registerPublished(m_leaderTemperatureSignal, nt, "leader_temp_c");
+        final NetworkTable myTable = nt.getSubTable(ntName);
+
+        signalManager.registerPublished(m_leaderVelocitySignal, myTable, "velocity_rps");
+        signalManager.registerPublished(m_leaderVelocityReferenceSignal, myTable, "velocity_reference_rps");
+        signalManager.registerPublished(m_leaderSupplyCurrentSignal, myTable, "supply_current_amps");
+        signalManager.registerPublished(m_leaderStatorCurrentSignal, myTable, "stator_current_amps");
+        signalManager.registerPublished(m_leaderTemperatureSignal, myTable, "temp_c");
     }
 
     public Flywheel(final String ntName,
@@ -59,7 +62,7 @@ public class Flywheel {
                     final TalonFX motorLeader,
                     final TalonFX... motorFollowers) {
         this(
-                NetworkTableInstance.getDefault().getTable(ntName + "/" + ntName),
+                NetworkTableInstance.getDefault().getTable(ntName),
                 ntName,
                 signalManager,
                 wheelRadius,
@@ -82,5 +85,10 @@ public class Flywheel {
 
     public double getAngularVelocity() {
         return m_leaderVelocitySignal.getValueAsDouble();
+    }
+
+    public boolean isAtReference() {
+        // angular difference <= 5
+        return m_leaderVelocityReferenceSignal.isNear(m_leaderVelocitySignal.getValueAsDouble(), 5.0);
     }
 }

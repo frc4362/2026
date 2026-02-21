@@ -115,11 +115,11 @@ public class Hopper {
     public void periodic() {
         if (m_on) {
             m_motorLeader.setControl(m_request);
+            m_motorFollower.setControl(m_request);
         } else {
             m_motorLeader.setControl(m_coastRequest);
+            m_motorFollower.setControl(m_coastRequest);
         }
-
-        m_motorFollower.setControl(m_followerRequest);
     }
 
     private void simulationPeriodic() { // Called by the Notifier earlier in this class

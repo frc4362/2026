@@ -20,23 +20,10 @@ public class Robot extends TimedRobot {
     private final RobotContainer m_robotContainer;
     private final MatchStateTracker m_matchStateTracker;
 
-    private final TalonFX m_launcherLower, m_launcherUpper, m_uptake;
-
     public Robot() {
         m_robotContainer = new RobotContainer();
         m_matchStateTracker = new MatchStateTracker();
         RobotController.setBrownoutVoltage(5.0);
-
-        m_launcherLower = new TalonFX(Constants.CAN.LAUNCHER_LOWER_EAST, kAUX_BUS);
-        m_launcherUpper = new TalonFX(Constants.CAN.LAUNCHER_UPPER_EAST, kAUX_BUS);
-        m_uptake = new TalonFX(Constants.CAN.UPTAKE_EAST, kAUX_BUS);
-        final TalonFXConfiguration cfg = new TalonFXConfiguration();
-        cfg.CurrentLimits.StatorCurrentLimitEnable = true;
-        cfg.CurrentLimits.StatorCurrentLimit = 80;
-        cfg.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
-        m_launcherUpper.getConfigurator().apply(cfg);
-        m_launcherLower.getConfigurator().apply(cfg);
-        m_uptake.getConfigurator().apply(cfg);
     }
 
     @Override
@@ -50,9 +37,6 @@ public class Robot extends TimedRobot {
 
     @Override
     public void disabledPeriodic() {
-        m_launcherLower.setControl(new CoastOut());
-        m_launcherUpper.setControl(new CoastOut());
-        m_uptake.setControl(new CoastOut());
     }
 
     @Override
@@ -66,17 +50,6 @@ public class Robot extends TimedRobot {
 
     @Override
     public void teleopPeriodic() {
-        var joystick = m_robotContainer.getPilot();
-
-        if (joystick.a().getAsBoolean()) {
-            m_launcherLower.setControl(new VoltageOut(3.0));
-            m_launcherUpper.setControl(new VoltageOut(5.0));
-            m_uptake.setControl(new VoltageOut(6.0));
-        } else {
-            m_launcherLower.setControl(new CoastOut());
-            m_launcherUpper.setControl(new CoastOut());
-            m_uptake.setControl(new CoastOut());
-        }
     }
 
     @Override
