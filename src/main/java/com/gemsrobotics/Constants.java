@@ -6,9 +6,7 @@ package com.gemsrobotics;
 
 import com.ctre.phoenix6.CANBus;
 import com.gemsrobotics.subsystems.swerve.TunerConstants;
-import edu.wpi.first.math.geometry.Rotation3d;
-import edu.wpi.first.math.geometry.Transform2d;
-import edu.wpi.first.math.geometry.Transform3d;
+import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Distance;
@@ -42,7 +40,9 @@ public final class Constants {
     public static final String LIMELIGHT_LAUNCHER_NAME = "limelight-launcher";
     public static final String LIMELIGHT_CLIMBER_NAME = "limelight-climber";
 
-    public static final Transform3d LIMELIGHT_LAUNCHER_TRANSFORM = new Transform3d();
+    public static final Transform3d LIMELIGHT_LAUNCHER_TRANSFORM = new Transform3d(
+            new Translation3d(Inches.of(-11.14), Inches.of(0.0), Inches.of(28.97)),
+            new Rotation3d(Degrees.of(0.0), Degrees.of(10.0), Degrees.of(0.0)));
     public static final Transform3d LIMELIGHT_CLIMBER_TRANSFORM = new Transform3d();
 
     public static final double HIGH_VARIANCE = 1_000_000.0;

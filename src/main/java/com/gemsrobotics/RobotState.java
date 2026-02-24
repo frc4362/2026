@@ -6,9 +6,7 @@ import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.units.measure.AngularVelocity;
 
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Consumer;
 
 import static edu.wpi.first.units.Units.RadiansPerSecond;
@@ -16,7 +14,7 @@ import static edu.wpi.first.units.Units.RadiansPerSecond;
 public final class RobotState {
 	private static final double LOOKBACK_TIME_SECONDS = 1.0;
 
-	private final Consumer<PoseEstimate> m_visionPoseEstimateConsumer;
+	private final List<Consumer<PoseEstimate>> m_visionPoseEstimateConsumers;
 
 	// Pose2d(X meters, Y meters, theta Rotation)
 	private final ConcurrentTimeInterpolatableBuffer<Pose2d> m_fieldToVehicle;
@@ -28,8 +26,8 @@ public final class RobotState {
 	private ChassisSpeeds m_recentVehicleRelativeVelocity;
 	private ChassisSpeeds m_recentFieldRelativeVelocity;
 
-	public RobotState(final Consumer<PoseEstimate> visionEstimateConsumer) {
-		m_visionPoseEstimateConsumer = visionEstimateConsumer;
+	public RobotState() {
+		m_visionPoseEstimateConsumers = new ArrayList<>();
 		m_lastVisionPoseEstimate = Pose2d.kZero;
 		m_lastVisionPoseEstimateTimestamp = 0.0;
 
@@ -42,10 +40,14 @@ public final class RobotState {
 		m_recentFieldRelativeVelocity = new ChassisSpeeds();
 	}
 
+	public void addPoseEstimateConsumer(final Consumer<PoseEstimate> consumer) {
+		m_visionPoseEstimateConsumers.add(consumer);
+	}
+
 	public void updatePoseEstimate(final PoseEstimate poseEstimate) {
 		m_lastVisionPoseEstimate = poseEstimate.fieldToVehicle();
 		m_lastVisionPoseEstimateTimestamp = poseEstimate.timestampSeconds();
-		m_visionPoseEstimateConsumer.accept(poseEstimate);
+		m_visionPoseEstimateConsumers.forEach(consumer -> consumer.accept(poseEstimate));
 	}
 
 	public double getLastVisionPoseEstimateTimestamp() {

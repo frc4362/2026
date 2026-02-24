@@ -15,17 +15,17 @@ import edu.wpi.first.units.measure.Temperature;
 import static edu.wpi.first.units.Units.Meters;
 
 public class Flywheel {
-    private final double m_wheelRadiusMeters;
-    private final TalonFX m_motorLeader;
+    protected final double m_wheelRadiusMeters;
+    protected final TalonFX m_motorLeader;
     //private final TalonFX[] m_motorFollowers;
 
-    private final VelocityTorqueCurrentFOC m_request;
-    private final CoastOut m_coastRequest;
+    protected final VelocityTorqueCurrentFOC m_request;
+    protected final CoastOut m_coastRequest;
 
-    private final StatusSignal<AngularVelocity> m_leaderVelocitySignal;
-    private final StatusSignal<Double> m_leaderVelocityReferenceSignal;
-    private final StatusSignal<Current> m_leaderSupplyCurrentSignal, m_leaderStatorCurrentSignal;
-    private final StatusSignal<Temperature> m_leaderTemperatureSignal;
+    protected final StatusSignal<AngularVelocity> m_leaderVelocitySignal;
+    protected final StatusSignal<Double> m_leaderVelocityReferenceSignal;
+    protected final StatusSignal<Current> m_leaderSupplyCurrentSignal, m_leaderStatorCurrentSignal;
+    protected final StatusSignal<Temperature> m_leaderTemperatureSignal;
 
     public Flywheel(final NetworkTable nt,
                     final String ntName,

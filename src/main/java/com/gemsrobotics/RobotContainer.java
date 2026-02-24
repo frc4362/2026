@@ -4,7 +4,9 @@
 
 package com.gemsrobotics;
 
+import com.ctre.phoenix6.Utils;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.controls.CoastOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.gemsrobotics.lib.Flywheel;
@@ -14,8 +16,13 @@ import com.gemsrobotics.sim.RobotVisualizer;
 import com.gemsrobotics.subsystems.Lights;
 import com.gemsrobotics.subsystems.superstructure.*;
 import com.gemsrobotics.commands.PilotedDrive;
+import com.gemsrobotics.vision.PoseEstimate;
+import edu.wpi.first.math.Matrix;
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.numbers.N1;
+import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -45,7 +52,7 @@ public final class RobotContainer {
 
         m_visualizer = new RobotVisualizer();
         // TODO make a real consumer
-        m_robotState = new RobotState(estimate -> {});
+        m_robotState = new RobotState();
         m_drivetrain = TunerConstants.createDrivetrain(m_robotState, m_joystick);
         m_drivetrain.setDefaultCommand(new PilotedDrive(
                 m_drivetrain,
@@ -54,11 +61,37 @@ public final class RobotContainer {
                 () -> -m_joystick.getLeftX(),
                 () -> -m_joystick.getRightX()));
 
+        m_robotState.addPoseEstimateConsumer(estimate -> {
+            final PoseEstimate correctEstimate;
+            if (estimate.variance().get(2, 0) >= Constants.Vision.HIGH_VARIANCE) {
+                // insert the known heading reading
+                // rather than hitting the pose estimator with a heading with a high variance
+                // this prevents spiraling off of the field
+                final Rotation2d newRotation = m_drivetrain.getState().Pose.getRotation();
+                final Matrix<N3, N1> correctVariance = estimate.variance().copy();
+                correctVariance.set(2, 0, 0.0);
+                estimate.variance().set(2, 0, 0);
+
+                correctEstimate = new PoseEstimate(
+                        estimate.timestampSeconds(),
+                        new Pose2d(estimate.fieldToVehicle().getTranslation(), newRotation),
+                        correctVariance,
+                        estimate.tagCount());
+            } else {
+                correctEstimate = estimate;
+            }
+            
+            m_drivetrain.addVisionMeasurement(
+                    correctEstimate.fieldToVehicle(),
+                    Utils.fpgaToCurrentTime(correctEstimate.timestampSeconds()),
+                    correctEstimate.variance());
+        });
+
         m_superstructure = new Superstructure(
                 m_drivetrain,
                 new Launcher(m_signalManager, "east_launcher", makeLowerWheel(), makeUpperWheel()),
                 new Hopper(m_signalManager, new TalonFX(SINGULATOR_WEST, kAUX_BUS), new TalonFX(SINGULATOR_EAST, kAUX_BUS)),
-                new Uptake(m_signalManager,"east_uptake", new TalonFX(UPTAKE_EAST, kAUX_BUS), new TalonFX(UPTAKE_WEST, kAUX_BUS)),
+                new Uptake(m_signalManager,"east", new TalonFX(UPTAKE_EAST, kAUX_BUS), new TalonFX(UPTAKE_WEST, kAUX_BUS)),
                 null,//new Hood(m_signalManager, new TalonFX(HOOD, kAUX_BUS)),
                 new Intake(m_signalManager,  new TalonFX(INTAKE_TOP_TRANSLATION, kAUX_BUS), new TalonFX(INTAKE_DEPLOYER, kAUX_BUS)));
         m_lights =null;// new Lights();
@@ -133,7 +166,12 @@ public final class RobotContainer {
                 m_signalManager,
                 Inches.of(1.0),
                 motor
-        );
+        ) {
+            @Override
+            public void setAngularVelocity(final double v) {
+                m_motorLeader.setControl(new CoastOut());
+            }
+        };
     }
 
     public RobotState getRobotState() {
