@@ -166,12 +166,7 @@ public final class RobotContainer {
                 m_signalManager,
                 Inches.of(1.0),
                 motor
-        ) {
-            @Override
-            public void setAngularVelocity(final double v) {
-                m_motorLeader.setControl(new CoastOut());
-            }
-        };
+        );
     }
 
     public RobotState getRobotState() {
