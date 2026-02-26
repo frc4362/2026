@@ -25,9 +25,9 @@ public final class Superstructure extends SubsystemBase {
     }
 
     private final CommandSwerveDrivetrain m_swerve;
-    private final Launcher m_launcherEast;
+    private final Launcher m_launcherEast, m_launcherWest;
     private final Hopper m_hopper;
-    private final Uptake m_uptakeEast;
+    private final Uptake m_uptake;
     private final Hood m_hood;
     private final Intake m_intake;
 
@@ -48,15 +48,17 @@ public final class Superstructure extends SubsystemBase {
     public Superstructure(
             final CommandSwerveDrivetrain swerve,
             final Launcher launcherEast,
+            final Launcher launcherWest,
             final Hopper hopper,
             final Uptake uptakeEast,
             final Hood hood,
             final Intake intake
     ) {
         m_swerve = swerve;
-        m_launcherEast = launcherEast; // launcher;
+        m_launcherEast = launcherEast;
+        m_launcherWest = launcherWest;
         m_hopper = hopper;
-        m_uptakeEast = uptakeEast;// uptake;
+        m_uptake = uptakeEast;// uptake;
         m_hood = null;// hood;
         m_intake = intake;
 
@@ -91,7 +93,7 @@ public final class Superstructure extends SubsystemBase {
         // update subsystems periodically
 //        m_launcher.periodic();
         m_hopper.periodic();
-        m_uptakeEast.periodic();
+        m_uptake.periodic();
 //        m_hood.periodic();
 
         final SystemState newState = switch (m_stateWanted) {
@@ -115,7 +117,8 @@ public final class Superstructure extends SubsystemBase {
     public SystemState handleIdle() {
         m_intake.setStop();
         m_launcherEast.setOff();
-        m_uptakeEast.setIdle();
+        m_launcherWest.setOff();
+        m_uptake.setIdle();
         m_hopper.setIdle();
         return SystemState.IDLE;
     }
@@ -127,11 +130,9 @@ public final class Superstructure extends SubsystemBase {
         }
 
         conformToLaunchParameters(getSelectedLaunchParameters());
-//
-//        m_intake.setStop();
-//        m_launcherEast.setLinearVelocity(30);
-        if (m_isSpunUp || m_launcherEast.isAtReference()) {
-            m_uptakeEast.setVoltage(11);
+
+        if (m_isSpunUp || (m_launcherEast.isAtReference() && m_launcherWest.isAtReference())) {
+            m_uptake.setVoltage(11);
             m_hopper.setVelocity(66);
             m_isSpunUp = true;
         }
@@ -144,7 +145,8 @@ public final class Superstructure extends SubsystemBase {
         m_intake.setIntaking();
         m_intake.setRetract();
         m_launcherEast.setOff();
-        m_uptakeEast.setIdle();
+        m_launcherWest.setOff();
+        m_uptake.setIdle();
         m_hopper.setIdle();
         return SystemState.INTAKING;
     }
@@ -152,7 +154,8 @@ public final class Superstructure extends SubsystemBase {
     public SystemState handleClimbing() {
         m_intake.setStop();
         m_launcherEast.setOff();
-        m_uptakeEast.setIdle();
+        m_launcherWest.setOff();
+        m_uptake.setIdle();
         m_hopper.setIdle();
         return SystemState.CLIMBING;
     }
@@ -160,7 +163,8 @@ public final class Superstructure extends SubsystemBase {
     public SystemState handleClimbed() {
         m_intake.setStop();
         m_launcherEast.setOff();
-        m_uptakeEast.setIdle();
+        m_launcherWest.setOff();
+        m_uptake.setIdle();
         m_hopper.setIdle();
         return SystemState.CLIMBED;
     }
@@ -190,10 +194,7 @@ public final class Superstructure extends SubsystemBase {
     private void conformToLaunchParameters(final LaunchParameters parameters) {
 //        m_hood.setReference(parameters.hoodAngle());
         m_launcherEast.setAngularVelocity(parameters.rps());
-    }
-
-    public boolean isReadyToLaunch() {
-        return false;// m_hood.atReference();
+        m_launcherWest.setAngularVelocity(parameters.rps());
     }
 
     public boolean isLaunching() {
@@ -214,17 +215,5 @@ public final class Superstructure extends SubsystemBase {
 
     public SystemState getState() {
         return m_state;
-    }
-
-    public Launcher getLauncher() {
-        return m_launcherEast;
-    }
-
-    public Hood getHood() {
-        return m_hood;
-    }
-
-    public Hopper getHopper() {
-        return m_hopper;
     }
 }

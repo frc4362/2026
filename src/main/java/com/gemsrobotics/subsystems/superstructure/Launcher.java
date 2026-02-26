@@ -35,7 +35,7 @@ public class Launcher {
     private final FlywheelSim m_flywheelSim;
     private final Notifier m_simNotifier;
 
-    public Launcher(final StatusSignalManager signalManager, final String ntName, final Flywheel wheelLower, final Flywheel wheelUpper) {
+    public Launcher(final Flywheel wheelLower, final Flywheel wheelUpper) {
         m_wheelLower = wheelLower;
         m_wheelUpper = wheelUpper;
 
