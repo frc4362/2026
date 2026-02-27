@@ -132,6 +132,7 @@ public final class Superstructure extends SubsystemBase {
         conformToLaunchParameters(getSelectedLaunchParameters());
 
         if (m_isSpunUp || (m_launcherEast.isAtReference() && m_launcherWest.isAtReference())) {
+            m_intake.setRetractSlowly();
             m_uptake.setVoltage(11);
             m_hopper.setVelocity(66);
             m_isSpunUp = true;

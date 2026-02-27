@@ -2,6 +2,7 @@ package com.gemsrobotics.subsystems.superstructure;
 
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.configs.TalonFXConfigurator;
 import com.ctre.phoenix6.controls.*;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
@@ -50,7 +51,7 @@ public class Intake {
     private final Notifier m_simNotifier;
 
     private final VelocityTorqueCurrentFOC m_request;
-    private final PositionTorqueCurrentFOC m_deployRequest;
+    private final DynamicMotionMagicTorqueCurrentFOC m_deployRequest;
     private final TalonFX m_intakeTop;
     private final TalonFX m_intakeDeployer;
 
@@ -82,7 +83,8 @@ public class Intake {
         m_intakeDeployer.getConfigurator().apply(cfgDep);
 
         m_request = new VelocityTorqueCurrentFOC(0);
-        m_deployRequest = new PositionTorqueCurrentFOC(0);
+        m_deployRequest = new DynamicMotionMagicTorqueCurrentFOC(0, 0, 0);
+        m_deployRequest.Acceleration = 7;
 
         m_intakeVelocitySignal = m_intakeTop.getVelocity(false);
         m_intakeStatorCurrentSignal = m_intakeTop.getStatorCurrent(false);
@@ -129,11 +131,21 @@ public class Intake {
     }
 
     public void setDeploy() {
-        m_intakeDeployer.setControl(m_deployRequest.withPosition(INTAKE_DEPLOYED_ROTATIONS));
+        m_intakeDeployer.setControl(m_deployRequest.
+                withPosition(INTAKE_DEPLOYED_ROTATIONS)
+                .withVelocity(10));
     }
 
     public void setRetract() {
-        m_intakeDeployer.setControl(m_deployRequest.withPosition(INTAKE_STOWED_ROTATIONS));
+        m_intakeDeployer.setControl(m_deployRequest
+                .withPosition(INTAKE_STOWED_ROTATIONS)
+                .withVelocity(10));
+    }
+
+    public void setRetractSlowly() {
+        m_intakeDeployer.setControl(m_deployRequest
+                .withPosition(INTAKE_STOWED_ROTATIONS)
+                .withVelocity(1.0 / 6.0));
     }
 
     public void setIntaking() {
