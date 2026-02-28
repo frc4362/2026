@@ -142,9 +142,8 @@ public final class Superstructure extends SubsystemBase {
     }
 
     public SystemState handleIntaking() {
-        //m_intake.setDeploy();
         m_intake.setIntaking();
-        m_intake.setRetract();
+        m_intake.setDeploy();
         m_launcherEast.setOff();
         m_launcherWest.setOff();
         m_uptake.setIdle();
