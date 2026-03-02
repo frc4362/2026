@@ -2,10 +2,10 @@ package com.gemsrobotics.subsystems.superstructure;
 
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
-import com.ctre.phoenix6.configs.TalonFXConfigurator;
 import com.ctre.phoenix6.controls.*;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
+import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.sim.TalonFXSimState;
 
@@ -52,11 +52,12 @@ public class Intake {
 
     private final VelocityTorqueCurrentFOC m_request;
     private final DynamicMotionMagicTorqueCurrentFOC m_deployRequest;
-    private final TalonFX m_intakeTop;
+    private final TalonFX m_intakeLeader, m_intakeFollower;
     private final TalonFX m_intakeDeployer;
 
-    public Intake(final StatusSignalManager signalManager, final TalonFX intakeMotor, final TalonFX deployerMotor) {
-        m_intakeTop = intakeMotor;
+    public Intake(final StatusSignalManager signalManager, final TalonFX intakeLeader, final TalonFX intakeFollower, final TalonFX deployerMotor) {
+        m_intakeLeader = intakeLeader;
+        m_intakeFollower = intakeFollower;
         final var cfg = new TalonFXConfiguration();
         cfg.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
         cfg.Feedback.SensorToMechanismRatio = INTAKE_GEARING;
@@ -67,7 +68,8 @@ public class Intake {
         cfg.MotorOutput.NeutralMode = NeutralModeValue.Coast;
         cfg.Slot0.kP = 8.0;
         cfg.Slot0.kA = 0.0;
-        m_intakeTop.getConfigurator().apply(cfg);
+        m_intakeLeader.getConfigurator().apply(cfg);
+        m_intakeFollower.getConfigurator().apply(cfg);
 
         m_intakeDeployer = deployerMotor;
         final var cfgDep = new TalonFXConfiguration();
@@ -86,10 +88,10 @@ public class Intake {
         m_deployRequest = new DynamicMotionMagicTorqueCurrentFOC(0, 0, 0);
         m_deployRequest.Acceleration = 7;
 
-        m_intakeVelocitySignal = m_intakeTop.getVelocity(false);
-        m_intakeStatorCurrentSignal = m_intakeTop.getStatorCurrent(false);
+        m_intakeVelocitySignal = m_intakeLeader.getVelocity(false);
+        m_intakeStatorCurrentSignal = m_intakeLeader.getStatorCurrent(false);
         m_deployerStatorCurrentSignal = m_intakeDeployer.getStatorCurrent(false);
-        m_intakeSupplyCurrentSignal = m_intakeTop.getSupplyCurrent(false);
+        m_intakeSupplyCurrentSignal = m_intakeLeader.getSupplyCurrent(false);
         m_deployerSupplyCurrentSignal = m_intakeDeployer.getSupplyCurrent(false);
         m_deployerPosition = m_intakeDeployer.getPosition(false);
 
@@ -105,7 +107,7 @@ public class Intake {
         m_intakeModel = DCMotor.getKrakenX60Foc(1);
         m_deployerModel = DCMotor.getKrakenX44Foc(1);
 
-        m_intakeSimState = m_intakeTop.getSimState();
+        m_intakeSimState = m_intakeLeader.getSimState();
         m_intakeSim = new DCMotorSim(
                 LinearSystemId.createDCMotorSystem(m_intakeModel, 0.001, INTAKE_GEARING),
                 m_intakeModel
@@ -149,15 +151,19 @@ public class Intake {
     }
 
     public void setIntaking() {
-        m_intakeTop.setControl(m_request.withVelocity(INTAKE_VELOCITY));
+        m_intakeLeader.setControl(m_request.withVelocity(INTAKE_VELOCITY));
     }
 
     public void setStop() {
-        m_intakeTop.setControl(new CoastOut());
+        m_intakeLeader.setControl(new CoastOut());
     }
 
     public Rotation2d getAngle() {
         return Rotation2d.fromRotations(m_deployerPosition.getValueAsDouble());
+    }
+
+    public void periodic() {
+        m_intakeFollower.setControl(new Follower(m_intakeLeader.getDeviceID(), MotorAlignmentValue.Opposed));
     }
 
     public void simulationPeriodic() {
