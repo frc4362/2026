@@ -78,7 +78,7 @@ public final class RobotContainer {
             
             m_drivetrain.addVisionMeasurement(
                     correctEstimate.fieldToVehicle(),
-                    Utils.fpgaToCurrentTime(correctEstimate.timestampSeconds()),
+                    correctEstimate.timestampSeconds(),
                     correctEstimate.variance());
         });
 

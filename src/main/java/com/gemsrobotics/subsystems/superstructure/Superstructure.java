@@ -86,7 +86,7 @@ public final class Superstructure extends SubsystemBase {
         m_systemStatePublisher.set(m_state.name());
         m_wantedStatePublisher.set(m_stateWanted.name());
         m_hubDistancePublisher.set(getDistanceToHub());
-        final LaunchParameters parameters = getSelectedLaunchParameters();
+        final LauncherParameters parameters = getSelectedLaunchParameters();
         m_launchVelocityPublisher.set(parameters.rps());
         m_launchAnglePublisher.set(parameters.hoodAngle());
 
@@ -187,11 +187,11 @@ public final class Superstructure extends SubsystemBase {
         return target.getDistance(m_swerve.getState().Pose.getTranslation());
     }
 
-    public LaunchParameters getSelectedLaunchParameters() {
+    public LauncherParameters getSelectedLaunchParameters() {
         return m_launchStrategyChooser.getSelected().getParameters(getDistanceToHub());
     }
 
-    private void conformToLaunchParameters(final LaunchParameters parameters) {
+    private void conformToLaunchParameters(final LauncherParameters parameters) {
 //        m_hood.setReference(parameters.hoodAngle());
         m_launcherEast.setAngularVelocity(parameters.rps());
         m_launcherWest.setAngularVelocity(parameters.rps());

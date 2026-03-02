@@ -20,8 +20,8 @@ public final class TunedLaunchStrategy extends LaunchStrategy {
 	}
 
 	@Override
-	protected LaunchParameters unsafeParametersFor(final double rangeMetersUnused) {
-		return new LaunchParameters(Rotation2d.fromDegrees(m_hoodAngleSubscriber.get()), m_rpsSubscriber.get());
+	protected LauncherParameters unsafeParametersFor(final double rangeMetersUnused) {
+		return new LauncherParameters(Rotation2d.fromDegrees(m_hoodAngleSubscriber.get()), m_rpsSubscriber.get());
 	}
 
 	@Override

@@ -16,6 +16,8 @@ import static edu.wpi.first.units.Units.*;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 
 public final class Constants {
+  public static final int TOF_RECURSION_LIMIT = 10;
+
   public static final Distance BUMPER_DEPTH = Inches.of(3.5);
 
   public static final double MAX_SPEED = 1.0 * TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
@@ -28,6 +30,11 @@ public final class Constants {
   public static final Distance ROBOT_TO_LAUNCHER_Z = Inches.of(22.826);
   public static final Transform3d ROBOT_TO_LAUNCHER_WEST = new Transform3d(ROBOT_TO_LAUNCHER_X, ROBOT_TO_LAUNCHER_WEST_Y, ROBOT_TO_LAUNCHER_Z, new Rotation3d());
   public static final Transform3d ROBOT_TO_LAUNCHER_EAST = new Transform3d(ROBOT_TO_LAUNCHER_X, ROBOT_TO_LAUNCHER_EAST_Y, ROBOT_TO_LAUNCHER_Z, new Rotation3d());
+  public static final Transform2d ROBOT_TO_LAUNCHER;
+  static {
+    final Transform3d robotToLauncher3d = ROBOT_TO_LAUNCHER_WEST.plus(ROBOT_TO_LAUNCHER_EAST).div(2.0);
+    ROBOT_TO_LAUNCHER = new Transform2d(robotToLauncher3d.getX(), robotToLauncher3d.getY(), robotToLauncher3d.getRotation().toRotation2d());
+  }
   public static final Distance BALL_STREAM_WIDTH = ROBOT_TO_LAUNCHER_EAST_Y.times(2.0).plus(BALL_RADIUS.times(2.0));
 
   public static final String SIM_VIZ_TABLE_KEY = "viz";

@@ -1,0 +1,187 @@
+package com.gemsrobotics.launching;
+
+import com.gemsrobotics.Constants;
+import com.gemsrobotics.FieldConstants;
+import com.gemsrobotics.RobotState;
+import com.gemsrobotics.lib.math.GeometryUtil;
+import com.gemsrobotics.util.AllianceFlipUtil;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.geometry.Twist2d;
+import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
+import edu.wpi.first.math.interpolation.InterpolatingTreeMap;
+import edu.wpi.first.math.interpolation.InverseInterpolator;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.networktables.DoubleArrayPublisher;
+import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.networktables.StructPublisher;
+import edu.wpi.first.util.struct.Struct;
+import edu.wpi.first.util.struct.StructGenerator;
+import edu.wpi.first.util.struct.StructSerializable;
+import edu.wpi.first.wpilibj.Timer;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+
+import static java.lang.Math.abs;
+
+public class Launching {
+	public record Parameters(
+			double timestamp,
+			boolean isValid,
+			Rotation2d vehicleRotation,
+			double vehicleRotationVelocity,
+			Rotation2d hoodAngle,
+			double hoodVelocity,
+			double flywheelSpeed,
+			double distance,
+			double distanceNoLookahead,
+			boolean isPassing
+	) implements StructSerializable {
+		public static final Struct<Parameters> struct = StructGenerator.genRecord(Parameters.class);
+	}
+
+	private static final InterpolatingTreeMap<Double, Rotation2d> RANGE_TO_HOOD_ANGLE;
+	private static final InterpolatingDoubleTreeMap RANGE_TO_WHEEL_RPS;
+	private static final InterpolatingDoubleTreeMap RANGE_TO_TOF_MAP;
+	static {
+		RANGE_TO_HOOD_ANGLE = new InterpolatingTreeMap<>(InverseInterpolator.forDouble(), Rotation2d::interpolate);
+		RANGE_TO_WHEEL_RPS = new InterpolatingDoubleTreeMap();
+		RANGE_TO_TOF_MAP = new InterpolatingDoubleTreeMap();
+
+		RANGE_TO_HOOD_ANGLE.put(1.0, Rotation2d.fromDegrees(15.0));
+		RANGE_TO_HOOD_ANGLE.put(5.0, Rotation2d.fromDegrees(40.0));
+
+		RANGE_TO_WHEEL_RPS.put(1.0, 30.0);
+		RANGE_TO_WHEEL_RPS.put(5.0, 40.0);
+
+		RANGE_TO_TOF_MAP.put(1.0, 0.9);
+		RANGE_TO_TOF_MAP.put(2.0, 1.0);
+		RANGE_TO_TOF_MAP.put(3.0, 1.1);
+		RANGE_TO_TOF_MAP.put(4.0, 1.115);
+		RANGE_TO_TOF_MAP.put(5.0, 1.2);
+	}
+
+	private static final double TOF_EPSILON = 0.001;
+	private static final double PHASE_LAG_SECONDS = 0.03;
+
+	private final RobotState m_robotState;
+	private final StructPublisher<Parameters> m_launchingParametersPublisher;
+	private final StructPublisher<Pose2d> m_lookaheadPosePublisher;
+	private final DoubleArrayPublisher m_contractionRatePublisher;
+
+	private Parameters m_latestParameters;
+
+	public Launching(final RobotState robotState) {
+		m_robotState = robotState;
+
+		final NetworkTable myTable = NetworkTableInstance.getDefault().getTable("launching_calculator");
+		m_launchingParametersPublisher = myTable.getStructTopic("parameters", Parameters.struct).publish();
+		m_lookaheadPosePublisher = myTable.getStructTopic("lookahead_pose", Pose2d.struct).publish();
+		m_contractionRatePublisher = myTable.getDoubleArrayTopic("contraction_rates").publish();
+
+		m_latestParameters = null;
+	}
+
+	public void periodic() {
+		Pose2d currentPose = m_robotState.getLatestFieldToVehicle().getValue();
+		final ChassisSpeeds currentVelocity = m_robotState.getLatestChassisSpeeds_FieldRelative();
+		currentPose = currentPose.exp(new Twist2d(
+				currentVelocity.vxMetersPerSecond * PHASE_LAG_SECONDS,
+				currentVelocity.vyMetersPerSecond * PHASE_LAG_SECONDS,
+				currentVelocity.omegaRadiansPerSecond * PHASE_LAG_SECONDS));
+
+		// right now, always pick the hub
+		// TODO passing shots
+		final boolean isPassing = false;
+		final Translation2d target = AllianceFlipUtil.apply(FieldConstants.Hub.topCenterPoint.toTranslation2d());
+		final Pose2d launcherStartingPose = currentPose.transformBy(Constants.ROBOT_TO_LAUNCHER);
+		final double startingLauncherToTargetDistance = target.getDistance(launcherStartingPose.getTranslation());
+
+		final Rotation2d currentRotation = currentPose.getRotation();
+		// the velocity of the launcher will not always be the same as the velocity of the robot
+		final ChassisSpeeds launcherVelocity = GeometryUtil.transformVelocity(currentVelocity, Constants.ROBOT_TO_LAUNCHER, currentRotation);
+
+		// TODO account for induced windage?
+		// https://frc-docs--3242.org.readthedocs.build/en/3242/docs/software/advanced-controls/fire-control/linear-drag.html
+
+		double tof = getTimeOfFlight(startingLauncherToTargetDistance, isPassing);
+		Pose2d lookaheadLauncherPose = launcherStartingPose;
+		double lookaheadLauncherToTargetDistance = startingLauncherToTargetDistance;
+		final List<Double> tofDiffs = new ArrayList<>();
+		tofDiffs.add(0.0);
+		final List<Double> contractionRates = new ArrayList<>(Constants.TOF_RECURSION_LIMIT);
+		for (int i = 1; i <= Constants.TOF_RECURSION_LIMIT; i++) {
+			// calculate new tof and log how much the tof contracted
+			final double newTof = getTimeOfFlight(lookaheadLauncherToTargetDistance, isPassing);
+			final double tofDiff = abs(newTof - tof);
+			tofDiffs.add(tofDiff);
+
+			double lastTofDiff = tofDiffs.get(i - 1);
+			if (lastTofDiff > TOF_EPSILON) {
+				contractionRates.add(tofDiff / lastTofDiff);
+			} else {
+				contractionRates.add(0.0);
+			}
+			tof = newTof;
+
+			// the imparted velocity of the robot times the flight time of the launch
+			// clearly, the time of the launch is not the same as when it is taken while still
+			// therefore we recurse
+			final var impartedVelocity = new Translation2d(launcherVelocity.vxMetersPerSecond, launcherVelocity.vyMetersPerSecond);
+			// calculate the new pose and distance for the next recursion
+			lookaheadLauncherPose = new Pose2d(
+				launcherStartingPose.getTranslation().plus(impartedVelocity.times(tof)),
+				launcherStartingPose.getRotation());
+			lookaheadLauncherToTargetDistance = target.getDistance(lookaheadLauncherPose.getTranslation());
+		}
+
+		// ugly one liner.. think its the best way around the boxing?
+		m_contractionRatePublisher.set(contractionRates.stream().mapToDouble(Double::doubleValue).toArray());
+
+		// when the loop is done, we're stuck with whatever we have converged on after N iterations
+		final Pose2d lookaheadRobotPose = lookaheadLauncherPose.transformBy(Constants.ROBOT_TO_LAUNCHER.inverse());
+		m_lookaheadPosePublisher.set(lookaheadRobotPose);
+
+		// TODO if we ever move shooter off center, we need to calculate the heading with that in mind
+		final Rotation2d desiredRobotRotation = target.minus(lookaheadRobotPose.getTranslation()).getAngle();
+
+		final var ret = new Parameters(
+				Timer.getTimestamp(),
+				isValidLaunchRange(lookaheadLauncherToTargetDistance, isPassing),
+				desiredRobotRotation,
+				0.0,
+				getHoodAngle(lookaheadLauncherToTargetDistance, isPassing),
+				0.0,
+				getFlywheelVelocity(lookaheadLauncherToTargetDistance, isPassing),
+				lookaheadLauncherToTargetDistance,
+				startingLauncherToTargetDistance,
+				isPassing);
+
+		m_launchingParametersPublisher.set(ret);
+		m_latestParameters = ret;
+	}
+
+	public Optional<Parameters> getLatestLaunchParameters() {
+		return Optional.ofNullable(m_latestParameters);
+	}
+
+	private double getFlywheelVelocity(final double launcherToTargetDistance, final boolean isPassing) {
+		return RANGE_TO_WHEEL_RPS.get(launcherToTargetDistance);
+	}
+
+	private Rotation2d getHoodAngle(final double launcherToTargetDistance, final boolean isPassing) {
+		return RANGE_TO_HOOD_ANGLE.get(launcherToTargetDistance);
+	}
+
+	private double getTimeOfFlight(final double launcherToTargetDistance, final boolean isPassing) {
+		return RANGE_TO_TOF_MAP.get(launcherToTargetDistance);
+	}
+
+	private boolean isValidLaunchRange(final double launcherToTargetDistance, final boolean isPassing) {
+		return true;
+	}
+}

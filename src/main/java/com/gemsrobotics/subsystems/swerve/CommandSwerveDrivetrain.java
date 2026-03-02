@@ -244,7 +244,7 @@ public class CommandSwerveDrivetrain extends TunerConstants.TunerSwerveDrivetrai
 
         // submit info to RobotState
         final var swerveState = getStateCopy();
-        final double robotTime = Timer.getFPGATimestamp();
+        final double robotTime = Timer.getTimestamp();
         m_robotState.addDriveSample(
                 robotTime,
                 swerveState.Pose,
