@@ -198,7 +198,7 @@ public final class Superstructure extends SubsystemBase {
     }
 
     public boolean isLaunching() {
-        return false;// m_launcher.getVelocity() > 33 && m_uptake.getVelocity() > 28 && m_hopper.getVelocity() > 28;
+        return m_state == SystemState.LAUNCHING && m_isSpunUp;// m_launcher.getVelocity() > 33 && m_uptake.getVelocity() > 28 && m_hopper.getVelocity() > 28;
     }
 
     public void setRetractIntake(boolean retractIntake) {

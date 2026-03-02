@@ -17,6 +17,7 @@ public final class AimAtHub extends Command {
     public AimAtHub(final CommandSwerveDrivetrain swerve) {
         m_swerve = swerve;
         m_request = CommandSwerveDrivetrain.makeAimingRequest();
+        addRequirements(m_swerve);
     }
 
     @Override

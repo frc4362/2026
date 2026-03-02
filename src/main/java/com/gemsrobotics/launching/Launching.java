@@ -13,10 +13,7 @@ import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.math.interpolation.InterpolatingTreeMap;
 import edu.wpi.first.math.interpolation.InverseInterpolator;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.networktables.DoubleArrayPublisher;
-import edu.wpi.first.networktables.NetworkTable;
-import edu.wpi.first.networktables.NetworkTableInstance;
-import edu.wpi.first.networktables.StructPublisher;
+import edu.wpi.first.networktables.*;
 import edu.wpi.first.util.struct.Struct;
 import edu.wpi.first.util.struct.StructGenerator;
 import edu.wpi.first.util.struct.StructSerializable;
@@ -27,15 +24,14 @@ import java.util.List;
 import java.util.Optional;
 
 import static java.lang.Math.abs;
+import static java.lang.Math.exp;
 
 public class Launching {
 	public record Parameters(
 			double timestamp,
 			boolean isValid,
 			Rotation2d vehicleRotation,
-			double vehicleRotationVelocity,
 			Rotation2d hoodAngle,
-			double hoodVelocity,
 			double flywheelSpeed,
 			double distance,
 			double distanceNoLookahead,
@@ -65,8 +61,12 @@ public class Launching {
 		RANGE_TO_TOF_MAP.put(5.0, 1.2);
 	}
 
+	private static final boolean DO_LINEAR_DRAG_COMPENSATION = false;
+	private static final double DRAG_CONSTANT_INVERSE_SECONDS = 0.2;
 	private static final double TOF_EPSILON = 0.001;
 	private static final double PHASE_LAG_SECONDS = 0.03;
+	private static final double MIN_RANGE_METERS = 1.0;
+	private static final double MAX_RANGE_METERS = 5.0;
 
 	private final RobotState m_robotState;
 	private final StructPublisher<Parameters> m_launchingParametersPublisher;
@@ -132,9 +132,18 @@ public class Launching {
 			// clearly, the time of the launch is not the same as when it is taken while still
 			// therefore we recurse
 			final var impartedVelocity = new Translation2d(launcherVelocity.vxMetersPerSecond, launcherVelocity.vyMetersPerSecond);
+
+			// reduce our effective tof by the imparted w
+			final double effectiveTof;
+			if (DO_LINEAR_DRAG_COMPENSATION) {
+				effectiveTof = (1 - exp(-DRAG_CONSTANT_INVERSE_SECONDS * tof)) / DRAG_CONSTANT_INVERSE_SECONDS;
+			} else {
+				effectiveTof = tof;
+			}
+
 			// calculate the new pose and distance for the next recursion
 			lookaheadLauncherPose = new Pose2d(
-				launcherStartingPose.getTranslation().plus(impartedVelocity.times(tof)),
+				launcherStartingPose.getTranslation().plus(impartedVelocity.times(effectiveTof)),
 				launcherStartingPose.getRotation());
 			lookaheadLauncherToTargetDistance = target.getDistance(lookaheadLauncherPose.getTranslation());
 		}
@@ -144,18 +153,15 @@ public class Launching {
 
 		// when the loop is done, we're stuck with whatever we have converged on after N iterations
 		final Pose2d lookaheadRobotPose = lookaheadLauncherPose.transformBy(Constants.ROBOT_TO_LAUNCHER.inverse());
-		m_lookaheadPosePublisher.set(lookaheadRobotPose);
-
 		// TODO if we ever move shooter off center, we need to calculate the heading with that in mind
 		final Rotation2d desiredRobotRotation = target.minus(lookaheadRobotPose.getTranslation()).getAngle();
+		m_lookaheadPosePublisher.set(new Pose2d(lookaheadRobotPose.getTranslation(), desiredRobotRotation));
 
 		final var ret = new Parameters(
 				Timer.getTimestamp(),
 				isValidLaunchRange(lookaheadLauncherToTargetDistance, isPassing),
 				desiredRobotRotation,
-				0.0,
 				getHoodAngle(lookaheadLauncherToTargetDistance, isPassing),
-				0.0,
 				getFlywheelVelocity(lookaheadLauncherToTargetDistance, isPassing),
 				lookaheadLauncherToTargetDistance,
 				startingLauncherToTargetDistance,
@@ -182,6 +188,6 @@ public class Launching {
 	}
 
 	private boolean isValidLaunchRange(final double launcherToTargetDistance, final boolean isPassing) {
-		return true;
+		return launcherToTargetDistance < MAX_RANGE_METERS && launcherToTargetDistance > MIN_RANGE_METERS;
 	}
 }
