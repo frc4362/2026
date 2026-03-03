@@ -102,8 +102,8 @@ public final class Constants {
 
     //--------------------aux-bus---------------------------
 
-    public static final int INTAKE_TOP_TRANSLATION = 30;
-    public static final int INTAKE_BOTTOM_TRANSLATION = 31;
+    public static final int INTAKE_TRANSLATION_LEADER = 30;
+    public static final int INTAKE_TRANSLATION_FOLLOWER = 31;
     public static final int INTAKE_DEPLOYER = 32;
     public static final int LAUNCHER_LOWER_WEST = 33;
     public static final int LAUNCHER_UPPER_WEST = 34;

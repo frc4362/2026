@@ -4,7 +4,6 @@
 
 package com.gemsrobotics;
 
-import com.ctre.phoenix6.Utils;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
@@ -95,7 +94,7 @@ public final class RobotContainer {
                 new Hopper(m_signalManager, new TalonFX(SINGULATOR_WEST, kAUX_BUS), new TalonFX(SINGULATOR_EAST, kAUX_BUS)),
                 new Uptake(m_signalManager,"uptake", new TalonFX(UPTAKE_EAST, kAUX_BUS), new TalonFX(UPTAKE_WEST, kAUX_BUS)),
                 null,//new Hood(m_signalManager, new TalonFX(HOOD, kAUX_BUS)),
-                new Intake(m_signalManager,  new TalonFX(INTAKE_TOP_TRANSLATION, kAUX_BUS), new TalonFX(INTAKE_BOTTOM_TRANSLATION, kAUX_BUS), new TalonFX(INTAKE_DEPLOYER, kAUX_BUS)));
+                new Intake(m_signalManager,  new TalonFX(INTAKE_TRANSLATION_LEADER, kAUX_BUS), new TalonFX(INTAKE_TRANSLATION_FOLLOWER, kAUX_BUS), new TalonFX(INTAKE_DEPLOYER, kAUX_BUS)));
         m_lights =null;// new Lights();
 
 //        m_joystick.rightTrigger().onTrue(Commands.runOnce(() -> m_superstructure.getHopper().setVelocity(90)));
@@ -132,7 +131,6 @@ public final class RobotContainer {
 
         if (Robot.isSimulation()) {
             m_projectileManager.updateAll();
-            // TODO
             if (m_superstructure.isLaunching()) {
                 m_projectileManager.attemptSpawn();
             }
@@ -147,6 +145,8 @@ public final class RobotContainer {
         cfg.Feedback.SensorToMechanismRatio = 1.0;
         cfg.Slot0.kP = 8.0;
         cfg.Slot0.kS = 4.0;
+        cfg.Slot0.kA = 0.01;
+        cfg.MotionMagic.MotionMagicAcceleration = 500;
         cfg.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
         motor.getConfigurator().apply(cfg);
         return new Flywheel(
@@ -166,6 +166,8 @@ public final class RobotContainer {
         cfg.Feedback.SensorToMechanismRatio = 1.0;
         cfg.Slot0.kP = 8.0;
         cfg.Slot0.kS = 4.0;
+        cfg.Slot0.kA = 0.01;
+        cfg.MotionMagic.MotionMagicAcceleration = 500;
         cfg.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
         motor.getConfigurator().apply(cfg);
         return new Flywheel(
@@ -185,6 +187,8 @@ public final class RobotContainer {
         cfg.Feedback.SensorToMechanismRatio = 1.0 / 2.5;
         cfg.Slot0.kP = 6.0;
         cfg.Slot0.kS = 23.0;
+        cfg.Slot0.kA = 0.01;
+        cfg.MotionMagic.MotionMagicAcceleration = 500;
         cfg.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
         motor.getConfigurator().apply(cfg);
         return new Flywheel(
@@ -204,6 +208,8 @@ public final class RobotContainer {
         cfg.Feedback.SensorToMechanismRatio = 1.0 / 2.5;
         cfg.Slot0.kP = 6.0;
         cfg.Slot0.kS = 23.0;
+        cfg.Slot0.kA = 0.01;
+        cfg.MotionMagic.MotionMagicAcceleration = 500;
         cfg.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
         motor.getConfigurator().apply(cfg);
         return new Flywheel(

@@ -95,6 +95,9 @@ public class Intake {
         m_deployerSupplyCurrentSignal = m_intakeDeployer.getSupplyCurrent(false);
         m_deployerPosition = m_intakeDeployer.getPosition(false);
 
+        // do this so the follower stays tapped in
+        m_intakeLeader.getTorqueCurrent(false).setUpdateFrequency(250.0);
+
         final NetworkTable nt = NetworkTableInstance.getDefault().getTable("intake");
         signalManager.registerPublished(m_intakeVelocitySignal, nt, "intake_velocity_rps");
         signalManager.registerPublished(m_intakeStatorCurrentSignal, nt, "intake_stator_current");

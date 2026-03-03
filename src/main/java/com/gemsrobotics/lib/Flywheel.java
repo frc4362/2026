@@ -3,7 +3,6 @@ package com.gemsrobotics.lib;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.controls.CoastOut;
 import com.ctre.phoenix6.controls.MotionMagicVelocityTorqueCurrentFOC;
-import com.ctre.phoenix6.controls.VelocityTorqueCurrentFOC;
 import com.ctre.phoenix6.hardware.TalonFX;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
@@ -19,7 +18,7 @@ public class Flywheel {
     protected final TalonFX m_motorLeader;
     //private final TalonFX[] m_motorFollowers;
 
-    protected final VelocityTorqueCurrentFOC m_request;
+    protected final MotionMagicVelocityTorqueCurrentFOC m_velocityRequest;
     protected final CoastOut m_coastRequest;
 
     protected final StatusSignal<AngularVelocity> m_leaderVelocitySignal;
@@ -37,8 +36,7 @@ public class Flywheel {
         m_motorLeader = motorLeader;
         //m_motorFollowers = motorFollowers;
 
-        m_request = new VelocityTorqueCurrentFOC(0);
-
+        m_velocityRequest = new MotionMagicVelocityTorqueCurrentFOC(0);
         m_coastRequest = new CoastOut();
 
         m_leaderVelocitySignal = m_motorLeader.getVelocity(false);
@@ -71,7 +69,7 @@ public class Flywheel {
     }
 
     public void setAngularVelocity(double rps) {
-        m_motorLeader.setControl(m_request.withVelocity(rps));
+        m_motorLeader.setControl(m_velocityRequest.withVelocity(rps));
     }
 
     public void setLinearVelocity(double mps) {
