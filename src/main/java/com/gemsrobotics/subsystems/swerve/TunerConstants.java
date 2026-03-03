@@ -80,17 +80,18 @@ public final class TunerConstants {
     // Configs for the Pigeon 2; leave this null to skip applying Pigeon 2 configs
     private static final Pigeon2Configuration pigeonConfigs = null;
 
-    // Theoretical free speed (m/s) at 12 V applied output;
-    // This needs to be tuned to your individual robot
-    public static final LinearVelocity kSpeedAt12Volts = MetersPerSecond.of(6.53);
-
     // Every 1 rotation of the azimuth results in kCoupleRatio drive motor turns;
     // This may need to be tuned to your individual robot
-    private static final double kCoupleRatio = 4.5;
+    private static final double kCoupleRatio = 5.4;
 
-    private static final double kDriveGearRatio = 4.725;
+    private static final double kDriveGearRatio = 5.67;
     private static final double kSteerGearRatio = 12.1;
     private static final Distance kWheelRadius = Inches.of(1.897);
+
+    // Theoretical free speed (m/s) at 12 V applied output;
+    // This needs to be tuned to your individual robot
+    public static final double WHEEL_MAX_RPS = RadiansPerSecond.of(DCMotor.getKrakenX60Foc(1).freeSpeedRadPerSec).in(RotationsPerSecond) / kDriveGearRatio;
+    public static final LinearVelocity kSpeedAt12Volts = MetersPerSecond.of(WHEEL_MAX_RPS * kWheelRadius.in(Meters));
 
     private static final boolean kInvertLeftSide = false;
     private static final boolean kInvertRightSide = true;
