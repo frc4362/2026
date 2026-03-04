@@ -11,8 +11,10 @@ import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructPublisher;
+import edu.wpi.first.wpilibj2.command.RunCommand;
+import edu.wpi.first.wpilibj2.command.WaitCommand;
+import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 
-import javax.swing.text.html.Option;
 import java.util.*;
 import java.util.function.Supplier;
 
@@ -43,14 +45,19 @@ public final class Vision {
         m_cameras =  Arrays.asList(m_cameraLauncher, m_cameraClimber);
 
         m_hasBeenEnabled = false;
+
+        // try to configure disabled every .5s while disabled
+        RobotModeTriggers.disabled().whileTrue(new RunCommand(this::configureDisabled).andThen(new WaitCommand(0.5)).repeatedly());
+        RobotModeTriggers.autonomous().onTrue(new RunCommand(this::configureEnabled));
+        RobotModeTriggers.teleop().onTrue(new RunCommand(this::configureEnabled));
     }
 
-    public void configureCamerasEnabled() {
+    public void configureEnabled() {
         m_cameras.forEach(Limelight4::configureEnabled);
         m_hasBeenEnabled = true;
     }
 
-    public void configureCamerasDisabled() {
+    public void configureDisabled() {
         m_cameras.forEach(Limelight4::configureDisabled);
     }
 
@@ -83,10 +90,18 @@ public final class Vision {
                 return Optional.empty();
             }
 
-            // use the MT2 estimate if we have 2 or more tags. otherwise, use MT1 fused with the robot's gyro
-            final Optional<PoseEstimate> megatagEstimate = outputs.getBestPoseEstimate()
-                    .filter(b -> b.estimate().tagCount > 1)
-                    .flatMap(this::processLimelightPoseEstimate);
+            // use MT1 if we're pre-enable. use the MT2 estimate if we have 2 or more tags. otherwise, use MT1 fused with the robot's gyro
+            final Optional<PoseEstimate> megatagEstimate;
+            if (m_hasBeenEnabled) {
+                megatagEstimate = outputs.getBestPoseEstimate()
+                        .filter(b -> b.estimate().tagCount > 1)
+                        .flatMap(this::processLimelightPoseEstimate);
+            } else if (outputs.mt1().estimate().tagCount > 1) {
+                megatagEstimate = processLimelightPoseEstimate(outputs.mt1());
+            } else {
+                megatagEstimate = Optional.empty();
+            }
+
             final Optional<PoseEstimate> gyroFusedEstimate = processGyroFusedPoseEstimate(outputs.mt1());
             final Optional<PoseEstimate> selectedEstimate = megatagEstimate.or(() -> gyroFusedEstimate);
 

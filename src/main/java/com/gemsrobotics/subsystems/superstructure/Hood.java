@@ -54,7 +54,7 @@ public final class Hood {
         cfg.Feedback.SensorToMechanismRatio = GEARING;
         cfg.Slot0.kP = 20.0;
         cfg.Slot0.kV = 0.0;
-        cfg.Slot0.kA = 0.0;
+        cfg.Slot0.kD = 2.0;
         cfg.TorqueCurrent.PeakForwardTorqueCurrent = 60.0;
         cfg.TorqueCurrent.PeakReverseTorqueCurrent = -60.0;
         cfg.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;

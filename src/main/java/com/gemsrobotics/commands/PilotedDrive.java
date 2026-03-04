@@ -49,7 +49,7 @@ public class PilotedDrive extends Command {
 
         m_evasionRequest = new FieldCentricEvasion(TunerConstants.moduleTranslations, Constants.BUMPER_DEPTH)
                 .withDeadband(0.05)
-                .withRotationalDeadband(0.1)
+                .withRotationalDeadband(0.05)
                 .withSteerRequestType(SwerveModule.SteerRequestType.MotionMagicExpo)
                 .withDriveRequestType(SwerveModule.DriveRequestType.OpenLoopVoltage)
                 .withEvading(false);

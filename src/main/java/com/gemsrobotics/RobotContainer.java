@@ -16,7 +16,9 @@ import com.gemsrobotics.sim.RobotVisualizer;
 import com.gemsrobotics.subsystems.Lights;
 import com.gemsrobotics.subsystems.superstructure.*;
 import com.gemsrobotics.commands.PilotedDrive;
+import com.gemsrobotics.vision.Limelight4;
 import com.gemsrobotics.vision.PoseEstimate;
+import com.gemsrobotics.vision.Vision;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -24,6 +26,7 @@ import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import com.gemsrobotics.subsystems.swerve.CommandSwerveDrivetrain;
 import com.gemsrobotics.subsystems.swerve.TunerConstants;
@@ -37,10 +40,10 @@ public final class RobotContainer {
     private final CommandXboxController m_joystick;
 
     private final Superstructure m_superstructure;
-
     private final RobotState m_robotState;
     private final RobotVisualizer m_visualizer;
     private final CommandSwerveDrivetrain m_drivetrain;
+    private final Vision m_vision;
     private final Launching m_launchCalculator;
     private final Lights m_lights;
 
@@ -51,7 +54,6 @@ public final class RobotContainer {
         m_joystick = new CommandXboxController(0);
 
         m_visualizer = new RobotVisualizer();
-        // TODO make a real consumer
         m_robotState = new RobotState();
         m_drivetrain = TunerConstants.createDrivetrain(m_robotState, m_joystick);
         m_drivetrain.setDefaultCommand(new PilotedDrive(
@@ -62,43 +64,50 @@ public final class RobotContainer {
                 () -> -m_joystick.getRightX()));
 
         m_robotState.addPoseEstimateConsumer(estimate -> {
-            final PoseEstimate correctEstimate;
-            if (estimate.variance().get(2, 0) >= Constants.Vision.HIGH_VARIANCE) {
-                // insert the known heading reading
-                // rather than hitting the pose estimator with a heading with a high variance
-                // this prevents spiraling off of the field
-                final Rotation2d newRotation = m_drivetrain.getState().Pose.getRotation();
-                final Matrix<N3, N1> correctVariance = estimate.variance().copy();
-                correctVariance.set(2, 0, 0.0);
-                correctEstimate = new PoseEstimate(
-                        estimate.timestampSeconds(),
-                        new Pose2d(estimate.fieldToVehicle().getTranslation(), newRotation),
-                        correctVariance,
-                        estimate.tagCount());
-            } else {
-                correctEstimate = estimate;
+            if (Constants.Vision.ACCEPT_VISION_MEASUREMENTS) {
+                final PoseEstimate correctEstimate;
+                if (estimate.variance().get(2, 0) >= Constants.Vision.HIGH_VARIANCE) {
+                    // insert the known heading reading
+                    // rather than hitting the pose estimator with a heading with a high variance
+                    // this prevents spiraling off of the field
+                    final Rotation2d newRotation = m_drivetrain.getState().Pose.getRotation();
+                    final Matrix<N3, N1> correctVariance = estimate.variance().copy();
+                    correctVariance.set(2, 0, 0.0);
+                    correctEstimate = new PoseEstimate(
+                            estimate.timestampSeconds(),
+                            new Pose2d(estimate.fieldToVehicle().getTranslation(), newRotation),
+                            correctVariance,
+                            estimate.tagCount());
+                } else {
+                    correctEstimate = estimate;
+                }
+
+                m_drivetrain.addVisionMeasurement(
+                        correctEstimate.fieldToVehicle(),
+                        correctEstimate.timestampSeconds(),
+                        correctEstimate.variance());
             }
-            
-            m_drivetrain.addVisionMeasurement(
-                    correctEstimate.fieldToVehicle(),
-                    correctEstimate.timestampSeconds(),
-                    correctEstimate.variance());
         });
 
-        m_launchCalculator = new Launching(m_robotState);
+        m_vision = new Vision(m_robotState, () ->
+            new Limelight4.Inputs(m_drivetrain.getState().Pose, m_drivetrain.getYawVelocity()));
 
+        m_launchCalculator = new Launching(m_robotState);
         m_superstructure = new Superstructure(
                 m_drivetrain,
                 new Launcher(makeLowerWheelEast(), makeUpperWheelEast()),
                 new Launcher(makeLowerWheelWest(), makeUpperWheelWest()),
                 new Hopper(m_signalManager, new TalonFX(SINGULATOR_WEST, kAUX_BUS), new TalonFX(SINGULATOR_EAST, kAUX_BUS)),
                 new Uptake(m_signalManager,"uptake", new TalonFX(UPTAKE_EAST, kAUX_BUS), new TalonFX(UPTAKE_WEST, kAUX_BUS)),
-                null,//new Hood(m_signalManager, new TalonFX(HOOD, kAUX_BUS)),
+                new Hood(m_signalManager, new TalonFX(HOOD, kAUX_BUS)),
                 new Intake(m_signalManager,  new TalonFX(INTAKE_TRANSLATION_LEADER, kAUX_BUS), new TalonFX(INTAKE_TRANSLATION_FOLLOWER, kAUX_BUS), new TalonFX(INTAKE_DEPLOYER, kAUX_BUS)));
-        m_lights =null;// new Lights();
+        m_lights = null;// new Lights();
 
 //        m_joystick.rightTrigger().onTrue(Commands.runOnce(() -> m_superstructure.getHopper().setVelocity(90)));
 //        m_joystick.rightTrigger().onFalse(Commands.runOnce(() -> m_superstructure.getHopper().setIdle()));
+
+        m_joystick.rightStick().onTrue(new RunCommand(() -> m_superstructure.setRetractIntake(true)));
+        m_joystick.rightStick().onFalse(new RunCommand(() -> m_superstructure.setRetractIntake(false)));
 
         m_joystick.rightTrigger().onTrue(m_superstructure.applyWantedState(Superstructure.SystemState.LAUNCHING));
         m_joystick.rightTrigger().onFalse(m_superstructure.applyWantedState(Superstructure.SystemState.IDLE));
@@ -121,7 +130,10 @@ public final class RobotContainer {
     }
 
     public void periodic() {
+        // conspicuously, we don't update Superstructure.
+        // This is because it is a Subsystem, so it is updated periodically inside the Scheduler
         m_signalManager.periodic();
+//        m_vision.update();
         m_launchCalculator.periodic();
 
         m_visualizer.update(

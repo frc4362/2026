@@ -21,7 +21,7 @@ public final class Constants {
   public static final Distance BUMPER_DEPTH = Inches.of(3.5);
 
   public static final double MAX_SPEED = 1.0 * TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
-  public static final double MAX_ANGULAR_RATE = RotationsPerSecond.of(1.5).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
+  public static final double MAX_ANGULAR_RATE = RotationsPerSecond.of(0.5).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
   public static final Mass ROBOT_WEIGHT = Pounds.of(115.0 + 20.0 + 13.0);
   public static final Distance BALL_RADIUS = Inches.of(5.91).div(2.0);
   public static final Distance ROBOT_TO_LAUNCHER_WEST_Y = Inches.of(4.77).plus(Inches.of(1.5));
@@ -51,6 +51,8 @@ public final class Constants {
             new Translation3d(Inches.of(-11.14), Inches.of(0.0), Inches.of(28.97)),
             new Rotation3d(Degrees.of(0.0), Degrees.of(10.0), Degrees.of(0.0)));
     public static final Transform3d LIMELIGHT_CLIMBER_TRANSFORM = new Transform3d();
+
+    public static final boolean ACCEPT_VISION_MEASUREMENTS = false;
 
     public static final double HIGH_VARIANCE = 1_000_000.0;
     // skips N frames and then processes one

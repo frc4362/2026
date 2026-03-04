@@ -26,15 +26,15 @@ import edu.wpi.first.wpilibj.simulation.SingleJointedArmSim;
 
 public class Intake {
     //TODO: fix values (because these are just copied from last year)
-    private static final double INTAKE_STARTING_ROTATIONS = 0.000;
+    private static final double INTAKE_STARTING_ROTATIONS = -0.43;
     // Assumes the intake is retracted at 0 rotations and deploys in the positive direction
-    private static final double INTAKE_STOWED_ROTATIONS = 0.0;
-    private static final double INTAKE_DEPLOYED_ROTATIONS = 105.0 / 360.0;   // (135deg/360deg)
-    private static final double INTAKE_VELOCITY = 108;
+    private static final double INTAKE_STOWED_ROTATIONS = -0.43;
+    private static final double INTAKE_DEPLOYED_ROTATIONS = 0.0;   // (135deg/360deg)
+    private static final double INTAKE_VELOCITY = 30;
     private static final double IDLE_VElOCITY = 0;
     private static final double SIM_UPDATE_SECONDS = 0.001;
 
-    private static final double INTAKE_GEARING = 1.0 / 1.2;
+    private static final double INTAKE_GEARING = 3.0 / 1.0;
     private static final double DEPLOYER_GEARING = 23.0 * (32.0 / 36.0);
     private static final double DEPLOYER_ARM_LENGTH = 0.37;
 
@@ -59,7 +59,7 @@ public class Intake {
         m_intakeLeader = intakeLeader;
         m_intakeFollower = intakeFollower;
         final var cfg = new TalonFXConfiguration();
-        cfg.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
+        cfg.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
         cfg.Feedback.SensorToMechanismRatio = INTAKE_GEARING;
         cfg.CurrentLimits.StatorCurrentLimit = 120;
         cfg.CurrentLimits.StatorCurrentLimitEnable = true;
@@ -81,8 +81,11 @@ public class Intake {
         cfgDep.MotorOutput.NeutralMode = NeutralModeValue.Brake;
         cfgDep.Slot0.kP = 3000;
         cfgDep.Slot0.kD = 30;
+        cfgDep.MotionMagic.MotionMagicAcceleration = 1.0;
         cfgDep.Feedback.SensorToMechanismRatio = DEPLOYER_GEARING;
         m_intakeDeployer.getConfigurator().apply(cfgDep);
+
+        m_intakeDeployer.setPosition(INTAKE_STARTING_ROTATIONS);
 
         m_request = new VelocityTorqueCurrentFOC(0);
         m_deployRequest = new DynamicMotionMagicTorqueCurrentFOC(0, 0, 0);
@@ -136,8 +139,8 @@ public class Intake {
     }
 
     public void setDeploy() {
-        m_intakeDeployer.setControl(m_deployRequest.
-                withPosition(INTAKE_DEPLOYED_ROTATIONS)
+        m_intakeDeployer.setControl(m_deployRequest
+                .withPosition(INTAKE_DEPLOYED_ROTATIONS)
                 .withVelocity(10));
     }
 
@@ -155,18 +158,16 @@ public class Intake {
 
     public void setIntaking() {
         m_intakeLeader.setControl(m_request.withVelocity(INTAKE_VELOCITY));
+        m_intakeFollower.setControl(m_request.withVelocity(INTAKE_VELOCITY));
     }
 
     public void setStop() {
         m_intakeLeader.setControl(new CoastOut());
+        m_intakeFollower.setControl(new CoastOut());
     }
 
     public Rotation2d getAngle() {
         return Rotation2d.fromRotations(m_deployerPosition.getValueAsDouble());
-    }
-
-    public void periodic() {
-        m_intakeFollower.setControl(new Follower(m_intakeLeader.getDeviceID(), MotorAlignmentValue.Opposed));
     }
 
     public void simulationPeriodic() {

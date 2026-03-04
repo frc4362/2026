@@ -267,6 +267,10 @@ public class CommandSwerveDrivetrain extends TunerConstants.TunerSwerveDrivetrai
         m_simNotifier.startPeriodic(kSimLoopPeriod);
     }
 
+    public AngularVelocity getYawVelocity() {
+        return m_yawVelocity.getValue();
+    }
+
     /**
      * Adds a vision measurement to the Kalman Filter. This will correct the odometry pose estimate
      * while still accounting for measurement noise.

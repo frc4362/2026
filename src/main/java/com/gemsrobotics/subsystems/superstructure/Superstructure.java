@@ -41,6 +41,7 @@ public final class Superstructure extends SubsystemBase {
     private Timer m_stateChangedTimer;
     private boolean m_stateChanged;
 
+    private boolean m_hasEverDeployedIntake;
     private boolean m_retractIntake;
 
     private final SendableChooser<LaunchStrategy> m_launchStrategyChooser;
@@ -59,7 +60,7 @@ public final class Superstructure extends SubsystemBase {
         m_launcherWest = launcherWest;
         m_hopper = hopper;
         m_uptake = uptakeEast;// uptake;
-        m_hood = null;// hood;
+        m_hood = hood;
         m_intake = intake;
 
         final NetworkTable myTable = NetworkTableInstance.getDefault().getTable(NT_KEY);
@@ -79,6 +80,8 @@ public final class Superstructure extends SubsystemBase {
         m_stateWanted = SystemState.IDLE;
         m_stateChangedTimer = new Timer();
         m_stateChanged = false;
+
+        m_hasEverDeployedIntake = false;
     }
 
     @Override
@@ -94,7 +97,7 @@ public final class Superstructure extends SubsystemBase {
 //        m_launcher.periodic();
         m_hopper.periodic();
         m_uptake.periodic();
-//        m_hood.periodic();
+        m_hood.periodic();
 
         final SystemState newState = switch (m_stateWanted) {
             case IDLE -> handleIdle();
@@ -115,6 +118,12 @@ public final class Superstructure extends SubsystemBase {
     }
 
     public SystemState handleIdle() {
+        if (m_retractIntake) {
+            m_intake.setRetract();
+        } else if (m_hasEverDeployedIntake) {
+            m_intake.setDeploy();
+        }
+
         m_intake.setStop();
         m_launcherEast.setOff();
         m_launcherWest.setOff();
@@ -142,6 +151,7 @@ public final class Superstructure extends SubsystemBase {
     }
 
     public SystemState handleIntaking() {
+        m_hasEverDeployedIntake = true;
         m_intake.setIntaking();
         m_intake.setDeploy();
         m_launcherEast.setOff();
