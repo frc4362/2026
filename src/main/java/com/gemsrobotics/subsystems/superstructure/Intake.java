@@ -28,7 +28,7 @@ public class Intake {
     //TODO: fix values (because these are just copied from last year)
     private static final double INTAKE_STARTING_ROTATIONS = -0.43;
     // Assumes the intake is retracted at 0 rotations and deploys in the positive direction
-    private static final double INTAKE_STOWED_ROTATIONS = -0.43;
+    private static final double INTAKE_STOWED_ROTATIONS = -0.4;
     private static final double INTAKE_DEPLOYED_ROTATIONS = 0.0;   // (135deg/360deg)
     private static final double INTAKE_VELOCITY = 30;
     private static final double IDLE_VElOCITY = 0;
@@ -153,7 +153,7 @@ public class Intake {
     public void setRetractSlowly() {
         m_intakeDeployer.setControl(m_deployRequest
                 .withPosition(INTAKE_STOWED_ROTATIONS)
-                .withVelocity(1.0 / 6.0));
+                .withVelocity(1.75 / 6.0));
     }
 
     public void setIntaking() {

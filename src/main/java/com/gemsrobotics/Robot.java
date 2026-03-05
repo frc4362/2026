@@ -15,8 +15,7 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
 
 import static com.gemsrobotics.Constants.CAN.kAUX_BUS;
 
-public class Robot extends TimedRobot {
-
+public final class Robot extends TimedRobot {
     private final RobotContainer m_robotContainer;
     private final MatchStateTracker m_matchStateTracker;
 

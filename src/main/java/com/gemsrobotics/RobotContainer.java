@@ -99,7 +99,7 @@ public final class RobotContainer {
                 new Launcher(makeLowerWheelWest(), makeUpperWheelWest()),
                 new Hopper(m_signalManager, new TalonFX(SINGULATOR_WEST, kAUX_BUS), new TalonFX(SINGULATOR_EAST, kAUX_BUS)),
                 new Uptake(m_signalManager,"uptake", new TalonFX(UPTAKE_EAST, kAUX_BUS), new TalonFX(UPTAKE_WEST, kAUX_BUS)),
-                new Hood(m_signalManager, new TalonFX(HOOD, kAUX_BUS)),
+                null,//new Hood(m_signalManager, new TalonFX(HOOD, kAUX_BUS)),
                 new Intake(m_signalManager,  new TalonFX(INTAKE_TRANSLATION_LEADER, kAUX_BUS), new TalonFX(INTAKE_TRANSLATION_FOLLOWER, kAUX_BUS), new TalonFX(INTAKE_DEPLOYER, kAUX_BUS)));
         m_lights = null;// new Lights();
 
