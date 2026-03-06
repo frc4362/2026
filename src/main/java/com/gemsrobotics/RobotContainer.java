@@ -99,7 +99,7 @@ public final class RobotContainer {
                 new Launcher(makeLowerWheelWest(), makeUpperWheelWest()),
                 new Hopper(m_signalManager, new TalonFX(SINGULATOR_WEST, kAUX_BUS), new TalonFX(SINGULATOR_EAST, kAUX_BUS)),
                 new Uptake(m_signalManager,"uptake", new TalonFX(UPTAKE_EAST, kAUX_BUS), new TalonFX(UPTAKE_WEST, kAUX_BUS)),
-                null,//new Hood(m_signalManager, new TalonFX(HOOD, kAUX_BUS)),
+                new Hood(m_signalManager, new TalonFX(HOOD, kAUX_BUS)),
                 new Intake(m_signalManager,  new TalonFX(INTAKE_TRANSLATION_LEADER, kAUX_BUS), new TalonFX(INTAKE_TRANSLATION_FOLLOWER, kAUX_BUS), new TalonFX(INTAKE_DEPLOYER, kAUX_BUS)));
         m_lights = null;// new Lights();
 
@@ -153,7 +153,7 @@ public final class RobotContainer {
         final TalonFX motor = new TalonFX(LAUNCHER_LOWER_EAST, kAUX_BUS);
         final TalonFXConfiguration cfg = new TalonFXConfiguration();
         cfg.CurrentLimits.StatorCurrentLimitEnable = true;
-        cfg.CurrentLimits.StatorCurrentLimit = 80;
+        cfg.CurrentLimits.StatorCurrentLimit = 100;
         cfg.Feedback.SensorToMechanismRatio = 1.0;
         cfg.Slot0.kP = 8.0;
         cfg.Slot0.kS = 4.0;
@@ -174,7 +174,7 @@ public final class RobotContainer {
         final TalonFX motor = new TalonFX(LAUNCHER_LOWER_WEST, kAUX_BUS);
         final TalonFXConfiguration cfg = new TalonFXConfiguration();
         cfg.CurrentLimits.StatorCurrentLimitEnable = true;
-        cfg.CurrentLimits.StatorCurrentLimit = 80;
+        cfg.CurrentLimits.StatorCurrentLimit = 100;
         cfg.Feedback.SensorToMechanismRatio = 1.0;
         cfg.Slot0.kP = 8.0;
         cfg.Slot0.kS = 4.0;
@@ -195,12 +195,12 @@ public final class RobotContainer {
         final TalonFX motor = new TalonFX(LAUNCHER_UPPER_EAST, kAUX_BUS);
         final TalonFXConfiguration cfg = new TalonFXConfiguration();
         cfg.CurrentLimits.StatorCurrentLimitEnable = true;
-        cfg.CurrentLimits.StatorCurrentLimit = 80;
+        cfg.CurrentLimits.StatorCurrentLimit = 100;
         cfg.Feedback.SensorToMechanismRatio = 1.0 / 2.5;
         cfg.Slot0.kP = 6.0;
         cfg.Slot0.kS = 23.0;
-        cfg.Slot0.kA = 0.01;
-        cfg.MotionMagic.MotionMagicAcceleration = 500;
+        cfg.Slot0.kA = 1;
+        cfg.MotionMagic.MotionMagicAcceleration = 1000;
         cfg.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
         motor.getConfigurator().apply(cfg);
         return new Flywheel(
@@ -216,12 +216,12 @@ public final class RobotContainer {
         final TalonFX motor = new TalonFX(LAUNCHER_UPPER_WEST, kAUX_BUS);
         final TalonFXConfiguration cfg = new TalonFXConfiguration();
         cfg.CurrentLimits.StatorCurrentLimitEnable = true;
-        cfg.CurrentLimits.StatorCurrentLimit = 80;
+        cfg.CurrentLimits.StatorCurrentLimit = 100;
         cfg.Feedback.SensorToMechanismRatio = 1.0 / 2.5;
         cfg.Slot0.kP = 6.0;
         cfg.Slot0.kS = 23.0;
-        cfg.Slot0.kA = 0.01;
-        cfg.MotionMagic.MotionMagicAcceleration = 500;
+        cfg.Slot0.kA = 1;
+        cfg.MotionMagic.MotionMagicAcceleration = 1000;
         cfg.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
         motor.getConfigurator().apply(cfg);
         return new Flywheel(

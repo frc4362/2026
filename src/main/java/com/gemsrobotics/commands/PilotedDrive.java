@@ -49,7 +49,7 @@ public class PilotedDrive extends Command {
 
         m_evasionRequest = new FieldCentricEvasion(TunerConstants.moduleTranslations, Constants.BUMPER_DEPTH)
                 .withDeadband(0.05)
-                .withRotationalDeadband(0.05)
+                .withRotationalDeadband(0.025)
                 .withSteerRequestType(SwerveModule.SteerRequestType.MotionMagicExpo)
                 .withDriveRequestType(SwerveModule.DriveRequestType.OpenLoopVoltage)
                 .withEvading(false);
@@ -90,10 +90,18 @@ public class PilotedDrive extends Command {
             if (targetVelocity.getNorm() < 0.01) {
                 m_swerve.setControl(m_idleRequest);
             } else {
-                m_swerve.setControl(m_maintainHeadingRequest
-                        .withVelocityX(targetVelocity.getX())
-                        .withVelocityY(targetVelocity.getY())
-                        .withTargetDirection(m_maintainHeadingGoal.orElse(Rotation2d.kZero))); // maintain heading
+                if (m_maintainHeadingGoal.isPresent()) {
+                    m_swerve.setControl(m_maintainHeadingRequest
+                            .withVelocityX(targetVelocity.getX())
+                            .withVelocityY(targetVelocity.getY())
+                            .withTargetDirection(m_maintainHeadingGoal.get())); // maintain heading
+                } else {
+                    m_swerve.setControl(m_evasionRequest
+                            .withVelocityX(targetVelocity.getX())
+                            .withVelocityY(targetVelocity.getY())
+                            .withEvading(false)
+                            .withRotationalRate(0.0));
+                }
             }
         } else {
             m_swerve.setControl(m_evasionRequest

@@ -29,7 +29,7 @@ public final class Hood {
     private static final double GEARING = 171.0; // 19:9:1
     // 15 degrees forward from the vertical, or 75 degrees up from the horizon
     public static final Rotation2d MIN_ANGLE  = Rotation2d.fromDegrees(15.0);
-    public static final Rotation2d MAX_ANGLE  = Rotation2d.fromDegrees(55.0);
+    public static final Rotation2d MAX_ANGLE  = MIN_ANGLE.plus(Rotation2d.fromRotations(0.065));
     private static final Rotation2d DEFAULT_TOLERANCE = Rotation2d.fromDegrees(0.5);
 
     private final TalonFX m_motor;
@@ -52,22 +52,26 @@ public final class Hood {
         final var cfg = new TalonFXConfiguration();
         cfg.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
         cfg.Feedback.SensorToMechanismRatio = GEARING;
-        cfg.Slot0.kP = 20.0;
+        cfg.Slot0.kP = 3000.0;
         cfg.Slot0.kV = 0.0;
-        cfg.Slot0.kD = 2.0;
+        cfg.Slot0.kD = 100.0;
+        cfg.Slot0.kS = 15.0;
+        cfg.ClosedLoopRamps.TorqueClosedLoopRampPeriod = 0.02;
         cfg.TorqueCurrent.PeakForwardTorqueCurrent = 60.0;
         cfg.TorqueCurrent.PeakReverseTorqueCurrent = -60.0;
         cfg.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
         cfg.SoftwareLimitSwitch.ReverseSoftLimitThreshold = 0.0;
-        cfg.SoftwareLimitSwitch.ForwardSoftLimitEnable = false;
-        cfg.SoftwareLimitSwitch.ReverseSoftLimitThreshold = 0.0; // this should be the maximum rotor position later
+        cfg.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
+        cfg.SoftwareLimitSwitch.ForwardSoftLimitThreshold = MAX_ANGLE.getRotations(); // this should be the maximum rotor position later
         cfg.MotorOutput.NeutralMode = NeutralModeValue.Brake;
         motor.getConfigurator().apply(cfg);
+
+        m_motor.setPosition(0.0);
 
         m_request = new PositionTorqueCurrentFOC(0.0);
         m_request.Slot = 0;
 
-        m_motorRotations = m_motor.getRotorPosition(false);
+        m_motorRotations = m_motor.getPosition(false);
         m_motorAmps = m_motor.getTorqueCurrent(false);
 
         final NetworkTable nt = NetworkTableInstance.getDefault().getTable("hood");

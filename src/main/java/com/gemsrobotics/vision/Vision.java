@@ -11,6 +11,7 @@ import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructPublisher;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
@@ -47,9 +48,9 @@ public final class Vision {
         m_hasBeenEnabled = false;
 
         // try to configure disabled every .5s while disabled
-        RobotModeTriggers.disabled().whileTrue(new RunCommand(this::configureDisabled).andThen(new WaitCommand(0.5)).repeatedly());
-        RobotModeTriggers.autonomous().onTrue(new RunCommand(this::configureEnabled));
-        RobotModeTriggers.teleop().onTrue(new RunCommand(this::configureEnabled));
+        RobotModeTriggers.disabled().whileTrue(Commands.runOnce(this::configureDisabled).andThen(new WaitCommand(0.5)).repeatedly());
+        RobotModeTriggers.autonomous().onTrue(Commands.runOnce(this::configureEnabled));
+        RobotModeTriggers.teleop().onTrue(Commands.runOnce(this::configureEnabled));
     }
 
     public void configureEnabled() {

@@ -15,13 +15,20 @@ public final class TunedLaunchStrategy extends LaunchStrategy {
 		m_hoodAngleSubscriber = nt.getDoubleTopic("set_hood_angle_degrees").subscribe(Hood.MIN_ANGLE.getDegrees());
 		m_rpsSubscriber = nt.getDoubleTopic("set_velocity_rps").subscribe(0.0);
 
-		m_hoodAngleSubscriber.getTopic().publish().set(Hood.MIN_ANGLE.getDegrees());
-		m_rpsSubscriber.getTopic().publish().set(0.0);
+		m_hoodAngleSubscriber.getTopic().publish().set(28.0);
+		m_rpsSubscriber.getTopic().publish().set(30.0);
 	}
 
 	@Override
 	protected LauncherParameters unsafeParametersFor(final double rangeMetersUnused) {
-		return new LauncherParameters(Rotation2d.fromDegrees(m_hoodAngleSubscriber.get()), m_rpsSubscriber.get());
+		double safeHoodAngleDegrees = m_hoodAngleSubscriber.get();
+		if (safeHoodAngleDegrees < Hood.MIN_ANGLE.getDegrees()) {
+			safeHoodAngleDegrees = Hood.MIN_ANGLE.getDegrees();
+		} else if (safeHoodAngleDegrees > Hood.MAX_ANGLE.getDegrees()) {
+			safeHoodAngleDegrees = Hood.MAX_ANGLE.getDegrees();
+		}
+
+		return new LauncherParameters(Rotation2d.fromDegrees(safeHoodAngleDegrees), m_rpsSubscriber.get());
 	}
 
 	@Override

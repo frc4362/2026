@@ -1,26 +1,12 @@
 package com.gemsrobotics.subsystems.superstructure;
 
-import com.ctre.phoenix6.StatusSignal;
-import com.ctre.phoenix6.configs.TalonFXConfiguration;
-import com.ctre.phoenix6.controls.*;
-import com.ctre.phoenix6.hardware.TalonFX;
-import com.ctre.phoenix6.signals.InvertedValue;
-import com.ctre.phoenix6.signals.MotorAlignmentValue;
-import com.ctre.phoenix6.sim.TalonFXSimState;
 import com.gemsrobotics.Robot;
 import com.gemsrobotics.lib.Flywheel;
-import com.gemsrobotics.lib.StatusSignalManager;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
-import edu.wpi.first.networktables.NetworkTable;
-import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.units.measure.*;
 import edu.wpi.first.wpilibj.Notifier;
-import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.FlywheelSim;
-import sun.misc.Signal;
-
-import java.util.function.DoubleSupplier;
 
 import static edu.wpi.first.units.Units.*;
 
@@ -71,7 +57,7 @@ public class Launcher {
 
     public void setAngularVelocity(final double angularVelocity) {
         m_wheelLower.setAngularVelocity(angularVelocity);
-        m_wheelUpper.setAngularVelocity(angularVelocity * 2.2);
+        m_wheelUpper.setAngularVelocity(angularVelocity * 1.5);
     }
 
     public void setOff() {
@@ -87,7 +73,7 @@ public class Launcher {
         return MetersPerSecond.of(getAngularVelocity() * WHEEL_CIRCUMFERENCE.in(Meters) * SCRUB_FACTOR);
     }
 
-    public boolean isAtReference() {
+    public boolean atReference() {
         return m_wheelLower.isAtReference() && m_wheelUpper.isAtReference();
     }
 }

@@ -17,8 +17,8 @@ public class LookupTableStrategy extends LaunchStrategy {
         ENTRIES = new ArrayList<>();
         ENTRIES.add(new TableEntry(2, new LauncherParameters(Rotation2d.fromDegrees(15.0), 25.0)));
         ENTRIES.add(new TableEntry(3, new LauncherParameters(Rotation2d.fromDegrees(25.0), 27.5)));
-        ENTRIES.add(new TableEntry(4, new LauncherParameters(Rotation2d.fromDegrees(35.0), 32.5)));
-        ENTRIES.add(new TableEntry(5, new LauncherParameters(Rotation2d.fromDegrees(50.0), 40.0)));
+        ENTRIES.add(new TableEntry(4, new LauncherParameters(Rotation2d.fromDegrees(30.0), 32.5)));
+        ENTRIES.add(new TableEntry(5, new LauncherParameters(Rotation2d.fromDegrees(38.0), 40.0)));
         ENTRIES.sort(Comparator.comparingDouble(TableEntry::range));
 
         LOOKUP_TABLE = new InterpolatingTreeMap<>(InverseInterpolator.forDouble(), LauncherParameters::interpolate);

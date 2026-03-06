@@ -21,7 +21,7 @@ public final class Constants {
   public static final Distance BUMPER_DEPTH = Inches.of(3.5);
 
   public static final double MAX_SPEED = 1.0 * TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
-  public static final double MAX_ANGULAR_RATE = RotationsPerSecond.of(0.5).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
+  public static final double MAX_ANGULAR_RATE = RotationsPerSecond.of(1.0).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
   public static final Mass ROBOT_WEIGHT = Pounds.of(115.0 + 20.0 + 13.0);
   public static final Distance BALL_RADIUS = Inches.of(5.91).div(2.0);
   public static final Distance ROBOT_TO_LAUNCHER_WEST_Y = Inches.of(4.77).plus(Inches.of(1.5));
@@ -44,8 +44,8 @@ public final class Constants {
   }
 
   public static class Vision {
-    public static final String LIMELIGHT_LAUNCHER_NAME = "limelight-launcher";
-    public static final String LIMELIGHT_CLIMBER_NAME = "limelight-climber";
+    public static final String LIMELIGHT_LAUNCHER_NAME = "limelight-launch";
+    public static final String LIMELIGHT_CLIMBER_NAME = "limelight-climb";
 
     public static final Transform3d LIMELIGHT_LAUNCHER_TRANSFORM = new Transform3d(
             new Translation3d(Inches.of(-11.14), Inches.of(0.0), Inches.of(28.97)),

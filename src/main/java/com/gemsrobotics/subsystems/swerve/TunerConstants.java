@@ -33,7 +33,7 @@ public final class TunerConstants {
         .withKI(0)
         .withKD(0.5)
         .withKS(0.1)
-        .withKV(SUPPLY_VOLTAGE / X44_RPS)
+        .withKV(SUPPLY_VOLTAGE / X44_RPS * 0.9)
         .withKA(0)
         .withStaticFeedforwardSign(StaticFeedforwardSignValue.UseClosedLoopSign);
     // When using closed-loop control, the drive motor uses the control
@@ -91,7 +91,7 @@ public final class TunerConstants {
     // Theoretical free speed (m/s) at 12 V applied output;
     // This needs to be tuned to your individual robot
     public static final double WHEEL_MAX_RPS = RadiansPerSecond.of(DCMotor.getKrakenX60Foc(1).freeSpeedRadPerSec).in(RotationsPerSecond) / kDriveGearRatio;
-    public static final LinearVelocity kSpeedAt12Volts = MetersPerSecond.of(WHEEL_MAX_RPS * kWheelRadius.in(Meters));
+    public static final LinearVelocity kSpeedAt12Volts = MetersPerSecond.of(WHEEL_MAX_RPS * kWheelRadius.in(Meters) * 2 * Math.PI);
 
     private static final boolean kInvertLeftSide = false;
     private static final boolean kInvertRightSide = true;

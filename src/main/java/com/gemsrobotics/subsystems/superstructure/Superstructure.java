@@ -60,7 +60,7 @@ public final class Superstructure extends SubsystemBase {
         m_launcherWest = launcherWest;
         m_hopper = hopper;
         m_uptake = uptakeEast;// uptake;
-        m_hood = null;// hood;
+        m_hood =  hood;
         m_intake = intake;
 
         final NetworkTable myTable = NetworkTableInstance.getDefault().getTable(NT_KEY);
@@ -97,7 +97,7 @@ public final class Superstructure extends SubsystemBase {
 //        m_launcher.periodic();
         m_hopper.periodic();
         m_uptake.periodic();
-//        m_hood.periodic();
+        m_hood.periodic();
 
         final SystemState newState = switch (m_stateWanted) {
             case IDLE -> handleIdle();
@@ -140,7 +140,7 @@ public final class Superstructure extends SubsystemBase {
 
         conformToLaunchParameters(getSelectedLaunchParameters());
 
-        if (m_isSpunUp || (m_launcherEast.isAtReference() && m_launcherWest.isAtReference())) {
+        if (m_isSpunUp || isReadyToFire()) {
             m_intake.setRetractSlowly();
             m_uptake.setVoltage(11);
             m_hopper.setVelocity(90);
@@ -201,8 +201,12 @@ public final class Superstructure extends SubsystemBase {
         return m_launchStrategyChooser.getSelected().getParameters(getDistanceToHub());
     }
 
+    private boolean isReadyToFire() {
+        return m_launcherWest.atReference() && m_launcherEast.atReference() && m_hood.atReference();
+    }
+
     private void conformToLaunchParameters(final LauncherParameters parameters) {
-//        m_hood.setReference(parameters.hoodAngle());
+        m_hood.setReference(parameters.hoodAngle());
         m_launcherEast.setAngularVelocity(parameters.rps());
         m_launcherWest.setAngularVelocity(parameters.rps());
     }
