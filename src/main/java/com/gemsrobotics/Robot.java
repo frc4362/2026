@@ -4,24 +4,18 @@
 
 package com.gemsrobotics;
 
-import com.ctre.phoenix6.configs.TalonFXConfiguration;
-import com.ctre.phoenix6.controls.CoastOut;
-import com.ctre.phoenix6.controls.VoltageOut;
-import com.ctre.phoenix6.hardware.TalonFX;
-import com.ctre.phoenix6.signals.InvertedValue;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
-
-import static com.gemsrobotics.Constants.CAN.kAUX_BUS;
 
 public final class Robot extends TimedRobot {
     private final RobotContainer m_robotContainer;
-    private final MatchStateTracker m_matchStateTracker;
+    private final MatchStateScheduler m_matchStateScheduler;
 
     public Robot() {
         m_robotContainer = new RobotContainer();
-        m_matchStateTracker = new MatchStateTracker();
+        m_matchStateScheduler = new MatchStateScheduler();
         RobotController.setBrownoutVoltage(5.0);
     }
 
@@ -64,7 +58,7 @@ public final class Robot extends TimedRobot {
 
     @Override
     public void simulationPeriodic() {
-        m_matchStateTracker.update();
-        // m_matchStateTracker.getMatchState();
+        m_matchStateScheduler.update();
+        SmartDashboard.putString("Match State", m_matchStateScheduler.getMatchState().toString());
     }
 }
