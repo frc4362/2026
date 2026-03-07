@@ -5,6 +5,7 @@
 package com.gemsrobotics;
 
 import choreo.auto.AutoChooser;
+import edu.wpi.first.networktables.*;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -17,6 +18,9 @@ public final class Robot extends TimedRobot {
     private final RobotContainer m_robotContainer;
     private final MatchStateScheduler m_matchStateScheduler;
     private final AutoChooser m_autoChooser;
+    private final NetworkTable m_table;
+    private final StringPublisher m_matchStatePublisher;
+    private final BooleanPublisher m_twoTagsPublisher;
 
     private Command m_autonomousCommand;
 
@@ -26,6 +30,12 @@ public final class Robot extends TimedRobot {
         RobotController.setBrownoutVoltage(5.0);
 
         m_autoChooser = m_robotContainer.getAutos().getAutoChooser();
+
+
+        m_table = NetworkTableInstance.getDefault().getTable("robot");
+        m_matchStatePublisher = m_table.getStringTopic("match_state").publish();
+        m_twoTagsPublisher = m_table.getBooleanTopic("two_tags").publish();
+
         SmartDashboard.putData("AutoChooser", m_autoChooser);
         RobotModeTriggers.autonomous().whileTrue(m_autoChooser.selectedCommandScheduler().withName("Auto Scheduler"));
 
@@ -35,9 +45,11 @@ public final class Robot extends TimedRobot {
     @Override
     public void robotPeriodic() {
         m_matchStateScheduler.update();
-        SmartDashboard.putString("Match State", m_matchStateScheduler.getMatchState().toString());
         m_robotContainer.periodic();
         CommandScheduler.getInstance().run();
+
+        m_matchStatePublisher.set(m_matchStateScheduler.getMatchState().toString());
+        m_twoTagsPublisher.set(m_robotContainer.getRobotState().getLastVisionPoseEstimate().tagCount() > 2);
     }
 
     @Override
