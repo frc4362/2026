@@ -92,7 +92,6 @@ public final class Limelight4 {
         final var mt2 = new LimelightPoseEstimateWithVariance(LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(m_name), varianceMt2);
 
         final boolean hasTags = (mt1.estimate().tagCount + mt2.estimate().tagCount) > 0;
-
         return Optional.of(new Outputs(m_name, m_heartbeat, hasTags, mt1, mt2, inputs));
     }
 
@@ -110,14 +109,14 @@ public final class Limelight4 {
     public void configureEnabled() {
         // 0.0 is pipeline-controlled downscale
         LimelightHelpers.SetFiducialDownscalingOverride(m_name, 0.0f);
-        LimelightHelpers.SetIMUMode(m_name, 0);
+        LimelightHelpers.SetIMUMode(m_name, 4);
         LimelightHelpers.SetIMUAssistAlpha(m_name, Constants.Vision.IMU_ALPHA);
         LimelightHelpers.SetThrottle(m_name, 0);
     }
 
     public void configureDisabled() {
         LimelightHelpers.SetFiducialDownscalingOverride(m_name, 2.0f);
-        LimelightHelpers.SetIMUMode(m_name, 0);
+        LimelightHelpers.SetIMUMode(m_name, 1);
         LimelightHelpers.SetThrottle(m_name, Constants.Vision.DISABLED_THROTTLE);
     }
 

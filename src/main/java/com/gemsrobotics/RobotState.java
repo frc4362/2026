@@ -21,14 +21,14 @@ public final class RobotState {
 	// units in radians per second
 	private final ConcurrentTimeInterpolatableBuffer<Double> m_vehicleAngularVelocity;
 
-	private Pose2d m_lastVisionPoseEstimate;
+	private PoseEstimate m_lastVisionPoseEstimate;
 	private double m_lastVisionPoseEstimateTimestamp;
 	private ChassisSpeeds m_recentVehicleRelativeVelocity;
 	private ChassisSpeeds m_recentFieldRelativeVelocity;
 
 	public RobotState() {
 		m_visionPoseEstimateConsumers = new ArrayList<>();
-		m_lastVisionPoseEstimate = Pose2d.kZero;
+		m_lastVisionPoseEstimate = PoseEstimate.NULL;
 		m_lastVisionPoseEstimateTimestamp = 0.0;
 
 		m_fieldToVehicle = ConcurrentTimeInterpolatableBuffer.createBuffer(LOOKBACK_TIME_SECONDS);
@@ -45,9 +45,13 @@ public final class RobotState {
 	}
 
 	public void updatePoseEstimate(final PoseEstimate poseEstimate) {
-		m_lastVisionPoseEstimate = poseEstimate.fieldToVehicle();
+		m_lastVisionPoseEstimate = poseEstimate;
 		m_lastVisionPoseEstimateTimestamp = poseEstimate.timestampSeconds();
 		m_visionPoseEstimateConsumers.forEach(consumer -> consumer.accept(poseEstimate));
+	}
+
+	public PoseEstimate getLastVisionPoseEstimate() {
+		return m_lastVisionPoseEstimate;
 	}
 
 	public double getLastVisionPoseEstimateTimestamp() {
