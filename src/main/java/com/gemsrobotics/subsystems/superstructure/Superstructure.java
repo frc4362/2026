@@ -230,4 +230,8 @@ public final class Superstructure extends SubsystemBase {
     public SystemState getState() {
         return m_state;
     }
+
+    public Intake getIntake() {
+        return m_intake;
+    }
 }
