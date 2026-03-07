@@ -21,6 +21,8 @@ public final class Robot extends TimedRobot {
 
     @Override
     public void robotPeriodic() {
+        m_matchStateScheduler.update();
+        SmartDashboard.putString("Match State", m_matchStateScheduler.getMatchState().toString());
         m_robotContainer.periodic();
         CommandScheduler.getInstance().run();
     }
@@ -44,8 +46,7 @@ public final class Robot extends TimedRobot {
     public void teleopInit() {}
 
     @Override
-    public void teleopPeriodic() {
-    }
+    public void teleopPeriodic() {}
 
     @Override
     public void testInit() {
@@ -59,8 +60,5 @@ public final class Robot extends TimedRobot {
     public void simulationInit() {}
 
     @Override
-    public void simulationPeriodic() {
-        m_matchStateScheduler.update();
-        SmartDashboard.putString("Match State", m_matchStateScheduler.getMatchState().toString());
-    }
+    public void simulationPeriodic() {}
 }

@@ -1,6 +1,8 @@
 package com.gemsrobotics;
 
+import java.sql.Driver;
 import java.util.Optional;
+import java.util.Random;
 
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
@@ -27,43 +29,54 @@ public class MatchStateScheduler {
         m_isActive = true;
         m_wonAuto = Optional.empty();
 
+        m_schedulerModeChooser = new SendableChooser<>();
+        m_schedulerModeChooser.setDefaultOption("FmsBased", SchedulerMode.FMS_BASED);
+        m_schedulerModeChooser.addOption("AlwaysActive", SchedulerMode.ALWAYS_ACTIVE);
+        m_schedulerModeChooser.addOption("RedWonAuto", SchedulerMode.RED_WON_AUTO);
+        m_schedulerModeChooser.addOption("BlueWonAuto", SchedulerMode.BLUE_WON_AUTO);
+        m_schedulerModeChooser.addOption("RandomizeOnEnable", SchedulerMode.RANDOMIZE_ON_ENABLE);
+        m_schedulerModeChooser.onChange((unused) -> {
+            m_wonAuto = Optional.empty(); // Allows changes after auto winner has been determined for the first time
+        });
+        SmartDashboard.putData("Match State Scheduler Mode", m_schedulerModeChooser);
+
         m_matchTimer = new Timer();
         m_matchTimer.start();
         m_hasEverEnabledTeleop = false;
         RobotModeTriggers.autonomous().onTrue(runOnce(m_matchTimer::restart));
         RobotModeTriggers.teleop().onTrue(runOnce(() -> {
+            if (m_schedulerModeChooser.getSelected() == SchedulerMode.RANDOMIZE_ON_ENABLE) {
+                m_wonAuto = Optional.empty();
+            }
             if (!m_hasEverEnabledTeleop) {
                 m_matchTimer.restart();
                 m_hasEverEnabledTeleop = true;
             }
         }));
         RobotModeTriggers.test().onTrue(runOnce(m_matchTimer::restart));
-
-        m_schedulerModeChooser = new SendableChooser<>();
-        m_schedulerModeChooser.setDefaultOption("FmsBased", SchedulerMode.FMS_BASED);
-        m_schedulerModeChooser.addOption("AlwaysActive", SchedulerMode.ALWAYS_ACTIVE);
-        m_schedulerModeChooser.addOption("RedWonAuto", SchedulerMode.RED_WON_AUTO);
-        m_schedulerModeChooser.addOption("BlueWonAuto", SchedulerMode.BLUE_WON_AUTO);
-        m_schedulerModeChooser.onChange((unused) -> {
-            m_wonAuto = Optional.empty(); // Allows changes after auto winner has been determined for the first time
-        });
-        SmartDashboard.putData("Match State Scheduler Mode", m_schedulerModeChooser);
     }
 
     public enum SchedulerMode {
         FMS_BASED,
         ALWAYS_ACTIVE,
         RED_WON_AUTO,
-        BLUE_WON_AUTO
+        BLUE_WON_AUTO,
+        RANDOMIZE_ON_ENABLE
     }
 
-    public record MatchState(double timeLeftInState, boolean isActive) {
+    public record MatchState(double timeLeftInState, boolean isActive, Optional<Boolean> wonAuto) {
         public String toString() {
-            if (isActive) {
-                return "active period, " + Math.round(timeLeftInState * 10.0) / 10.0 + "s until inactive";
+            String str = "";
+
+            str += (isActive ? "active period, " : "inactive period, ");
+            if (wonAuto.isPresent()) {
+                str += (wonAuto.get() ? "won auto, " : "lost auto, ");
             } else {
-                return "inactive period, " + Math.round(timeLeftInState * 10.0) / 10.0 + "s until active";
+                str += "no auto winner, ";
             }
+            str += Math.round(timeLeftInState * 10.0) / 10.0 + "s until state change";
+
+            return str;
         }
     }
 
@@ -72,7 +85,8 @@ public class MatchStateScheduler {
         m_timeLeftInState = 9999;
         m_isActive = true;
 
-        if (m_schedulerModeChooser.getSelected() == SchedulerMode.ALWAYS_ACTIVE) {
+        if (m_schedulerModeChooser.getSelected() == SchedulerMode.ALWAYS_ACTIVE
+                || DriverStation.getAlliance().isEmpty()) {
             return;
         }
 
@@ -99,6 +113,10 @@ public class MatchStateScheduler {
                 }
                 case RED_WON_AUTO -> determineIfWonAuto(Alliance.Red);
                 case BLUE_WON_AUTO -> determineIfWonAuto(Alliance.Blue);
+                case RANDOMIZE_ON_ENABLE -> {
+                    Random rand = new Random();
+                    determineIfWonAuto(rand.nextBoolean() ? Alliance.Blue : Alliance.Red);
+                }
             }
         }
 
@@ -137,6 +155,6 @@ public class MatchStateScheduler {
     }
 
     public MatchState getMatchState() {
-        return new MatchState(m_timeLeftInState, m_isActive);
+        return new MatchState(m_timeLeftInState, m_isActive, m_wonAuto);
     }
 }
