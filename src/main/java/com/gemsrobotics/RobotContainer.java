@@ -133,7 +133,7 @@ public final class RobotContainer {
         // conspicuously, we don't update Superstructure.
         // This is because it is a Subsystem, so it is updated periodically inside the Scheduler
         m_signalManager.periodic();
-//        m_vision.update();
+        m_vision.update();
         m_launchCalculator.periodic();
 
         m_visualizer.update(
@@ -147,6 +147,10 @@ public final class RobotContainer {
                 m_projectileManager.attemptSpawn();
             }
         }
+    }
+
+    public void configureDisabled() {
+        m_vision.configureDisabled();
     }
 
     private Flywheel makeLowerWheelEast() {

@@ -7,6 +7,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 
+import edu.wpi.first.math.system.struct.LinearSystemStruct;
 import edu.wpi.first.util.struct.Struct;
 import edu.wpi.first.util.struct.StructGenerator;
 import edu.wpi.first.util.struct.StructSerializable;
@@ -48,7 +49,7 @@ public record PoseEstimate(double timestampSeconds, Pose2d fieldToVehicle, Matri
 
 		@Override
 		public String getTypeName() {
-			return "record:PoseEstimate";
+			return "PoseEstimate";
 		}
 
 		@Override
@@ -58,7 +59,12 @@ public record PoseEstimate(double timestampSeconds, Pose2d fieldToVehicle, Matri
 
 		@Override
 		public String getSchema() {
-			return "double timestampSeconds; Pose2d fieldToVehicle; " + VARIANCE_STRUCT.getTypeName() + " variance; int tagCount; boolean isFusedEstimate";
+			return "double timestampSeconds; Pose2d fieldToVehicle; " + VARIANCE_STRUCT.getTypeName() + " variance; int32 tagCount; bool isFusedEstimate";
+		}
+
+		@Override
+		public Struct<?>[] getNested() {
+			return new Struct<?>[] { Pose2d.struct, VARIANCE_STRUCT };
 		}
 
 		@Override
@@ -78,11 +84,6 @@ public record PoseEstimate(double timestampSeconds, Pose2d fieldToVehicle, Matri
 			VARIANCE_STRUCT.pack(byteBuffer, poseEstimate.variance);
 			byteBuffer.putInt(poseEstimate.tagCount);
 			byteBuffer.put((byte) (poseEstimate.isFusedEstimate ? 1 : 0));
-		}
-
-		@Override
-		public boolean isImmutable() {
-			return true;
 		}
 	}
 }

@@ -52,13 +52,13 @@ public final class Constants {
             new Rotation3d(Degrees.of(0.0), Degrees.of(10.0), Degrees.of(0.0)));
     public static final Transform3d LIMELIGHT_CLIMBER_TRANSFORM = new Transform3d();
 
-    public static final boolean ACCEPT_VISION_MEASUREMENTS = false;
+    public static final boolean ACCEPT_VISION_MEASUREMENTS = true;
 
     public static final double HIGH_VARIANCE = 1_000_000.0;
     // skips N frames and then processes one
-    public static final int DISABLED_THROTTLE = 100;
+    public static final int DISABLED_THROTTLE = 20;
     // how fast the Limelight IMU filter converges on the Pigeon, default 0.001
-    public static final double IMU_ALPHA = 0.001;
+    public static final double IMU_ALPHA = 0.005;
 
     // Standard deviation constants
     public static final int kMegatag1XStdDevIndex = 0;

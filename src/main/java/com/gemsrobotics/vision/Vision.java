@@ -11,6 +11,7 @@ import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructPublisher;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
@@ -47,8 +48,6 @@ public final class Vision {
 
         m_hasBeenEnabled = false;
 
-        // try to configure disabled every .5s while disabled
-        RobotModeTriggers.disabled().whileTrue(Commands.runOnce(this::configureDisabled).andThen(new WaitCommand(0.5)).repeatedly());
         RobotModeTriggers.autonomous().onTrue(Commands.runOnce(this::configureEnabled));
         RobotModeTriggers.teleop().onTrue(Commands.runOnce(this::configureEnabled));
     }
@@ -303,12 +302,12 @@ public final class Vision {
         final double quality = poseEstimate.tagCount > 1 ? 1.0 : 1.0 - poseEstimate.rawFiducials[0].ambiguity;
         final double varianceScalar = 1.0 / quality;
         final Matrix<N3, N1> variance = poseEstimateWithVariance.variance();
-        final double xyVar = Math.max(variance.get(0, 1), variance.get(1, 1));
+        final double xyVar = Math.max(variance.get(0, 0), variance.get(1, 0));
 
         return Optional.of(new PoseEstimate(
                 poseEstimate.timestampSeconds,
                 poseEstimate.pose,
-                VecBuilder.fill(xyVar, xyVar, variance.get(0, 2)).times(varianceScalar),
+                VecBuilder.fill(xyVar, xyVar, variance.get(2, 0)).times(varianceScalar),
                 poseEstimate.tagCount));
     }
 
@@ -361,7 +360,7 @@ public final class Vision {
                 prior.get().getRotation());
 
         final Matrix<N3, N1> variance = poseEstimateWithVariance.variance();
-        final double xyVar = Math.max(variance.get(0, 1), variance.get(1, 1));
+        final double xyVar = Math.max(variance.get(0, 0), variance.get(1, 0));
 
         return Optional.of(new PoseEstimate(
                 poseEstimate.timestampSeconds,
