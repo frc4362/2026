@@ -9,6 +9,10 @@ import static java.lang.Math.max;
 import java.util.Optional;
 import java.util.function.Supplier;
 
+import choreo.Choreo;
+import choreo.auto.AutoFactory;
+import choreo.trajectory.SwerveSample;
+import choreo.trajectory.TrajectorySample;
 import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.Utils;
@@ -26,11 +30,14 @@ import com.gemsrobotics.lib.math.Translation2dPlus;
 import com.gemsrobotics.lib.swerve.FieldCentricEvasion;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.Matrix;
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
+import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
@@ -61,12 +68,19 @@ public class CommandSwerveDrivetrain extends TunerConstants.TunerSwerveDrivetrai
     private final LinearPath m_linearPathController;
     private LinearPath.State m_initialLinearState;
 
+    private final SwerveRequest.ApplyFieldSpeeds m_driveSpeedsRequest;
+    private final PIDController m_pathXController;
+    private final PIDController m_pathYController;
+    private final PIDController m_pathThetaController;
+
     /* Blue alliance sees forward as 0 degrees (toward red alliance wall) */
     private static final Rotation2d kBlueAlliancePerspectiveRotation = Rotation2d.kZero;
     /* Red alliance sees forward as 180 degrees (toward blue alliance wall) */
     private static final Rotation2d kRedAlliancePerspectiveRotation = Rotation2d.k180deg;
     /* Keep track if we've ever applied the operator perspective before or not */
     private boolean m_hasAppliedOperatorPerspective = false;
+
+    private final StructPublisher<Pose2d> m_goalPosePublisher;
 
     //region SysId
     /* Swerve requests to apply during SysId characterization */
@@ -158,6 +172,13 @@ public class CommandSwerveDrivetrain extends TunerConstants.TunerSwerveDrivetrai
     ) {
         super(drivetrainConstants, modules);
 
+        m_driveSpeedsRequest = new SwerveRequest.ApplyFieldSpeeds();
+        //These PID values may need to be changed
+        m_pathXController = new PIDController(2.5, 0, 0);
+        m_pathYController = new PIDController(2.5, 0, 0);
+        m_pathThetaController = new PIDController(5, 0, 0.2);
+        m_pathThetaController.enableContinuousInput(-Math.PI, Math.PI);
+
         m_robotState = robotState;
         m_yawVelocity = getPigeon2().getAngularVelocityZWorld(false);
 
@@ -169,10 +190,59 @@ public class CommandSwerveDrivetrain extends TunerConstants.TunerSwerveDrivetrai
                 new TrapezoidProfile.Constraints(MAX_SPEED, MAX_SPEED),
                 new TrapezoidProfile.Constraints(MAX_ANGULAR_RATE, MAX_ANGULAR_RATE));
 
+        m_goalPosePublisher = NetworkTableInstance.getDefault()
+                .getTable("DriveState")
+                .getStructTopic("TrackingPose", Pose2d.struct)
+                .publish();
+        m_goalPosePublisher.setDefault(new Pose2d());
+
         if (Utils.isSimulation()) {
             startSimThread();
         }
     }
+
+
+    /**
+     * Creates a new auto factory for this drivetrain.
+     *
+     * @return AutoFactory for this drivetrain
+     */
+    public AutoFactory createAutoFactory() {
+        return createAutoFactory((sample, isStart) -> {});
+    }
+
+    /**
+     * Creates a new auto factory for this drivetrain with the given
+     * trajectory logger.
+     *
+     * @param trajLogger Logger for the trajectory
+     * @return AutoFactory for this drivetrain
+     */
+    public AutoFactory createAutoFactory(Choreo.TrajectoryLogger<SwerveSample> trajLogger) {
+        return new AutoFactory(
+                () -> getState().Pose,
+                this::resetPose,
+                this::setTrajectorySample,
+                true,
+                this,
+                trajLogger
+        );
+    }
+
+public void setTrajectorySample(final SwerveSample sample) {
+        m_goalPosePublisher.set(sample.getPose());
+        var pose = getState().Pose;
+
+        var targetSpeeds = sample.getChassisSpeeds();
+        targetSpeeds.vxMetersPerSecond += m_pathXController.calculate(pose.getX(), sample.x);
+        targetSpeeds.vyMetersPerSecond += m_pathYController.calculate(pose.getY(), sample.y);
+        targetSpeeds.omegaRadiansPerSecond += m_pathThetaController.calculate(pose.getRotation().getRadians(), sample.heading);
+
+        setControl(m_driveSpeedsRequest.withSpeeds(targetSpeeds)
+                .withWheelForceFeedforwardsX(sample.moduleForcesX())
+                .withWheelForceFeedforwardsY(sample.moduleForcesY())
+        );
+}
 
 //    public Command driveToPose(Pose2d target) {
 //        return startRun(() -> {
