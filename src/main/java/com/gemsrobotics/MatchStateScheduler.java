@@ -18,6 +18,7 @@ public class MatchStateScheduler {
     private Optional<Boolean> m_wonAuto;
 
     private final Timer m_matchTimer;
+    private boolean m_hasEverEnabledTeleop;
 
     private final SendableChooser<SchedulerMode> m_schedulerModeChooser;
 
@@ -28,8 +29,14 @@ public class MatchStateScheduler {
 
         m_matchTimer = new Timer();
         m_matchTimer.start();
+        m_hasEverEnabledTeleop = false;
         RobotModeTriggers.autonomous().onTrue(runOnce(m_matchTimer::restart));
-        RobotModeTriggers.teleop().onTrue(runOnce(m_matchTimer::restart));
+        RobotModeTriggers.teleop().onTrue(runOnce(() -> {
+            if (!m_hasEverEnabledTeleop) {
+                m_matchTimer.restart();
+                m_hasEverEnabledTeleop = true;
+            }
+        }));
         RobotModeTriggers.test().onTrue(runOnce(m_matchTimer::restart));
 
         m_schedulerModeChooser = new SendableChooser<>();
@@ -53,9 +60,9 @@ public class MatchStateScheduler {
     public record MatchState(double timeLeftInState, boolean isActive) {
         public String toString() {
             if (isActive) {
-                return "active period, " + timeLeftInState + "s until active";
+                return "active period, " + Math.round(timeLeftInState * 10.0) / 10.0 + "s until inactive";
             } else {
-                return "inactive period, " + timeLeftInState + "s until active";
+                return "inactive period, " + Math.round(timeLeftInState * 10.0) / 10.0 + "s until active";
             }
         }
     }
@@ -86,6 +93,8 @@ public class MatchStateScheduler {
                             default:
                                 break;
                         }
+                    } else if (DriverStation.isTeleop() && m_matchTimer.get() >= 10) {
+                        return;
                     }
                 }
                 case RED_WON_AUTO -> determineIfWonAuto(Alliance.Red);
@@ -101,7 +110,9 @@ public class MatchStateScheduler {
             m_timeLeftInState = 20 - m_matchTimer.get();
         } else if (DriverStation.isTeleop()) {
             if (m_matchTimer.get() < 10) {
-                m_timeLeftInState = 10 - m_matchTimer.get();
+                if (m_wonAuto.isPresent()) {
+                    m_timeLeftInState = (m_wonAuto.get() ? 10 : 35) - m_matchTimer.get();
+                }
             } else if (m_matchTimer.get() < 35) {
                 m_timeLeftInState = 35 - m_matchTimer.get();
                 m_isActive = !m_wonAuto.get();
@@ -112,8 +123,10 @@ public class MatchStateScheduler {
                 m_timeLeftInState = 85 - m_matchTimer.get();
                 m_isActive = !m_wonAuto.get();
             } else if (m_matchTimer.get() < 110) {
-                m_timeLeftInState = 110 - m_matchTimer.get();
                 m_isActive = m_wonAuto.get();
+                if (!m_isActive) {
+                    m_timeLeftInState = 110 - m_matchTimer.get();
+                }
             }
         }
     }
