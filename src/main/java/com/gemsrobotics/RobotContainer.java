@@ -8,6 +8,7 @@ import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.gemsrobotics.commands.AimAtHub;
+import com.gemsrobotics.commands.Autos;
 import com.gemsrobotics.launching.Launching;
 import com.gemsrobotics.lib.Flywheel;
 import com.gemsrobotics.lib.StatusSignalManager;
@@ -46,6 +47,7 @@ public final class RobotContainer {
     private final Vision m_vision;
     private final Launching m_launchCalculator;
     private final Lights m_lights;
+    private final Autos m_autos;
 
     private final ProjectileManager m_projectileManager;
 
@@ -102,6 +104,7 @@ public final class RobotContainer {
                 new Hood(m_signalManager, new TalonFX(HOOD, kAUX_BUS)),
                 new Intake(m_signalManager,  new TalonFX(INTAKE_TRANSLATION_LEADER, kAUX_BUS), new TalonFX(INTAKE_TRANSLATION_FOLLOWER, kAUX_BUS), new TalonFX(INTAKE_DEPLOYER, kAUX_BUS)));
         m_lights = null;// new Lights();
+        m_autos = new Autos(this);
 
 //        m_joystick.rightTrigger().onTrue(Commands.runOnce(() -> m_superstructure.getHopper().setVelocity(90)));
 //        m_joystick.rightTrigger().onFalse(Commands.runOnce(() -> m_superstructure.getHopper().setIdle()));
@@ -243,5 +246,17 @@ public final class RobotContainer {
 
     public CommandXboxController getPilot() {
         return m_joystick;
+    }
+
+    public CommandSwerveDrivetrain getDrivetrain() {
+        return m_drivetrain;
+    }
+
+    public Superstructure getSuperstructure() {
+        return m_superstructure;
+    }
+
+    public Autos getAutos() {
+        return m_autos;
     }
 }
