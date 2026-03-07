@@ -60,10 +60,6 @@ public class PilotedDrive extends Command {
     }
 
     @Override
-    public void initialize() {
-    }
-
-    @Override
     public void execute() {
         // Correct travel direction to nearest 90deg if close to it
         double translationMagnitude = new Translation2dPlus(m_velocityX.getAsDouble(), m_velocityY.getAsDouble()).getNorm();
@@ -77,39 +73,48 @@ public class PilotedDrive extends Command {
             return;
         }
 
-        Rotation2dPlus translationDirection = new Rotation2dPlus(m_velocityX.getAsDouble(), m_velocityY.getAsDouble());
-        final var nearestPole = translationDirection.getNearestPole();
-        if (abs(translationDirection.minus(nearestPole).getDegrees()) < 5) {
-            translationDirection = nearestPole;
-        }
-
-        final Translation2dPlus targetVelocity = new Translation2dPlus(translationMagnitude * MAX_SPEED, translationDirection);
-
-        if (dbRotation == 0.0) {
-            // Don't move if not commanding an input
-            if (targetVelocity.getNorm() < 0.01) {
-                m_swerve.setControl(m_idleRequest);
-            } else {
-                if (m_maintainHeadingGoal.isPresent()) {
-                    m_swerve.setControl(m_maintainHeadingRequest
-                            .withVelocityX(targetVelocity.getX())
-                            .withVelocityY(targetVelocity.getY())
-                            .withTargetDirection(m_maintainHeadingGoal.get())); // maintain heading
-                } else {
-                    m_swerve.setControl(m_evasionRequest
-                            .withVelocityX(targetVelocity.getX())
-                            .withVelocityY(targetVelocity.getY())
-                            .withEvading(false)
-                            .withRotationalRate(0.0));
-                }
-            }
-        } else {
+        if (translationMagnitude == 0.0) {
             m_swerve.setControl(m_evasionRequest
-                    .withVelocityX(targetVelocity.getX()) // Drive forward with negative Y (forward)
-                    .withVelocityY(targetVelocity.getY()) // Drive left with negative X (left)
+                    .withVelocityX(0) // Drive forward with negative Y (forward)
+                    .withVelocityY(0) // Drive left with negative X (left)
                     .withRotationalRate(dbRotation)
                     .withEvading(m_evading.getAsBoolean()));
-            m_maintainHeadingGoal = Optional.of(m_swerve.getState().Pose.getRotation());
+            m_maintainHeadingGoal = Optional.empty();
+        } else {
+            Rotation2dPlus translationDirection = new Rotation2dPlus(m_velocityX.getAsDouble(), m_velocityY.getAsDouble());
+            final var nearestPole = translationDirection.getNearestPole();
+            if (abs(translationDirection.minus(nearestPole).getDegrees()) < 5) {
+                translationDirection = nearestPole;
+            }
+
+            final Translation2dPlus targetVelocity = new Translation2dPlus(translationMagnitude * MAX_SPEED, translationDirection);
+
+            if (dbRotation == 0.0) {
+                // Don't move if not commanding an input
+                if (targetVelocity.getNorm() < 0.01) {
+                    m_swerve.setControl(m_idleRequest);
+                } else {
+                    if (m_maintainHeadingGoal.isPresent()) {
+                        m_swerve.setControl(m_maintainHeadingRequest
+                                .withVelocityX(targetVelocity.getX())
+                                .withVelocityY(targetVelocity.getY())
+                                .withTargetDirection(m_maintainHeadingGoal.get())); // maintain heading
+                    } else {
+                        m_swerve.setControl(m_evasionRequest
+                                .withVelocityX(targetVelocity.getX())
+                                .withVelocityY(targetVelocity.getY())
+                                .withEvading(false)
+                                .withRotationalRate(0.0));
+                    }
+                }
+            } else {
+                m_swerve.setControl(m_evasionRequest
+                        .withVelocityX(targetVelocity.getX()) // Drive forward with negative Y (forward)
+                        .withVelocityY(targetVelocity.getY()) // Drive left with negative X (left)
+                        .withRotationalRate(dbRotation)
+                        .withEvading(m_evading.getAsBoolean()));
+                m_maintainHeadingGoal = Optional.of(m_swerve.getState().Pose.getRotation());
+            }
         }
     }
 

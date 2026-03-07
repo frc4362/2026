@@ -237,7 +237,6 @@ public final class RobotContainer {
         );
     }
 
-
     public RobotState getRobotState() {
         return m_robotState;
     }
