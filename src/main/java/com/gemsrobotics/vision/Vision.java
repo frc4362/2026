@@ -62,7 +62,7 @@ public final class Vision {
     }
 
     public void update() {
-        var inputs = m_inputSupplier.get();
+        final Limelight4.Inputs inputs = m_inputSupplier.get();
         final List<PoseEstimate> estimates = m_cameras.stream()
                 .map(camera -> processCamera(camera, inputs))
                 .flatMap(Optional::stream)
@@ -102,6 +102,7 @@ public final class Vision {
                 megatagEstimate = Optional.empty();
             }
 
+            // check if a one-tag, gyro-fused estimate is available. if it is, consider using it
             final Optional<PoseEstimate> gyroFusedEstimate = processGyroFusedPoseEstimate(outputs.mt1());
             final Optional<PoseEstimate> selectedEstimate = megatagEstimate.or(() -> gyroFusedEstimate);
 
@@ -110,63 +111,6 @@ public final class Vision {
 
             return selectedEstimate;
         });
-    }
-
-    // we are assuming that all the pose estimates are independent, and do not share a source of error ie. field layout
-    private Optional<PoseEstimate> fusePoseEstimates(PoseEstimate a, PoseEstimate b) {
-        if (b.timestampSeconds() < a.timestampSeconds()) {
-            var temp = a;
-            a = b;
-            b = temp;
-        }
-
-        final Optional<Pose2d> maybeCaptureA = m_robotState.getFieldToVehicle(a.timestampSeconds());
-        final Optional<Pose2d> maybeCaptureB = m_robotState.getFieldToVehicle(b.timestampSeconds());
-
-        if (maybeCaptureA.isEmpty() || maybeCaptureB.isEmpty()) {
-            return Optional.empty();
-        }
-
-        // apply the difference in when we took the two measurements to the earlier measurement
-        // effectively scrubbing us forward in time
-        final Transform2d aTb = maybeCaptureA.get().minus(maybeCaptureB.get());
-        final Pose2d poseA = a.fieldToVehicle().transformBy(aTb);
-        final Pose2d poseB = b.fieldToVehicle();
-
-        // square each element of the variance
-        final Matrix<N3, N1> varianceA = a.variance().elementTimes(a.variance());
-        final Matrix<N3, N1> varianceB = b.variance().elementTimes(b.variance());
-
-        // compare the headings of the two readings and perform a weighted average of them
-        Rotation2d fusedHeading = poseB.getRotation();
-        if (varianceA.get(2, 0) < Constants.Vision.HIGH_VARIANCE && varianceB.get(2, 0) < Constants.Vision.HIGH_VARIANCE) {
-            fusedHeading = new Rotation2d(
-                poseA.getRotation().getCos() / varianceA.get(2, 0) + poseB.getRotation().getCos() / varianceB.get(2, 0),
-                poseA.getRotation().getSin() / varianceA.get(2, 0) + poseB.getRotation().getSin() / varianceB.get(2, 0));
-        }
-
-        final double weightAx = 1.0 / varianceA.get(0, 0);
-        final double weightAy = 1.0 / varianceA.get(1, 0);
-        final double weightBx = 1.0 / varianceB.get(0, 0);
-        final double weightBy = 1.0 / varianceB.get(1, 0);
-
-        final Translation2d weightedTranslation = new Translation2d(
-                (poseA.getTranslation().getX() * weightAx + poseB.getTranslation().getX() * weightBx) / (weightAx + weightBx),
-                (poseA.getTranslation().getY() * weightAy + poseB.getTranslation().getY() * weightBy) / (weightAy + weightBy));
-
-        final var fusedPose = new Pose2d(weightedTranslation, fusedHeading);
-
-        final Matrix<N3, N1> fusedVariance = VecBuilder.fill(
-                Math.sqrt(1.0 / (weightAx + weightBx)),
-                Math.sqrt(1.0 / (weightAy + weightBy)),
-                Math.sqrt(1.0 / (1.0 / varianceA.get(2, 0) + 1.0 / varianceB.get(2, 0))));
-
-        // the time of them should be equal
-        return Optional.of(new PoseEstimate(
-                b.timestampSeconds(),
-                fusedPose,
-                fusedVariance,
-                a.tagCount() + b.tagCount()));
     }
 
     // we are assuming that all the pose estimates are independent, and do not share a source of error ie. field layout
@@ -282,8 +226,8 @@ public final class Vision {
             return Optional.empty();
         }
 
-        // if we're within a centimeter of the origin, we can assume this is pretty much a null reading
-        if (poseEstimate.pose.getTranslation().getSquaredNorm() < 0.1) {
+        // if we're within a centimeter or two of the origin, we can assume this is pretty much a null reading
+        if (poseEstimate.pose.getTranslation().getSquaredNorm() < 0.02) {
             return Optional.empty();
         }
 
@@ -329,7 +273,7 @@ public final class Vision {
             return Optional.empty();
         }
 
-        // if we've recently been turning very fast
+        // if we've recently been turning very fast, don't use this estimation method
         final Optional<Double> maxRecentYawRate = m_robotState.getMaxAbsVehicleAngularVelocity(
                 poseEstimate.timestampSeconds - Constants.Vision.YAW_LOOKBACK_SECONDS,
                 poseEstimate.timestampSeconds);
@@ -344,18 +288,18 @@ public final class Vision {
         }
 
         // retrieve the location of the tag. if it's not part of the field this year, we can't fuse with it.
-        int tagId = poseEstimate.rawFiducials[0].id;
-        Optional<Pose3d> rawFieldToTag = FieldConstants.defaultAprilTagType.getLayout().getTagPose(tagId);
+        final int tagId = poseEstimate.rawFiducials[0].id;
+        final Optional<Pose3d> rawFieldToTag = FieldConstants.defaultAprilTagType.getLayout().getTagPose(tagId);
         if (rawFieldToTag.isEmpty()) {
             return Optional.empty();
         }
 
         // make the heading zero. this is because the vision is only measuring distance in this case.
-        Pose2d fieldToTag = new Pose2d(rawFieldToTag.get().toPose2d().getTranslation(), Rotation2d.kZero);
+        final Pose2d fieldToTag = new Pose2d(rawFieldToTag.get().toPose2d().getTranslation(), Rotation2d.kZero);
         // get our vision-derived robot-to-tag measurement.
-        Pose2d robotToTag = fieldToTag.relativeTo(poseEstimate.pose);
+        final Pose2d robotToTag = fieldToTag.relativeTo(poseEstimate.pose);
         // create the posterior pose, the "most likely" pose estimate, fused with our known gyro reading
-        Pose2d posterior = new Pose2d(
+        final Pose2d posterior = new Pose2d(
                 fieldToTag.getTranslation().minus(robotToTag.getTranslation().rotateBy(prior.get().getRotation())),
                 prior.get().getRotation());
 

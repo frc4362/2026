@@ -71,7 +71,7 @@ public final class Limelight4 {
                 0.0,
                 0.0);
 
-        double newHeartbeat = LimelightHelpers.getHeartbeat(m_name);
+        final double newHeartbeat = LimelightHelpers.getHeartbeat(m_name);
         // no new frame, early exit
         if (newHeartbeat == m_heartbeat) {
             return Optional.empty();

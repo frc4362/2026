@@ -5,6 +5,10 @@
 package com.gemsrobotics;
 
 import choreo.auto.AutoChooser;
+import com.gemsrobotics.vision.PoseEstimate;
+import edu.wpi.first.math.Matrix;
+import edu.wpi.first.math.numbers.N1;
+import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.networktables.*;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.TimedRobot;
@@ -21,6 +25,7 @@ public final class Robot extends TimedRobot {
     private final NetworkTable m_table;
     private final StringPublisher m_matchStatePublisher;
     private final BooleanPublisher m_twoTagsPublisher;
+    private final StructPublisher<Matrix<N3, N1>> m_variancePublisher;
 
     private Command m_autonomousCommand;
 
@@ -31,10 +36,10 @@ public final class Robot extends TimedRobot {
 
         m_autoChooser = m_robotContainer.getAutos().getAutoChooser();
 
-
         m_table = NetworkTableInstance.getDefault().getTable("robot");
         m_matchStatePublisher = m_table.getStringTopic("match_state").publish();
         m_twoTagsPublisher = m_table.getBooleanTopic("two_tags").publish();
+        m_variancePublisher = m_table.getStructTopic("variance", PoseEstimate.VARIANCE_STRUCT).publish();
 
         SmartDashboard.putData("AutoChooser", m_autoChooser);
         RobotModeTriggers.autonomous().whileTrue(m_autoChooser.selectedCommandScheduler().withName("Auto Scheduler"));

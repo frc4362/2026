@@ -229,36 +229,19 @@ public class CommandSwerveDrivetrain extends TunerConstants.TunerSwerveDrivetrai
         );
     }
 
-public void setTrajectorySample(final SwerveSample sample) {
-        m_goalPosePublisher.set(sample.getPose());
-        var pose = getState().Pose;
+    public void setTrajectorySample(final SwerveSample sample) {
+            m_goalPosePublisher.set(sample.getPose());
+            var pose = getState().Pose;
 
-        var targetSpeeds = sample.getChassisSpeeds();
-        targetSpeeds.vxMetersPerSecond += m_pathXController.calculate(pose.getX(), sample.x);
-        targetSpeeds.vyMetersPerSecond += m_pathYController.calculate(pose.getY(), sample.y);
-        targetSpeeds.omegaRadiansPerSecond += m_pathThetaController.calculate(pose.getRotation().getRadians(), sample.heading);
+            var targetSpeeds = sample.getChassisSpeeds();
+            targetSpeeds.vxMetersPerSecond += m_pathXController.calculate(pose.getX(), sample.x);
+            targetSpeeds.vyMetersPerSecond += m_pathYController.calculate(pose.getY(), sample.y);
+            targetSpeeds.omegaRadiansPerSecond += m_pathThetaController.calculate(pose.getRotation().getRadians(), sample.heading);
 
-        setControl(m_driveSpeedsRequest.withSpeeds(targetSpeeds)
-                .withWheelForceFeedforwardsX(sample.moduleForcesX())
-                .withWheelForceFeedforwardsY(sample.moduleForcesY())
-        );
-}
-
-//    public Command driveToPose(Pose2d target) {
-//        return startRun(() -> {
-//        }, () -> {
-//            var setpoint = m_linearPathController.calculate(
-//                    0.02,
-//                    new LinearPath.State(getState().Pose, getKinematics().toChassisSpeeds(getStateCopy().ModuleStates)),
-//                    target);
-//
-//            setControl(m_evasionRequest
-//                    .withVelocityX(setpoint.speeds.vxMetersPerSecond)
-//                    .withVelocityY(setpoint.speeds.vyMetersPerSecond)
-//                    .withRotationalRate(setpoint.speeds.omegaRadiansPerSecond)
-//                    .withEvading(false));
-//        });
-//    }
+            setControl(m_driveSpeedsRequest.withSpeeds(targetSpeeds)
+                    .withWheelForceFeedforwardsX(sample.moduleForcesX())
+                    .withWheelForceFeedforwardsY(sample.moduleForcesY()));
+    }
 
     /**
      * Returns a command that applies the specified control request to this swerve drivetrain.

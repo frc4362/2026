@@ -27,7 +27,6 @@ public record PoseEstimate(double timestampSeconds, Pose2d fieldToVehicle, Matri
 		this(timestampSeconds, fieldToVehicle, variance, tagCount, false);
 	}
 
-
 	@Override
 	public String toString() {
 		return "PoseEstimate[" +
@@ -39,7 +38,7 @@ public record PoseEstimate(double timestampSeconds, Pose2d fieldToVehicle, Matri
 	}
 
 	public static final PoseEstimateStruct struct = new PoseEstimateStruct();
-	private static final Struct<Matrix<N3, N1>> VARIANCE_STRUCT = Matrix.getStruct(Nat.N3(), Nat.N1());
+	public static final Struct<Matrix<N3, N1>> VARIANCE_STRUCT = Matrix.getStruct(Nat.N3(), Nat.N1());
 
 	public static class PoseEstimateStruct implements Struct<PoseEstimate> {
 		@Override
