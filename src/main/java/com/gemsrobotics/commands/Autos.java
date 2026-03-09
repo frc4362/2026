@@ -31,7 +31,6 @@ public final class Autos {
 
     public AutoRoutine leftShoot() {
         AutoRoutine routine = m_autoFactory.newRoutine("LeftBasicShootAuto");
-
         AutoTrajectory leftShoot = routine.trajectory("LeftBasicShootAuto");
 
         routine.active().onTrue(Commands.parallel(

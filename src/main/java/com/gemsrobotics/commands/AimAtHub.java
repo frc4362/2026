@@ -13,6 +13,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 public final class AimAtHub extends Command {
     private final CommandSwerveDrivetrain m_swerve;
     private final SwerveRequest.FieldCentricFacingAngle m_request;
+    private Rotation2d m_angleToHub;
 
     public AimAtHub(final CommandSwerveDrivetrain swerve) {
         m_swerve = swerve;
@@ -20,10 +21,26 @@ public final class AimAtHub extends Command {
         addRequirements(m_swerve);
     }
 
+    private Rotation2d getAngleToHub() {
+        final Translation2d swerveLocation = m_swerve.getState().Pose.getTranslation();
+        return AllianceFlipUtil.apply(FieldConstants.Hub.topCenterPoint).toTranslation2d().minus(swerveLocation).getAngle();
+    }
+
+    @Override
+    public void initialize() {
+        m_angleToHub = getAngleToHub();
+    }
+
     @Override
     public void execute() {
-        final Translation2d swerveLocation = m_swerve.getState().Pose.getTranslation();
-        final Rotation2d angleToHub = AllianceFlipUtil.apply(FieldConstants.Hub.topCenterPoint).toTranslation2d().minus(swerveLocation).getAngle();
-        m_swerve.setControl(m_request.withTargetDirection(angleToHub));
+        m_swerve.setControl(m_request
+                .withVelocityX(0.0)
+                .withVelocityY(0.0)
+                .withTargetDirection(getAngleToHub()));
+    }
+
+    @Override
+    public boolean isFinished() {
+        return getAngleToHub().getDegrees() < 1.0;
     }
 }

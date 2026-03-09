@@ -54,7 +54,7 @@ public class Hopper {
         m_motorFollower = motorFollower;
 
         final var cfg = new TalonFXConfiguration();
-        cfg.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+        cfg.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
         cfg.Feedback.SensorToMechanismRatio = GEARING;
         cfg.Slot0.kP = 20.0;
         cfg.Slot0.kV = 0.0;

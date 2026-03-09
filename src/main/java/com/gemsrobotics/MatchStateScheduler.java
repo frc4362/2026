@@ -13,8 +13,7 @@ import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 
 import static edu.wpi.first.wpilibj2.command.Commands.runOnce;
 
-public class MatchStateScheduler {
-
+public final class MatchStateScheduler {
     private double m_timeLeftInState;
     private boolean m_isActive;
     private Optional<Boolean> m_wonAuto;

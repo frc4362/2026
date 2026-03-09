@@ -54,7 +54,7 @@ public final class Robot extends TimedRobot {
         CommandScheduler.getInstance().run();
 
         m_matchStatePublisher.set(m_matchStateScheduler.getMatchState().toString());
-        m_twoTagsPublisher.set(m_robotContainer.getRobotState().getLastVisionPoseEstimate().tagCount() > 2);
+        m_twoTagsPublisher.set(m_robotContainer.getRobotState().getLastVisionPoseEstimate().tagCount() > 1);
     }
 
     @Override

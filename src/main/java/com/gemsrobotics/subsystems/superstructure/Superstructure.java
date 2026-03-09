@@ -1,5 +1,6 @@
 package com.gemsrobotics.subsystems.superstructure;
 
+import com.gemsrobotics.Constants;
 import com.gemsrobotics.FieldConstants;
 import com.gemsrobotics.launching.*;
 import com.gemsrobotics.subsystems.swerve.CommandSwerveDrivetrain;
@@ -194,7 +195,7 @@ public final class Superstructure extends SubsystemBase {
     private double getDistanceToHub() {
         // get our hub
         final Translation2d target = AllianceFlipUtil.apply(FieldConstants.Hub.topCenterPoint.toTranslation2d());
-        return target.getDistance(m_swerve.getState().Pose.getTranslation());
+        return target.getDistance(m_swerve.getState().Pose.transformBy(Constants.ROBOT_TO_LAUNCHER).getTranslation());
     }
 
     public LauncherParameters getSelectedLaunchParameters() {

@@ -23,10 +23,12 @@ import com.gemsrobotics.vision.Vision;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import com.gemsrobotics.subsystems.swerve.CommandSwerveDrivetrain;
@@ -162,10 +164,10 @@ public final class RobotContainer {
         cfg.CurrentLimits.StatorCurrentLimitEnable = true;
         cfg.CurrentLimits.StatorCurrentLimit = 100;
         cfg.Feedback.SensorToMechanismRatio = 1.0;
-        cfg.Slot0.kP = 8.0;
+        cfg.Slot0.kP = 10.0;
         cfg.Slot0.kS = 4.0;
-        cfg.Slot0.kA = 0.01;
-        cfg.MotionMagic.MotionMagicAcceleration = 500;
+        cfg.Slot0.kA = 2.0;
+        cfg.MotionMagic.MotionMagicAcceleration = 700;
         cfg.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
         motor.getConfigurator().apply(cfg);
         return new Flywheel(

@@ -28,8 +28,9 @@ import java.util.function.DoubleSupplier;
 public final class Hood {
     private static final double GEARING = 171.0; // 19:9:1
     // 15 degrees forward from the vertical, or 75 degrees up from the horizon
-    public static final Rotation2d MIN_ANGLE  = Rotation2d.fromDegrees(15.0);
-    public static final Rotation2d MAX_ANGLE  = MIN_ANGLE.plus(Rotation2d.fromRotations(0.065));
+    public static final Rotation2d MIN_ANGLE  = Rotation2d.fromDegrees(5.65);
+    // this is 30.85 degrees
+    public static final Rotation2d MAX_ANGLE  = MIN_ANGLE.plus(Rotation2d.fromRotations(0.07));
     private static final Rotation2d DEFAULT_TOLERANCE = Rotation2d.fromDegrees(0.5);
 
     private final TalonFX m_motor;
