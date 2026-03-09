@@ -99,8 +99,10 @@ public final class RobotContainer {
         m_launchCalculator = new Launching(m_robotState);
         m_superstructure = new Superstructure(
                 m_drivetrain,
-                new Launcher(makeLowerWheelEast(), makeUpperWheelEast()),
-                new Launcher(makeLowerWheelWest(), makeUpperWheelWest()),
+                new Launcher(makeLowerWheel(LAUNCHER_LOWER_EAST, InvertedValue.Clockwise_Positive, "launcher_east"),
+                        makeUpperWheel(LAUNCHER_UPPER_EAST, InvertedValue.Clockwise_Positive, "launcher_east")),
+                new Launcher(makeLowerWheel(LAUNCHER_LOWER_WEST, InvertedValue.CounterClockwise_Positive, "launcher_west"),
+                        makeUpperWheel(LAUNCHER_UPPER_WEST, InvertedValue.CounterClockwise_Positive, "launcher_west")),
                 new Hopper(m_signalManager, new TalonFX(SINGULATOR_WEST, kAUX_BUS), new TalonFX(SINGULATOR_EAST, kAUX_BUS)),
                 new Uptake(m_signalManager,"uptake", new TalonFX(UPTAKE_EAST, kAUX_BUS), new TalonFX(UPTAKE_WEST, kAUX_BUS)),
                 new Hood(m_signalManager, new TalonFX(HOOD, kAUX_BUS)),
@@ -135,7 +137,7 @@ public final class RobotContainer {
     }
 
     public void periodic() {
-        // conspicuously, we don't update Superstructure.
+        // Conspicuously, we don't update Superstructure.
         // This is because it is a Subsystem, so it is updated periodically inside the Scheduler
         m_signalManager.periodic();
         m_vision.update();
@@ -158,8 +160,8 @@ public final class RobotContainer {
         m_vision.configureDisabled();
     }
 
-    private Flywheel makeLowerWheelEast() {
-        final TalonFX motor = new TalonFX(LAUNCHER_LOWER_EAST, kAUX_BUS);
+    private Flywheel makeLowerWheel(int talonId, InvertedValue invert, String ntTable) {
+        final TalonFX motor = new TalonFX(talonId, kAUX_BUS);
         final TalonFXConfiguration cfg = new TalonFXConfiguration();
         cfg.CurrentLimits.StatorCurrentLimitEnable = true;
         cfg.CurrentLimits.StatorCurrentLimit = 100;
@@ -168,10 +170,10 @@ public final class RobotContainer {
         cfg.Slot0.kS = 4.0;
         cfg.Slot0.kA = 2.0;
         cfg.MotionMagic.MotionMagicAcceleration = 700;
-        cfg.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+        cfg.MotorOutput.Inverted = invert;
         motor.getConfigurator().apply(cfg);
         return new Flywheel(
-                NetworkTableInstance.getDefault().getTable("launcher_east"),
+                NetworkTableInstance.getDefault().getTable(ntTable),
                 "lower_wheel",
                 m_signalManager,
                 Inches.of(2.0),
@@ -179,29 +181,8 @@ public final class RobotContainer {
         );
     }
 
-    private Flywheel makeLowerWheelWest() {
-        final TalonFX motor = new TalonFX(LAUNCHER_LOWER_WEST, kAUX_BUS);
-        final TalonFXConfiguration cfg = new TalonFXConfiguration();
-        cfg.CurrentLimits.StatorCurrentLimitEnable = true;
-        cfg.CurrentLimits.StatorCurrentLimit = 100;
-        cfg.Feedback.SensorToMechanismRatio = 1.0;
-        cfg.Slot0.kP = 8.0;
-        cfg.Slot0.kS = 4.0;
-        cfg.Slot0.kA = 0.01;
-        cfg.MotionMagic.MotionMagicAcceleration = 500;
-        cfg.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
-        motor.getConfigurator().apply(cfg);
-        return new Flywheel(
-                NetworkTableInstance.getDefault().getTable("launcher_west"),
-                "lower_wheel",
-                m_signalManager,
-                Inches.of(2.0),
-                motor
-        );
-    }
-
-    private Flywheel makeUpperWheelEast() {
-        final TalonFX motor = new TalonFX(LAUNCHER_UPPER_EAST, kAUX_BUS);
+    private Flywheel makeUpperWheel(int talonId, InvertedValue invert, String ntTable) {
+        final TalonFX motor = new TalonFX(talonId, kAUX_BUS);
         final TalonFXConfiguration cfg = new TalonFXConfiguration();
         cfg.CurrentLimits.StatorCurrentLimitEnable = true;
         cfg.CurrentLimits.StatorCurrentLimit = 100;
@@ -210,31 +191,10 @@ public final class RobotContainer {
         cfg.Slot0.kS = 23.0;
         cfg.Slot0.kA = 1;
         cfg.MotionMagic.MotionMagicAcceleration = 1000;
-        cfg.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+        cfg.MotorOutput.Inverted = invert;
         motor.getConfigurator().apply(cfg);
         return new Flywheel(
-                NetworkTableInstance.getDefault().getTable("launcher_east"),
-                "upper_wheel",
-                m_signalManager,
-                Inches.of(1.0),
-                motor
-        );
-    }
-
-    private Flywheel makeUpperWheelWest() {
-        final TalonFX motor = new TalonFX(LAUNCHER_UPPER_WEST, kAUX_BUS);
-        final TalonFXConfiguration cfg = new TalonFXConfiguration();
-        cfg.CurrentLimits.StatorCurrentLimitEnable = true;
-        cfg.CurrentLimits.StatorCurrentLimit = 100;
-        cfg.Feedback.SensorToMechanismRatio = 1.0 / 2.5;
-        cfg.Slot0.kP = 6.0;
-        cfg.Slot0.kS = 23.0;
-        cfg.Slot0.kA = 1;
-        cfg.MotionMagic.MotionMagicAcceleration = 1000;
-        cfg.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
-        motor.getConfigurator().apply(cfg);
-        return new Flywheel(
-                NetworkTableInstance.getDefault().getTable("launcher_west"),
+                NetworkTableInstance.getDefault().getTable(ntTable),
                 "upper_wheel",
                 m_signalManager,
                 Inches.of(1.0),
