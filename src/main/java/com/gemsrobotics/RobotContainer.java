@@ -128,6 +128,9 @@ public final class RobotContainer {
         m_joystick.leftTrigger().onTrue(m_superstructure.applyWantedState(Superstructure.SystemState.INTAKING));
         m_joystick.leftTrigger().onFalse(m_superstructure.applyWantedState(Superstructure.SystemState.IDLE));
 
+        m_joystick.a().onTrue(m_superstructure.applyWantedState(Superstructure.SystemState.SPITTING));
+        m_joystick.a().onFalse(m_superstructure.applyWantedState(Superstructure.SystemState.IDLE));
+
         m_joystick.povDown().whileTrue(new AimAtHub(m_drivetrain));
 //        m_joystick.a().onTrue(m_lights.setJammed());
 //        m_joystick.a().onFalse(m_lights.setOff());

@@ -162,6 +162,11 @@ public class Intake {
         m_intakeFollower.setControl(m_request.withVelocity(INTAKE_VELOCITY));
     }
 
+    public void setSpitting() {
+        m_intakeLeader.setControl(m_request.withVelocity(-INTAKE_VELOCITY));
+        m_intakeFollower.setControl(m_request.withVelocity(-INTAKE_VELOCITY));
+    }
+
     public void setStop() {
         m_intakeLeader.setControl(new CoastOut());
         m_intakeFollower.setControl(new CoastOut());

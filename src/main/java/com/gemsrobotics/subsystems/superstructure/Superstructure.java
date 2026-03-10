@@ -19,8 +19,9 @@ public final class Superstructure extends SubsystemBase {
 
     public enum SystemState {
         IDLE,
-        INTAKING,
         LAUNCHING,
+        INTAKING,
+        SPITTING,
         CLIMBING,
         CLIMBED
     }
@@ -104,6 +105,7 @@ public final class Superstructure extends SubsystemBase {
             case IDLE -> handleIdle();
             case LAUNCHING -> handleLaunching();
             case INTAKING -> handleIntaking();
+            case SPITTING -> handleSpitting();
             case CLIMBING -> handleClimbing();
             case CLIMBED -> handleClimbed();
             default -> SystemState.IDLE;
@@ -159,6 +161,17 @@ public final class Superstructure extends SubsystemBase {
         m_launcherWest.setOff();
         m_uptake.setIdle();
         m_hopper.setIdle();
+        return SystemState.INTAKING;
+    }
+
+    public SystemState handleSpitting() {
+        m_hasEverDeployedIntake = true;
+        m_intake.setSpitting();
+        m_intake.setDeploy();
+        m_launcherEast.setOff();
+        m_launcherWest.setOff();
+        m_uptake.setIdle();
+        m_hopper.setVelocity(-30);
         return SystemState.INTAKING;
     }
 
