@@ -28,6 +28,7 @@ import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -70,11 +71,16 @@ public final class RobotContainer {
         m_robotState.addPoseEstimateConsumer(estimate -> {
             if (Constants.Vision.ACCEPT_VISION_MEASUREMENTS) {
                 final PoseEstimate correctEstimate;
-                if (estimate.variance().get(2, 0) >= Constants.Vision.HIGH_VARIANCE) {
+                if (estimate.variance().get(2, 0) >= Constants.Vision.HIGH_VARIANCE || estimate.tagCount() < 2 || DriverStation.isEnabled()) {
                     // insert the known heading reading
                     // rather than hitting the pose estimator with a heading with a high variance
                     // this prevents spiraling off of the field
-                    final Rotation2d newRotation = m_drivetrain.getState().Pose.getRotation();
+                    final var poseSample = m_drivetrain.samplePoseAt(estimate.timestampSeconds());
+                    if (poseSample.isEmpty()) {
+                        return;
+                    }
+                    
+                    final Rotation2d newRotation = poseSample.get().getRotation();
                     final Matrix<N3, N1> correctVariance = estimate.variance().copy();
                     correctVariance.set(2, 0, 0.0);
                     correctEstimate = new PoseEstimate(

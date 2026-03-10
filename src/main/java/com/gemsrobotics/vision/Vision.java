@@ -104,7 +104,7 @@ public final class Vision {
 
             // check if a one-tag, gyro-fused estimate is available. if it is, consider using it
             final Optional<PoseEstimate> gyroFusedEstimate = processGyroFusedPoseEstimate(outputs.mt1());
-            final Optional<PoseEstimate> selectedEstimate = megatagEstimate.or(() -> gyroFusedEstimate);
+            final Optional<PoseEstimate> selectedEstimate = megatagEstimate;//.or(() -> gyroFusedEstimate);
 
             selectedEstimate.ifPresent(estimate ->
                 camera.getLogger().log(estimate.timestampSeconds(), megatagEstimate, gyroFusedEstimate));
