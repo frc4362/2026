@@ -7,9 +7,9 @@ package com.gemsrobotics;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
-import com.gemsrobotics.commands.AimAtHub;
 import com.gemsrobotics.commands.Autos;
-import com.gemsrobotics.launching.Launching;
+import com.gemsrobotics.commands.SuperstructureCommands;
+import com.gemsrobotics.launching.LaunchingCalculator;
 import com.gemsrobotics.lib.Flywheel;
 import com.gemsrobotics.lib.StatusSignalManager;
 import com.gemsrobotics.sim.ProjectileManager;
@@ -23,13 +23,11 @@ import com.gemsrobotics.vision.Vision;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import com.gemsrobotics.subsystems.swerve.CommandSwerveDrivetrain;
@@ -46,9 +44,9 @@ public final class RobotContainer {
     private final Superstructure m_superstructure;
     private final RobotState m_robotState;
     private final RobotVisualizer m_visualizer;
-    private final CommandSwerveDrivetrain m_drivetrain;
+    private final CommandSwerveDrivetrain m_swerve;
     private final Vision m_vision;
-    private final Launching m_launchCalculator;
+    private final LaunchingCalculator m_launchCalculator;
     private final Lights m_lights;
     private final Autos m_autos;
 
@@ -60,9 +58,9 @@ public final class RobotContainer {
 
         m_visualizer = new RobotVisualizer();
         m_robotState = new RobotState();
-        m_drivetrain = TunerConstants.createDrivetrain(m_robotState, m_joystick);
-        m_drivetrain.setDefaultCommand(new PilotedDrive(
-                m_drivetrain,
+        m_swerve = TunerConstants.createDrivetrain(m_robotState, m_joystick);
+        m_swerve.setDefaultCommand(new PilotedDrive(
+                m_swerve,
                 m_joystick.rightBumper(),
                 () -> -m_joystick.getLeftY(),
                 () -> -m_joystick.getLeftX(),
@@ -75,7 +73,7 @@ public final class RobotContainer {
                     // insert the known heading reading
                     // rather than hitting the pose estimator with a heading with a high variance
                     // this prevents spiraling off of the field
-                    final var poseSample = m_drivetrain.samplePoseAt(estimate.timestampSeconds());
+                    final var poseSample = m_swerve.samplePoseAt(estimate.timestampSeconds());
                     if (poseSample.isEmpty()) {
                         return;
                     }
@@ -92,7 +90,7 @@ public final class RobotContainer {
                     correctEstimate = estimate;
                 }
 
-                m_drivetrain.addVisionMeasurement(
+                m_swerve.addVisionMeasurement(
                         correctEstimate.fieldToVehicle(),
                         correctEstimate.timestampSeconds(),
                         correctEstimate.variance());
@@ -100,11 +98,11 @@ public final class RobotContainer {
         });
 
         m_vision = new Vision(m_robotState, () ->
-            new Limelight4.Inputs(m_drivetrain.getState().Pose, m_drivetrain.getYawVelocity()));
+            new Limelight4.Inputs(m_swerve.getState().Pose, m_swerve.getYawVelocity()));
 
-        m_launchCalculator = new Launching(m_robotState);
+        m_launchCalculator = new LaunchingCalculator(m_robotState);
         m_superstructure = new Superstructure(
-                m_drivetrain,
+                m_swerve,
                 new Launcher(makeLowerWheel(LAUNCHER_LOWER_EAST, InvertedValue.Clockwise_Positive, "launcher_east"),
                         makeUpperWheel(LAUNCHER_UPPER_EAST, InvertedValue.Clockwise_Positive, "launcher_east")),
                 new Launcher(makeLowerWheel(LAUNCHER_LOWER_WEST, InvertedValue.CounterClockwise_Positive, "launcher_west"),
@@ -131,18 +129,17 @@ public final class RobotContainer {
         m_joystick.a().onTrue(m_superstructure.applyWantedState(Superstructure.SystemState.SPITTING));
         m_joystick.a().onFalse(m_superstructure.applyWantedState(Superstructure.SystemState.IDLE));
 
-        m_joystick.povDown().whileTrue(new AimAtHub(m_drivetrain));
-//        m_joystick.a().onTrue(m_lights.setJammed());
-//        m_joystick.a().onFalse(m_lights.setOff());
-        //m_joystick.b().onTrue(m_drivetrain.driveToPose(FieldConstants.Hub.nearFace));
+//        m_joystick.rightBumper().whileTrue(new AimAndBrakeCommand(m_drivetrain, () -> Optional.of(AllianceFlipUtil.apply(FieldConstants.Hub.topCenterPoint.toTranslation2d()))));
+        m_joystick.rightBumper().whileTrue(SuperstructureCommands.makeLaunchCommand(m_swerve, m_superstructure, m_launchCalculator));
+        m_joystick.rightBumper().onFalse(m_superstructure.applyWantedState(Superstructure.SystemState.IDLE));
 
         m_projectileManager = new ProjectileManager(
                 m_robotState,
                 () -> m_launchCalculator.getLatestLaunchParameters()
-                        .map(Launching.Parameters::flywheelSpeed)
+                        .map(LaunchingCalculator.Parameters::flywheelSpeed)
                         .map(speed -> MetersPerSecond.of(speed * 2 * Math.PI * Units.inchesToMeters(2)))
                         .orElse(MetersPerSecond.of(0)),
-                () -> m_launchCalculator.getLatestLaunchParameters().map(Launching.Parameters::hoodAngle).orElse(Rotation2d.kZero));
+                () -> m_launchCalculator.getLatestLaunchParameters().map(LaunchingCalculator.Parameters::hoodAngle).orElse(Rotation2d.kZero));
     }
 
     public void periodic() {
@@ -219,8 +216,8 @@ public final class RobotContainer {
         return m_joystick;
     }
 
-    public CommandSwerveDrivetrain getDrivetrain() {
-        return m_drivetrain;
+    public CommandSwerveDrivetrain getSwerve() {
+        return m_swerve;
     }
 
     public Superstructure getSuperstructure() {

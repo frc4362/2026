@@ -371,6 +371,7 @@ public class CommandSwerveDrivetrain extends TunerConstants.TunerSwerveDrivetrai
 
     public static SwerveRequest.FieldCentricFacingAngle makeAimingRequest() {
         final SwerveRequest.FieldCentricFacingAngle aimingRequest = new FieldCentricFacingAngle();
+        aimingRequest.ForwardPerspective = SwerveRequest.ForwardPerspectiveValue.BlueAlliance;
         aimingRequest.SteerRequestType = SwerveModule.SteerRequestType.MotionMagicExpo;
         aimingRequest.HeadingController.setPID(5.0, 0.0, 0.0);
         return aimingRequest;

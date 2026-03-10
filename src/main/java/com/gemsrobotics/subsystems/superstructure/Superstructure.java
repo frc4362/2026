@@ -43,6 +43,8 @@ public final class Superstructure extends SubsystemBase {
     private Timer m_stateChangedTimer;
     private boolean m_stateChanged;
 
+    private boolean m_isAllowedToLaunch;
+    private LaunchingCalculator.Parameters m_launcherParameters;
     private boolean m_hasEverDeployedIntake;
     private boolean m_retractIntake;
 
@@ -82,6 +84,8 @@ public final class Superstructure extends SubsystemBase {
         m_stateWanted = SystemState.IDLE;
         m_stateChangedTimer = new Timer();
         m_stateChanged = false;
+
+        m_isAllowedToLaunch = true;
 
         m_hasEverDeployedIntake = false;
     }
@@ -143,7 +147,7 @@ public final class Superstructure extends SubsystemBase {
 
         conformToLaunchParameters(getSelectedLaunchParameters());
 
-        if (m_isSpunUp || isReadyToFire()) {
+        if (m_isSpunUp || isReadyToLaunch()) {
             m_intake.setRetractSlowly();
             m_uptake.setVoltage(11);
             m_hopper.setVelocity(90);
@@ -215,7 +219,7 @@ public final class Superstructure extends SubsystemBase {
         return m_launchStrategyChooser.getSelected().getParameters(getDistanceToHub());
     }
 
-    private boolean isReadyToFire() {
+    public boolean isReadyToLaunch() {
         return m_launcherWest.atReference() && m_launcherEast.atReference() && m_hood.atReference();
     }
 
@@ -247,5 +251,13 @@ public final class Superstructure extends SubsystemBase {
 
     public Intake getIntake() {
         return m_intake;
+    }
+
+    public void setLauncherParameters(final LaunchingCalculator.Parameters parameters) {
+        m_launcherParameters = parameters;
+    }
+
+    public void setAllowedToLaunch(final boolean allowed) {
+        m_isAllowedToLaunch = allowed;
     }
 }

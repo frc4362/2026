@@ -7,7 +7,6 @@ import choreo.auto.AutoTrajectory;
 import com.gemsrobotics.RobotContainer;
 import com.gemsrobotics.subsystems.superstructure.Superstructure;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.WaitCommand;
 
 import static edu.wpi.first.wpilibj2.command.Commands.*;
 
@@ -19,7 +18,7 @@ public final class Autos {
 
     public Autos(RobotContainer robot) {
         m_robot = robot;
-        m_autoFactory = robot.getDrivetrain().createAutoFactory();
+        m_autoFactory = robot.getSwerve().createAutoFactory();
         m_autoFactory
                 .bind("Intake", m_robot.getSuperstructure().applyWantedState(Superstructure.SystemState.INTAKING))
                 .bind("StopIntake", m_robot.getSuperstructure().applyWantedState(Superstructure.SystemState.IDLE));
@@ -39,10 +38,10 @@ public final class Autos {
                 leftShoot.cmd()
         ));
         leftShoot.done().onTrue(Commands.sequence(
-                new AimAtHub(m_robot.getDrivetrain()),
-                m_robot.getSuperstructure().applyWantedState(Superstructure.SystemState.LAUNCHING),
-                new WaitCommand(10), // Replace this with WaitUntilCommand([hopper empty])
-                m_robot.getSuperstructure().applyWantedState(Superstructure.SystemState.IDLE)
+//                new AimAndBrakeCommand(m_robot.getDrivetrain()),
+//                m_robot.getSuperstructure().applyWantedState(Superstructure.SystemState.LAUNCHING),
+//                new WaitCommand(10), // Replace this with WaitUntilCommand([hopper empty])
+//                m_robot.getSuperstructure().applyWantedState(Superstructure.SystemState.IDLE)
         ));
 
         return routine;
@@ -51,18 +50,18 @@ public final class Autos {
     public AutoRoutine rightShoot() {
         AutoRoutine routine = m_autoFactory.newRoutine("RightBasicShootAuto");
 
-        AutoTrajectory rightShoot = routine.trajectory("RightBasicShootAuto");
-        routine.active().onTrue(Commands.parallel(
-                        run(() -> m_robot.getSuperstructure().applyWantedState(Superstructure.SystemState.INTAKING))
-                        .andThen(m_robot.getSuperstructure().applyWantedState(Superstructure.SystemState.IDLE)),
-                        rightShoot.cmd()
-        ));
-        rightShoot.done().onTrue(Commands.sequence(
-                new AimAtHub(m_robot.getDrivetrain()),
-                m_robot.getSuperstructure().applyWantedState(Superstructure.SystemState.LAUNCHING),
-                new WaitCommand(10), // Replace this with WaitUntilCommand([hopper empty])
-                m_robot.getSuperstructure().applyWantedState(Superstructure.SystemState.IDLE)
-        ));
+//        AutoTrajectory rightShoot = routine.trajectory("RightBasicShootAuto");
+//        routine.active().onTrue(Commands.parallel(
+//                        run(() -> m_robot.getSuperstructure().applyWantedState(Superstructure.SystemState.INTAKING))
+//                        .andThen(m_robot.getSuperstructure().applyWantedState(Superstructure.SystemState.IDLE)),
+//                        rightShoot.cmd()
+//        ));
+//        rightShoot.done().onTrue(Commands.sequence(
+//                new AimAndBrakeCommand(m_robot.getDrivetrain()),
+//                m_robot.getSuperstructure().applyWantedState(Superstructure.SystemState.LAUNCHING),
+//                new WaitCommand(10), // Replace this with WaitUntilCommand([hopper empty])
+//                m_robot.getSuperstructure().applyWantedState(Superstructure.SystemState.IDLE)
+//        ));
 
         return routine;
     }
