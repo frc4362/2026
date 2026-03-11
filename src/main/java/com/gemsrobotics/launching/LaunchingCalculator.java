@@ -4,6 +4,7 @@ import com.gemsrobotics.Constants;
 import com.gemsrobotics.FieldConstants;
 import com.gemsrobotics.RobotState;
 import com.gemsrobotics.lib.math.GeometryUtil;
+import com.gemsrobotics.subsystems.superstructure.Hood;
 import com.gemsrobotics.util.AllianceFlipUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -40,8 +41,18 @@ public class LaunchingCalculator {
 			double distance,
 			double distanceNoLookahead,
 			boolean isPassing
-	) implements StructSerializable {
+	) implements StructSerializable, HoodAndRps {
 		public static final Struct<Parameters> struct = StructGenerator.genRecord(Parameters.class);
+
+		@Override
+		public Rotation2d getHoodAngle() {
+			return hoodAngle;
+		}
+
+		@Override
+		public double getRps() {
+			return flywheelSpeed;
+		}
 	}
 
 	private static final InterpolatingTreeMap<Double, Rotation2d> RANGE_TO_HOOD_ANGLE;
@@ -58,13 +69,21 @@ public class LaunchingCalculator {
 		RANGE_TO_TOF_MAP = new InterpolatingDoubleTreeMap();
 		RANGE_TO_TOF_MAP_FEEDING = new InterpolatingDoubleTreeMap();
 
-		RANGE_TO_HOOD_ANGLE.put(1.0, Rotation2d.fromDegrees(15.0));
-		RANGE_TO_HOOD_ANGLE.put(5.0, Rotation2d.fromDegrees(40.0));
+		RANGE_TO_HOOD_ANGLE.put(1.6, Rotation2d.fromDegrees(6));
+		RANGE_TO_HOOD_ANGLE.put(2.1, Rotation2d.fromDegrees(13));
+		RANGE_TO_HOOD_ANGLE.put(2.63, Rotation2d.fromDegrees(19.7));
+		RANGE_TO_HOOD_ANGLE.put(3.28, Rotation2d.fromDegrees(21.25));
+		RANGE_TO_HOOD_ANGLE.put(3.88, Rotation2d.fromDegrees(24.25));
+		RANGE_TO_HOOD_ANGLE.put(4.4, Rotation2d.fromDegrees(27));
 		RANGE_TO_HOOD_ANGLE_FEEDING.put(1.0, Rotation2d.fromDegrees(15.0));
 		RANGE_TO_HOOD_ANGLE_FEEDING.put(5.0, Rotation2d.fromDegrees(40.0));
 
-		RANGE_TO_WHEEL_RPS.put(1.0, 30.0);
-		RANGE_TO_WHEEL_RPS.put(5.0, 40.0);
+		RANGE_TO_WHEEL_RPS.put(1.6, 25.1);
+		RANGE_TO_WHEEL_RPS.put(2.1, 28.0);
+		RANGE_TO_WHEEL_RPS.put(2.63, 31.0);
+		RANGE_TO_WHEEL_RPS.put(3.28, 32.0);
+		RANGE_TO_WHEEL_RPS.put(3.88, 34.25);
+		RANGE_TO_WHEEL_RPS.put(4.4, 36.25);
 		RANGE_TO_WHEEL_RPS_FEEDING.put(1.0, 30.0);
 		RANGE_TO_WHEEL_RPS_FEEDING.put(5.0, 40.0);
 
@@ -85,8 +104,8 @@ public class LaunchingCalculator {
 	private static final double DRAG_CONSTANT_INVERSE_SECONDS = 0.2;
 	private static final double TOF_EPSILON = 0.001;
 	private static final double PHASE_LAG_SECONDS = 0.03;
-	private static final double MIN_RANGE_METERS = 1.0;
-	private static final double MAX_RANGE_METERS = 5.0;
+	private static final double MIN_RANGE_METERS = 1.6;
+	private static final double MAX_RANGE_METERS = 4.4;
 
 	private final RobotState m_robotState;
 	private final StructPublisher<Parameters> m_launchingParametersPublisher;
@@ -115,8 +134,6 @@ public class LaunchingCalculator {
 				currentVelocity.vyMetersPerSecond * PHASE_LAG_SECONDS,
 				currentVelocity.omegaRadiansPerSecond * PHASE_LAG_SECONDS));
 
-		// right now, always pick the hub
-		// TODO passing shots
 		final boolean isFeeding = shouldFeed(currentPose);
 		final Translation2d target = isFeeding ? getFeedingTarget(currentPose) : getHubTarget();
 		final Pose2d launcherStartingPose = currentPose.transformBy(Constants.ROBOT_TO_LAUNCHER);
@@ -125,9 +142,6 @@ public class LaunchingCalculator {
 		final Rotation2d currentRotation = currentPose.getRotation();
 		// the velocity of the launcher will not always be the same as the velocity of the robot
 		final ChassisSpeeds launcherVelocity = GeometryUtil.transformVelocity(currentVelocity, Constants.ROBOT_TO_LAUNCHER, currentRotation);
-
-		// TODO account for induced windage?
-		// https://frc-docs--3242.org.readthedocs.build/en/3242/docs/software/advanced-controls/fire-control/linear-drag.html
 
 		double tof = getTimeOfFlight(startingLauncherToTargetDistance, isFeeding);
 		Pose2d lookaheadLauncherPose = launcherStartingPose;

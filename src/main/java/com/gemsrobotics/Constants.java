@@ -52,7 +52,7 @@ public final class Constants {
             new Rotation3d(Degrees.of(0.0), Degrees.of(10.0), Degrees.of(0.0)));
     public static final Transform3d LIMELIGHT_CLIMBER_TRANSFORM = new Transform3d();
 
-    public static final boolean ACCEPT_VISION_MEASUREMENTS = false;
+    public static final boolean ACCEPT_VISION_MEASUREMENTS = true;
 
     public static final double HIGH_VARIANCE = 1_000_000.0;
     // skips N frames and then processes one

@@ -14,6 +14,8 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
+import java.util.Optional;
+
 public final class Superstructure extends SubsystemBase {
     private static final String NT_KEY = "superstructure";
 
@@ -48,7 +50,9 @@ public final class Superstructure extends SubsystemBase {
     private boolean m_hasEverDeployedIntake;
     private boolean m_retractIntake;
 
-    private final SendableChooser<LaunchStrategy> m_launchStrategyChooser;
+    private TunedLaunchStrategy m_tunedLaunchStrategy;
+
+    private final SendableChooser<Boolean> m_doTuningChooser;
 
     public Superstructure(
             final CommandSwerveDrivetrain swerve,
@@ -74,11 +78,12 @@ public final class Superstructure extends SubsystemBase {
         m_launchVelocityPublisher = myTable.getDoubleTopic("launch_velocity_rps").publish();
         m_launchAnglePublisher = myTable.getStructTopic("launch_angle", Rotation2d.struct).publish();
 
-        m_launchStrategyChooser = new SendableChooser<>();
-        m_launchStrategyChooser.addOption("LookupTable", new LookupTableStrategy());
-        m_launchStrategyChooser.addOption("SinMap", new SinMapStrategy());
-        m_launchStrategyChooser.setDefaultOption("TunedLaunch", new TunedLaunchStrategy(myTable));
-        SmartDashboard.putData("Launch Strategy", m_launchStrategyChooser);
+        m_tunedLaunchStrategy = new TunedLaunchStrategy(myTable);
+
+        m_doTuningChooser = new SendableChooser<>();
+        m_doTuningChooser.addOption("Tuning", true);
+        m_doTuningChooser.setDefaultOption("Pre-calibrated", false);
+        SmartDashboard.putData("Do Tuning", m_doTuningChooser);
 
         m_state = SystemState.IDLE;
         m_stateWanted = SystemState.IDLE;
@@ -95,9 +100,11 @@ public final class Superstructure extends SubsystemBase {
         m_systemStatePublisher.set(m_state.name());
         m_wantedStatePublisher.set(m_stateWanted.name());
         m_hubDistancePublisher.set(getDistanceToHub());
-        final LauncherParameters parameters = getSelectedLaunchParameters();
-        m_launchVelocityPublisher.set(parameters.rps());
-        m_launchAnglePublisher.set(parameters.hoodAngle());
+
+        getSelectedLaunchParameters().ifPresent(parameters -> {
+            m_launchVelocityPublisher.set(parameters.getRps());
+            m_launchAnglePublisher.set(parameters.getHoodAngle());
+        });
 
         // update subsystems periodically
 //        m_launcher.periodic();
@@ -105,7 +112,7 @@ public final class Superstructure extends SubsystemBase {
         m_uptake.periodic();
         m_hood.periodic();
 
-        final SystemState newState = switch (m_stateWanted) {
+        final SystemState newState = switch (m_state) {
             case IDLE -> handleIdle();
             case LAUNCHING -> handleLaunching();
             case INTAKING -> handleIntaking();
@@ -117,11 +124,13 @@ public final class Superstructure extends SubsystemBase {
 
         if (newState != m_state) {
             m_state = newState;
+            m_stateChangedTimer.stop();
             m_stateChangedTimer.reset();
             m_stateChanged = true;
         } else {
             m_stateChanged = false;
         }
+        SmartDashboard.putNumber("stateChangedTimer", m_stateChangedTimer.get());
     }
 
     public SystemState handleIdle() {
@@ -140,15 +149,30 @@ public final class Superstructure extends SubsystemBase {
     }
 
     private boolean m_isSpunUp = false;
+    private Timer m_intakeLiftTimer = new Timer();
     public SystemState handleLaunching() {
+        SmartDashboard.putNumber("intakeLiftTimer", m_intakeLiftTimer.get());
         if (m_stateChanged) {
+            if (m_intakeLiftTimer.isRunning()) {
+                m_intakeLiftTimer.stop();
+            }
+            m_intakeLiftTimer.reset();
             m_isSpunUp = false;
         }
 
-        conformToLaunchParameters(getSelectedLaunchParameters());
+        getSelectedLaunchParameters().ifPresent(this::conformToLaunchParameters);
 
         if (m_isSpunUp || isReadyToLaunch()) {
-            m_intake.setRetractSlowly();
+            if (!m_isSpunUp) {
+                m_intakeLiftTimer.start();
+            }
+            if (m_intakeLiftTimer.get() > 3) {
+                m_intake.setRetractSlowly();
+            } else {
+                m_intake.setDeploy();
+            }
+
+            m_intake.setIntaking();
             m_uptake.setVoltage(11);
             m_hopper.setVelocity(90);
             m_isSpunUp = true;
@@ -215,18 +239,22 @@ public final class Superstructure extends SubsystemBase {
         return target.getDistance(m_swerve.getState().Pose.transformBy(Constants.ROBOT_TO_LAUNCHER).getTranslation());
     }
 
-    public LauncherParameters getSelectedLaunchParameters() {
-        return m_launchStrategyChooser.getSelected().getParameters(getDistanceToHub());
+    public Optional<HoodAndRps> getSelectedLaunchParameters() {
+        if (m_doTuningChooser.getSelected()) {
+            return Optional.ofNullable(m_tunedLaunchStrategy.getParameters(getDistanceToHub()));
+        } else {
+            return Optional.ofNullable(m_launcherParameters);
+        }
     }
 
     public boolean isReadyToLaunch() {
         return m_launcherWest.atReference() && m_launcherEast.atReference() && m_hood.atReference();
     }
 
-    private void conformToLaunchParameters(final LauncherParameters parameters) {
-        m_hood.setReference(parameters.hoodAngle());
-        m_launcherEast.setAngularVelocity(parameters.rps());
-        m_launcherWest.setAngularVelocity(parameters.rps());
+    private void conformToLaunchParameters(final HoodAndRps parameters) {
+        m_hood.setReference(parameters.getHoodAngle());
+        m_launcherEast.setAngularVelocity(parameters.getRps());
+        m_launcherWest.setAngularVelocity(parameters.getRps());
     }
 
     public boolean isLaunching() {

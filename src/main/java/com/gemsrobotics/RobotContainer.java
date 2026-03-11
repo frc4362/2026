@@ -120,9 +120,6 @@ public final class RobotContainer {
         m_joystick.rightStick().onTrue(new RunCommand(() -> m_superstructure.setRetractIntake(true)));
         m_joystick.rightStick().onFalse(new RunCommand(() -> m_superstructure.setRetractIntake(false)));
 
-        m_joystick.rightTrigger().onTrue(m_superstructure.applyWantedState(Superstructure.SystemState.LAUNCHING));
-        m_joystick.rightTrigger().onFalse(m_superstructure.applyWantedState(Superstructure.SystemState.IDLE));
-
         m_joystick.leftTrigger().onTrue(m_superstructure.applyWantedState(Superstructure.SystemState.INTAKING));
         m_joystick.leftTrigger().onFalse(m_superstructure.applyWantedState(Superstructure.SystemState.IDLE));
 
@@ -130,8 +127,8 @@ public final class RobotContainer {
         m_joystick.a().onFalse(m_superstructure.applyWantedState(Superstructure.SystemState.IDLE));
 
 //        m_joystick.rightBumper().whileTrue(new AimAndBrakeCommand(m_drivetrain, () -> Optional.of(AllianceFlipUtil.apply(FieldConstants.Hub.topCenterPoint.toTranslation2d()))));
-        m_joystick.rightBumper().whileTrue(SuperstructureCommands.makeLaunchCommand(m_swerve, m_superstructure, m_launchCalculator));
-        m_joystick.rightBumper().onFalse(m_superstructure.applyWantedState(Superstructure.SystemState.IDLE));
+        m_joystick.rightTrigger().whileTrue(SuperstructureCommands.makeLaunchCommand(m_swerve, m_superstructure, m_launchCalculator));
+        m_joystick.rightTrigger().onFalse(m_superstructure.applyWantedState(Superstructure.SystemState.IDLE));
 
         m_projectileManager = new ProjectileManager(
                 m_robotState,
