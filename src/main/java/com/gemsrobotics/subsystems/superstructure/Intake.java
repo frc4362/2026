@@ -159,6 +159,11 @@ public class Intake {
                 .withVelocity(1.1 / 6.0));
     }
 
+    public void setFeedingHopper() {
+        m_intakeLeader.setControl(m_request.withVelocity(INTAKE_VELOCITY));
+        m_intakeFollower.setControl(m_request.withVelocity(INTAKE_VELOCITY));
+    }
+
     public void setIntaking() {
         m_intakeLeader.setControl(new DutyCycleOut(1.0));
         m_intakeFollower.setControl(new DutyCycleOut(1.0));
