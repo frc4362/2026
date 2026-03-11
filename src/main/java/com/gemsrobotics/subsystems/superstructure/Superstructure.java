@@ -130,7 +130,12 @@ public final class Superstructure extends SubsystemBase {
         } else {
             m_stateChanged = false;
         }
+
         SmartDashboard.putNumber("stateChangedTimer", m_stateChangedTimer.get());
+    }
+
+    public SystemState conformToWantedState() {
+        return m_stateWanted;
     }
 
     public SystemState handleIdle() {
@@ -145,7 +150,7 @@ public final class Superstructure extends SubsystemBase {
         m_launcherWest.setOff();
         m_uptake.setIdle();
         m_hopper.setIdle();
-        return SystemState.IDLE;
+        return conformToWantedState();
     }
 
     private boolean m_isSpunUp = false;
@@ -178,7 +183,7 @@ public final class Superstructure extends SubsystemBase {
             m_isSpunUp = true;
         }
 
-        return SystemState.LAUNCHING;
+        return conformToWantedState();
     }
 
     public SystemState handleIntaking() {
@@ -189,7 +194,7 @@ public final class Superstructure extends SubsystemBase {
         m_launcherWest.setOff();
         m_uptake.setIdle();
         m_hopper.setIdle();
-        return SystemState.INTAKING;
+        return conformToWantedState();
     }
 
     public SystemState handleSpitting() {
@@ -200,7 +205,7 @@ public final class Superstructure extends SubsystemBase {
         m_launcherWest.setOff();
         m_uptake.setIdle();
         m_hopper.setVelocity(-30);
-        return SystemState.INTAKING;
+        return conformToWantedState();
     }
 
     public SystemState handleClimbing() {
@@ -209,7 +214,7 @@ public final class Superstructure extends SubsystemBase {
         m_launcherWest.setOff();
         m_uptake.setIdle();
         m_hopper.setIdle();
-        return SystemState.CLIMBING;
+        return conformToWantedState();
     }
 
     public SystemState handleClimbed() {
@@ -218,7 +223,7 @@ public final class Superstructure extends SubsystemBase {
         m_launcherWest.setOff();
         m_uptake.setIdle();
         m_hopper.setIdle();
-        return SystemState.CLIMBED;
+        return conformToWantedState();
     }
 
     public Command setWantedState(final SystemState state) {
