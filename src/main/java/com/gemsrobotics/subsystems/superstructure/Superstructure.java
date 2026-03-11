@@ -124,8 +124,7 @@ public final class Superstructure extends SubsystemBase {
 
         if (newState != m_state) {
             m_state = newState;
-            m_stateChangedTimer.stop();
-            m_stateChangedTimer.reset();
+            m_stateChangedTimer.restart();
             m_stateChanged = true;
         } else {
             m_stateChanged = false;
@@ -156,7 +155,6 @@ public final class Superstructure extends SubsystemBase {
     private boolean m_isSpunUp = false;
     private Timer m_intakeLiftTimer = new Timer();
     public SystemState handleLaunching() {
-        SmartDashboard.putNumber("intakeLiftTimer", m_intakeLiftTimer.get());
         if (m_stateChanged) {
             if (m_intakeLiftTimer.isRunning()) {
                 m_intakeLiftTimer.stop();
@@ -186,25 +184,35 @@ public final class Superstructure extends SubsystemBase {
         return conformToWantedState();
     }
 
+//    private final Timer m_assertDeployedTimer = new Timer();
+//    private boolean m_deployAsserted = false;
     public SystemState handleIntaking() {
-        m_hasEverDeployedIntake = true;
-        m_intake.setIntaking();
+//        if (m_stateChanged) {
+//            m_assertDeployedTimer.restart();
+//        }
+//        m_intake.assertDeployed(m_assertDeployedTimer);
         m_intake.setDeploy();
+        m_intake.setIntaking();
         m_launcherEast.setOff();
         m_launcherWest.setOff();
         m_uptake.setIdle();
         m_hopper.setIdle();
+
+        m_hasEverDeployedIntake = true;
+
         return conformToWantedState();
     }
 
     public SystemState handleSpitting() {
-        m_hasEverDeployedIntake = true;
         m_intake.setSpitting();
         m_intake.setDeploy();
         m_launcherEast.setOff();
         m_launcherWest.setOff();
         m_uptake.setIdle();
-        m_hopper.setVelocity(-30);
+        m_hopper.setVelocity(-90);
+
+        m_hasEverDeployedIntake = true;
+
         return conformToWantedState();
     }
 

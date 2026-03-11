@@ -21,6 +21,7 @@ import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotController;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import edu.wpi.first.wpilibj.simulation.SingleJointedArmSim;
 
@@ -31,6 +32,7 @@ public class Intake {
     private static final double INTAKE_STOWED_ROTATIONS = -0.4;
     private static final double INTAKE_FEEDING_ROTATIONS = -0.295;
     private static final double INTAKE_DEPLOYED_ROTATIONS = 0.0;   // (135deg/360deg)
+//    private static final double INTAKE_ASSERT_ROTATIONS = 0.5;
     private static final double INTAKE_VELOCITY = 30;
     private static final double IDLE_VElOCITY = 0;
     private static final double SIM_UPDATE_SECONDS = 0.001;
@@ -158,8 +160,10 @@ public class Intake {
     }
 
     public void setIntaking() {
-        m_intakeLeader.setControl(m_request.withVelocity(INTAKE_VELOCITY));
-        m_intakeFollower.setControl(m_request.withVelocity(INTAKE_VELOCITY));
+        m_intakeLeader.setControl(new DutyCycleOut(1.0));
+        m_intakeFollower.setControl(new DutyCycleOut(1.0));
+//        m_intakeLeader.setControl(m_request.withVelocity(INTAKE_VELOCITY));
+//        m_intakeFollower.setControl(m_request.withVelocity(INTAKE_VELOCITY));
     }
 
     public void setSpitting() {
@@ -188,5 +192,21 @@ public class Intake {
         m_intakeSimState.setRotorVelocity(m_intakeSim.getAngularVelocity().times(INTAKE_GEARING));
         m_deployerSimState.setRawRotorPosition(m_deployerSim.getAngleRads() / 2 * Math.PI * DEPLOYER_GEARING);
     }
+
+//    private boolean hasAssertedThisIntake = false;
+//    public void assertDeployed(Timer timer) {
+//        if (timer.hasElapsed(.5)) {
+//            if (!hasAssertedThisIntake) {
+//                m_intakeDeployer.setPosition(INTAKE_DEPLOYED_ROTATIONS);
+//                hasAssertedThisIntake = true;
+//            }
+//            setDeploy();
+//        } else {
+//            m_intakeDeployer.setControl(m_deployRequest
+//                    .withPosition(INTAKE_ASSERT_ROTATIONS)
+//                    .withVelocity(10));
+//            hasAssertedThisIntake = false;
+//        }
+//    }
 }
 
