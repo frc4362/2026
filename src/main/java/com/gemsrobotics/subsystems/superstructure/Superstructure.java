@@ -29,7 +29,9 @@ public final class Superstructure extends SubsystemBase {
     }
 
     public static final boolean DO_INTAKE_AGITATION = true;
-    public static final double INTAKE_AGITATION_DELAY = 1.5;
+    public static final double INTAKE_AGITATION_DELAY = 2.0;
+    public static final double INTAKE_AGITATION_FREQUENCY = 2;
+    public static final double INTAKE_AGITATION_PHASE = 1.0 / INTAKE_AGITATION_FREQUENCY;
 
     private final CommandSwerveDrivetrain m_swerve;
     private final Launcher m_launcherEast, m_launcherWest;
@@ -176,7 +178,7 @@ public final class Superstructure extends SubsystemBase {
             if (DO_INTAKE_AGITATION) {
                 if (m_intakeLiftTimer.get() > INTAKE_AGITATION_DELAY) {
                     final double s = m_intakeLiftTimer.get() - INTAKE_AGITATION_DELAY;
-                    if (s % 0.5 < 0.25) {
+                    if ((s % INTAKE_AGITATION_PHASE) < (INTAKE_AGITATION_PHASE / 2.0)) {
                         m_intake.setAgitating();
                     } else {
                         m_intake.setDeploy();
