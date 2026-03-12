@@ -221,15 +221,27 @@ public class LaunchingCalculator {
 	}
 
 	private double getFlywheelVelocity(final double launcherToTargetDistance, final boolean isFeeding) {
-		return RANGE_TO_WHEEL_RPS.get(launcherToTargetDistance);
+		if (isFeeding) {
+			return RANGE_TO_WHEEL_RPS_FEEDING.get(launcherToTargetDistance);
+		} else {
+			return RANGE_TO_WHEEL_RPS.get(launcherToTargetDistance);
+		}
 	}
 
 	private Rotation2d getHoodAngle(final double launcherToTargetDistance, final boolean isFeeding) {
-		return RANGE_TO_HOOD_ANGLE.get(launcherToTargetDistance);
+		if (isFeeding) {
+			return RANGE_TO_HOOD_ANGLE_FEEDING.get(launcherToTargetDistance);
+		} else {
+			return RANGE_TO_HOOD_ANGLE.get(launcherToTargetDistance);
+		}
 	}
 
 	private double getTimeOfFlight(final double launcherToTargetDistance, final boolean isFeeding) {
-		return RANGE_TO_TOF_MAP.get(launcherToTargetDistance);
+		if (isFeeding) {
+			return RANGE_TO_TOF_MAP_FEEDING.get(launcherToTargetDistance);
+		} else {
+			return RANGE_TO_TOF_MAP.get(launcherToTargetDistance);
+		}
 	}
 
 	private boolean isValidLaunchRange(final double launcherToTargetDistance, final boolean isFeeding) {
@@ -237,7 +249,7 @@ public class LaunchingCalculator {
 	}
 
 	private boolean isValidLaunchVelocity(final ChassisSpeeds launcherVelocity, final boolean isFeeding) {
-		if (DO_MOVE_AND_SHOOT) {
+		if (DO_MOVE_AND_SHOOT || isFeeding) { // Can feed at any robot velocity
 			return true;
 		} else {
 			return Math.hypot(launcherVelocity.vxMetersPerSecond, launcherVelocity.vyMetersPerSecond) <= 0.25;
