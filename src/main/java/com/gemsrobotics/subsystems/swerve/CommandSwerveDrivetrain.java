@@ -218,15 +218,14 @@ public class CommandSwerveDrivetrain extends TunerConstants.TunerSwerveDrivetrai
      * @param trajLogger Logger for the trajectory
      * @return AutoFactory for this drivetrain
      */
-    public AutoFactory createAutoFactory(Choreo.TrajectoryLogger<SwerveSample> trajLogger) {
+    public AutoFactory createAutoFactory(final Choreo.TrajectoryLogger<SwerveSample> trajLogger) {
         return new AutoFactory(
                 () -> getState().Pose,
                 this::resetPose,
                 this::setTrajectorySample,
                 true,
                 this,
-                trajLogger
-        );
+                trajLogger);
     }
 
     public void setTrajectorySample(final SwerveSample sample) {

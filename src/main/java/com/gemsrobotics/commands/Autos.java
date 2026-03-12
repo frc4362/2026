@@ -5,7 +5,9 @@ import choreo.auto.AutoFactory;
 import choreo.auto.AutoRoutine;
 import choreo.auto.AutoTrajectory;
 import com.gemsrobotics.RobotContainer;
+import com.gemsrobotics.choreo.ChoreoTraj;
 import com.gemsrobotics.subsystems.superstructure.Superstructure;
+import com.gemsrobotics.subsystems.swerve.CommandSwerveDrivetrain;
 import edu.wpi.first.wpilibj2.command.Commands;
 
 import static edu.wpi.first.wpilibj2.command.Commands.*;
@@ -13,6 +15,8 @@ import static edu.wpi.first.wpilibj2.command.Commands.*;
 public final class Autos {
 
     private final RobotContainer m_robot;
+    private final Superstructure m_superstructure;
+    private final CommandSwerveDrivetrain m_swerve;
     private final AutoFactory m_autoFactory;
     private final AutoChooser m_autoChooser;
 
@@ -22,6 +26,9 @@ public final class Autos {
         m_autoFactory
                 .bind("Intake", m_robot.getSuperstructure().applyWantedState(Superstructure.SystemState.INTAKING))
                 .bind("StopIntake", m_robot.getSuperstructure().applyWantedState(Superstructure.SystemState.IDLE));
+
+        m_superstructure = m_robot.getSuperstructure();
+        m_swerve = m_robot.getSwerve();
 
         m_autoChooser = new AutoChooser();
         m_autoChooser.addRoutine("LeftBasicShootAuto", this::leftShoot);
@@ -48,7 +55,14 @@ public final class Autos {
     }
 
     public AutoRoutine rightShoot() {
-        AutoRoutine routine = m_autoFactory.newRoutine("RightBasicShootAuto");
+        final AutoRoutine routine = m_autoFactory.newRoutine("Right Auto");
+        final AutoTrajectory driveRightPath = ChoreoTraj.RightBasicShootAuto.asAutoTraj(routine);
+
+        routine.active().onTrue(Commands.parallel(
+                driveRightPath.cmd(),
+                m_superstructure.setWantedState(Superstructure.SystemState.INTAKING)));
+
+        driveRightPath.done().onTrue(SuperstructureCommands.makeLaunchCommand(m_swerve, m_superstructure, m_robot.getLaunchCalculator()));
 
 //        AutoTrajectory rightShoot = routine.trajectory("RightBasicShootAuto");
 //        routine.active().onTrue(Commands.parallel(

@@ -1,6 +1,7 @@
 package com.gemsrobotics.commands;
 
 import com.gemsrobotics.FieldConstants;
+import com.gemsrobotics.MatchStateScheduler;
 import com.gemsrobotics.launching.LauncherParameters;
 import com.gemsrobotics.launching.LaunchingCalculator;
 import com.gemsrobotics.subsystems.superstructure.Superstructure;
@@ -12,6 +13,8 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj2.command.*;
 
 import java.util.Optional;
+import java.util.function.BooleanSupplier;
+import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
 import static java.lang.Math.abs;
@@ -38,6 +41,29 @@ public class SuperstructureCommands {
 					});
 				})
 		));
+	}
+
+	public static Command makeLaunchCommand_MatchState(
+			final CommandSwerveDrivetrain swerve,
+			final Superstructure superstructure,
+			final LaunchingCalculator calculator,
+			final Supplier<MatchStateScheduler.MatchState> matchStateSupplier
+	) {
+		final Supplier<Optional<LaunchingCalculator.Parameters>> parametersSupplier = calculator::getLatestLaunchParameters;
+		final AimAndBrakeCommand aimingCommand = new AimAndBrakeCommand(swerve, () -> parametersSupplier.get().map(LaunchingCalculator.Parameters::target));
+		final DoubleSupplier timeLeftInStateSupplier = () -> matchStateSupplier.get().timeLeftInState();
+		
+		return new SequentialCommandGroup(
+				new InstantCommand(() -> superstructure.setAllowedToLaunch(false)),
+				superstructure.applyWantedState(Superstructure.SystemState.LAUNCHING),
+				aimingCommand.alongWith(new RunCommand(() -> {
+							parametersSupplier.get().ifPresent(parameters -> {
+								superstructure.setLauncherParameters(parameters);
+								final var headingOk = aimingCommand.getAngleToGoal().isPresent() && abs(aimingCommand.getAngleToGoal().get().getDegrees()) < LAUNCH_TOLERANCE.getDegrees();
+								superstructure.setAllowedToLaunch(parameters.isValid() && superstructure.isReadyToLaunch() && headingOk &&  timeLeftInStateSupplier.getAsDouble() < 1.0);
+							});
+						})
+				));
 	}
 
 	private Rotation2d calculateHeadingTolerance(final double distance) {

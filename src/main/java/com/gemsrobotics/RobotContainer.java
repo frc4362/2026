@@ -209,6 +209,10 @@ public final class RobotContainer {
         return m_robotState;
     }
 
+    public LaunchingCalculator getLaunchCalculator() {
+        return m_launchCalculator;
+    }
+
     public CommandXboxController getPilot() {
         return m_joystick;
     }
