@@ -28,6 +28,8 @@ public final class Superstructure extends SubsystemBase {
         CLIMBED
     }
 
+    public static boolean DO_INTAKE_AGITATION = true;
+
     private final CommandSwerveDrivetrain m_swerve;
     private final Launcher m_launcherEast, m_launcherWest;
     private final Hopper m_hopper;
@@ -169,10 +171,22 @@ public final class Superstructure extends SubsystemBase {
             if (!m_isSpunUp) {
                 m_intakeLiftTimer.start();
             }
-            if (m_intakeLiftTimer.get() > 3) {
-                m_intake.setRetractSlowly();
+
+            if (DO_INTAKE_AGITATION) {
+                if (m_intakeLiftTimer.get() > 1) {
+                    final double s = m_intakeLiftTimer.get() - 1;
+                    if (s % 1 < 0.5) {
+                        m_intake.setAgitating();
+                    } else {
+                        m_intake.setDeploy();
+                    }
+                }
             } else {
-                m_intake.setDeploy();
+                if (m_intakeLiftTimer.get() > 3) {
+                    m_intake.setRetractSlowly();
+                } else {
+                    m_intake.setDeploy();
+                }
             }
 
             m_intake.setFeedingHopper();

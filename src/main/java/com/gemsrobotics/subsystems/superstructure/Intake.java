@@ -31,6 +31,7 @@ public class Intake {
     // Assumes the intake is retracted at 0 rotations and deploys in the positive direction
     private static final double INTAKE_STOWED_ROTATIONS = -0.4;
     private static final double INTAKE_FEEDING_ROTATIONS = -0.295;
+    private static final double INTAKE_AGITATING_ROTATIONS = -0.22;
     private static final double INTAKE_DEPLOYED_ROTATIONS = 0.0;   // (135deg/360deg)
 //    private static final double INTAKE_ASSERT_ROTATIONS = 0.5;
     private static final double INTAKE_VELOCITY = 30;
@@ -77,14 +78,16 @@ public class Intake {
         m_intakeDeployer = deployerMotor;
         final var cfgDep = new TalonFXConfiguration();
         cfgDep.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
-        cfgDep.CurrentLimits.StatorCurrentLimit = 60;
+        cfgDep.CurrentLimits.StatorCurrentLimit = 70;
         cfgDep.CurrentLimits.StatorCurrentLimitEnable = true;
+        cfgDep.CurrentLimits.SupplyCurrentLimit = 35;
+        cfgDep.CurrentLimits.SupplyCurrentLimitEnable = true;
         cfgDep.Voltage.PeakForwardVoltage = 12;
         cfgDep.Voltage.PeakReverseVoltage = -12;
         cfgDep.MotorOutput.NeutralMode = NeutralModeValue.Brake;
         cfgDep.Slot0.kP = 3000;
         cfgDep.Slot0.kD = 30;
-        cfgDep.MotionMagic.MotionMagicAcceleration = 1.0;
+        cfgDep.MotionMagic.MotionMagicAcceleration = 2.0;
         cfgDep.Feedback.SensorToMechanismRatio = DEPLOYER_GEARING;
         m_intakeDeployer.getConfigurator().apply(cfgDep);
 
@@ -157,6 +160,12 @@ public class Intake {
         m_intakeDeployer.setControl(m_deployRequest
                 .withPosition(INTAKE_FEEDING_ROTATIONS)
                 .withVelocity(1.1 / 6.0));
+    }
+
+    public void setAgitating() {
+        m_intakeDeployer.setControl(m_deployRequest
+                .withPosition(INTAKE_AGITATING_ROTATIONS)
+                .withVelocity(15));
     }
 
     public void setFeedingHopper() {
