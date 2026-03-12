@@ -24,7 +24,14 @@ public record ChoreoTraj(
     Pose2d initialPoseBlue,
     Pose2d endPoseBlue
 ) {
-    public static final ChoreoTraj LeftBasicShootAuto = new ChoreoTraj(
+    public static final ChoreoTraj HomeAuto = new ChoreoTraj(
+	    "HomeAuto",
+	    OptionalInt.empty(),
+	    3.18635,
+	    new Pose2d(6.32, 1.565, Rotation2d.fromRadians(2.175)),
+	    new Pose2d(3.072, 2.61, Rotation2d.fromRadians(0.8))
+	);
+	public static final ChoreoTraj LeftBasicShootAuto = new ChoreoTraj(
 	    "LeftBasicShootAuto",
 	    OptionalInt.empty(),
 	    4.18019,
@@ -34,15 +41,8 @@ public record ChoreoTraj(
 	public static final ChoreoTraj RightBasicShootAuto = new ChoreoTraj(
 	    "RightBasicShootAuto",
 	    OptionalInt.empty(),
-	    4.16486,
-	    new Pose2d(3.472, 2.32, Rotation2d.fromRadians(0.8)),
-	    new Pose2d(3.072, 2.61, Rotation2d.fromRadians(0.8))
-	);
-	public static final ChoreoTraj HomeAuto = new ChoreoTraj(
-	    "HomeAuto",
-	    OptionalInt.empty(),
-	    3.18635,
-	    new Pose2d(6.32, 1.565, Rotation2d.fromRadians(2.175)),
+	    4.65517,
+	    new Pose2d(3.456, 2.514, Rotation2d.fromRadians(0.8)),
 	    new Pose2d(3.072, 2.61, Rotation2d.fromRadians(0.8))
 	);
 
@@ -51,9 +51,9 @@ public record ChoreoTraj(
      * This allows for trajectory data to be looked up with strings during runtime.
      */
     public static final Map<String, ChoreoTraj> ALL_TRAJECTORIES = Map.ofEntries(
-    	Map.entry("LeftBasicShootAuto", LeftBasicShootAuto),
-		Map.entry("RightBasicShootAuto", RightBasicShootAuto),
-		Map.entry("HomeAuto", HomeAuto)
+    	Map.entry("HomeAuto", HomeAuto),
+		Map.entry("LeftBasicShootAuto", LeftBasicShootAuto),
+		Map.entry("RightBasicShootAuto", RightBasicShootAuto)
     );
 
     /**

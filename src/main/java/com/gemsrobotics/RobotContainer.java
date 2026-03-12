@@ -42,6 +42,7 @@ public final class RobotContainer {
     private final CommandXboxController m_joystick;
 
     private final Superstructure m_superstructure;
+    private final MatchStateScheduler m_matchStateScheduler;
     private final RobotState m_robotState;
     private final RobotVisualizer m_visualizer;
     private final CommandSwerveDrivetrain m_swerve;
@@ -52,9 +53,11 @@ public final class RobotContainer {
 
     private final ProjectileManager m_projectileManager;
 
-    public RobotContainer() {
+    public RobotContainer(MatchStateScheduler matchStateScheduler) {
         m_signalManager = new StatusSignalManager();
         m_joystick = new CommandXboxController(0);
+
+        m_matchStateScheduler = matchStateScheduler;
 
         m_visualizer = new RobotVisualizer();
         m_robotState = new RobotState();
@@ -127,8 +130,8 @@ public final class RobotContainer {
         m_joystick.a().onFalse(m_superstructure.applyWantedState(Superstructure.SystemState.IDLE));
 
 //        m_joystick.rightBumper().whileTrue(new AimAndBrakeCommand(m_drivetrain, () -> Optional.of(AllianceFlipUtil.apply(FieldConstants.Hub.topCenterPoint.toTranslation2d()))));
-        m_joystick.rightTrigger().whileTrue(SuperstructureCommands.makeLaunchCommand(m_swerve, m_superstructure, m_launchCalculator));
-//        m_joystick.rightTrigger().whileTrue(SuperstructureCommands.makeLaunchCommand_MatchState(m_swerve, m_superstructure, m_launchCalculator, () -> m_matchStateTracker.getMatchState().getTimeUntilActive()));
+//        m_joystick.rightTrigger().whileTrue(SuperstructureCommands.makeLaunchCommand(m_swerve, m_superstructure, m_launchCalculator));
+        m_joystick.rightTrigger().whileTrue(SuperstructureCommands.makeLaunchCommand_MatchState(m_swerve, m_superstructure, m_launchCalculator, () -> m_matchStateScheduler.getMatchState().getTimeUntilActive()));
         m_joystick.rightTrigger().onFalse(m_superstructure.applyWantedState(Superstructure.SystemState.IDLE));
 
         m_projectileManager = new ProjectileManager(

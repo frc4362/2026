@@ -1,23 +1,18 @@
 package com.gemsrobotics.commands;
 
 import com.gemsrobotics.FieldConstants;
-import com.gemsrobotics.MatchStateScheduler;
-import com.gemsrobotics.launching.LauncherParameters;
 import com.gemsrobotics.launching.LaunchingCalculator;
 import com.gemsrobotics.subsystems.superstructure.Superstructure;
 import com.gemsrobotics.subsystems.swerve.CommandSwerveDrivetrain;
-import com.gemsrobotics.util.AllianceFlipUtil;
-import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.*;
 
 import java.util.Optional;
-import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
+import static com.gemsrobotics.Constants.LAUNCH_TIME_BEFORE_ACTIVE;
 import static java.lang.Math.abs;
 
 public class SuperstructureCommands {
@@ -48,7 +43,8 @@ public class SuperstructureCommands {
 								superstructure.setLauncherParameters(parameters);
 								SmartDashboard.putNumber("turning error", aimingCommand.getErrorToGoal().isPresent() ? abs(aimingCommand.getErrorToGoal().get().getDegrees()) : 999.0);
 								final var headingOk = aimingCommand.getErrorToGoal().isPresent() && abs(aimingCommand.getErrorToGoal().get().getDegrees()) < LAUNCH_TOLERANCE.getDegrees();
-								superstructure.setAllowedToLaunch(parameters.isValid() && superstructure.isReadyToLaunch() && headingOk &&  timeUntilActiveSupplier.getAsDouble() < 1.0);
+								final boolean activeOk = parameters.isFeeding() || (timeUntilActiveSupplier.getAsDouble() < LAUNCH_TIME_BEFORE_ACTIVE);
+								superstructure.setAllowedToLaunch(parameters.isValid() && superstructure.isReadyToLaunch() && headingOk && activeOk);
 							});
 						})
 				));

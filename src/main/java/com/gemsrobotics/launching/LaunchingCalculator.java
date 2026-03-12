@@ -4,7 +4,6 @@ import com.gemsrobotics.Constants;
 import com.gemsrobotics.FieldConstants;
 import com.gemsrobotics.RobotState;
 import com.gemsrobotics.lib.math.GeometryUtil;
-import com.gemsrobotics.subsystems.superstructure.Hood;
 import com.gemsrobotics.util.AllianceFlipUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -40,7 +39,7 @@ public class LaunchingCalculator {
 			double flywheelSpeed,
 			double distance,
 			double distanceNoLookahead,
-			boolean isPassing
+			boolean isFeeding
 	) implements StructSerializable, HoodAndRps {
 		public static final Struct<Parameters> struct = StructGenerator.genRecord(Parameters.class);
 
@@ -86,10 +85,10 @@ public class LaunchingCalculator {
 		RANGE_TO_WHEEL_RPS.put(3.28, 32.0);
 		RANGE_TO_WHEEL_RPS.put(3.88, 34.25);
 		RANGE_TO_WHEEL_RPS.put(4.4, 36.25);
-		RANGE_TO_WHEEL_RPS_FEEDING.put(5.0, 28.0);
-		RANGE_TO_WHEEL_RPS_FEEDING.put(6.5, 31.0);
-		RANGE_TO_WHEEL_RPS_FEEDING.put(8.0, 33.0);
-		RANGE_TO_WHEEL_RPS_FEEDING.put(17.0, 50.0);
+		RANGE_TO_WHEEL_RPS_FEEDING.put(5.0, 32.0);
+		RANGE_TO_WHEEL_RPS_FEEDING.put(6.5, 35.0);
+		RANGE_TO_WHEEL_RPS_FEEDING.put(8.0, 39.0);
+		RANGE_TO_WHEEL_RPS_FEEDING.put(17.0, 70.0);
 
 		RANGE_TO_TOF_MAP.put(1.0, 0.9);
 		RANGE_TO_TOF_MAP.put(2.0, 1.0);

@@ -30,8 +30,8 @@ public final class Robot extends TimedRobot {
     private Command m_autonomousCommand;
 
     public Robot() {
-        m_robotContainer = new RobotContainer();
         m_matchStateScheduler = new MatchStateScheduler();
+        m_robotContainer = new RobotContainer(m_matchStateScheduler);
         RobotController.setBrownoutVoltage(5.0);
 
         m_autoChooser = m_robotContainer.getAutos().getAutoChooser();
