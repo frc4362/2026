@@ -128,6 +128,7 @@ public final class RobotContainer {
 
 //        m_joystick.rightBumper().whileTrue(new AimAndBrakeCommand(m_drivetrain, () -> Optional.of(AllianceFlipUtil.apply(FieldConstants.Hub.topCenterPoint.toTranslation2d()))));
         m_joystick.rightTrigger().whileTrue(SuperstructureCommands.makeLaunchCommand(m_swerve, m_superstructure, m_launchCalculator));
+//        m_joystick.rightTrigger().whileTrue(SuperstructureCommands.makeLaunchCommand_MatchState(m_swerve, m_superstructure, m_launchCalculator, () -> m_matchStateTracker.getMatchState().getTimeUntilActive()));
         m_joystick.rightTrigger().onFalse(m_superstructure.applyWantedState(Superstructure.SystemState.IDLE));
 
         m_projectileManager = new ProjectileManager(
