@@ -31,8 +31,9 @@ public final class Autos {
         m_swerve = m_robot.getSwerve();
 
         m_autoChooser = new AutoChooser();
-        m_autoChooser.addRoutine("LeftBasicShootAuto", this::leftShoot);
-        m_autoChooser.addRoutine("RightBasicShootAuto", this::rightShoot);
+        m_autoChooser.addRoutine("Left Auto", this::leftShoot);
+        m_autoChooser.addRoutine("Right Auto", this::rightShoot);
+        m_autoChooser.addRoutine("Home Auto", this::homeAuto);
     }
 
     public AutoRoutine leftShoot() {
@@ -77,6 +78,18 @@ public final class Autos {
 //                m_robot.getSuperstructure().applyWantedState(Superstructure.SystemState.IDLE)
 //        ));
 
+        return routine;
+    }
+
+    public AutoRoutine homeAuto() {
+        final AutoRoutine routine = m_autoFactory.newRoutine("Home Auto");
+        final AutoTrajectory driveRightPath = ChoreoTraj.HomeAuto.asAutoTraj(routine);
+
+        routine.active().onTrue(Commands.parallel(
+                driveRightPath.cmd(),
+                m_superstructure.setWantedState(Superstructure.SystemState.INTAKING)));
+
+        driveRightPath.done().onTrue(SuperstructureCommands.makeLaunchCommand(m_swerve, m_superstructure, m_robot.getLaunchCalculator()));
         return routine;
     }
 

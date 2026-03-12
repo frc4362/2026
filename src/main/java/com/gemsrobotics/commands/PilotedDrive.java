@@ -8,10 +8,14 @@ import com.gemsrobotics.lib.math.Translation2dPlus;
 import com.gemsrobotics.lib.swerve.FieldCentricEvasion;
 import com.gemsrobotics.subsystems.swerve.CommandSwerveDrivetrain;
 import com.gemsrobotics.subsystems.swerve.TunerConstants;
+import com.gemsrobotics.util.AllianceFlipUtil;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 
+import javax.swing.text.html.Option;
 import java.util.Optional;
 import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
@@ -60,6 +64,11 @@ public class PilotedDrive extends Command {
     }
 
     @Override
+    public void initialize() {
+        m_maintainHeadingGoal = Optional.empty();
+    }
+
+    @Override
     public void execute() {
         // Correct travel direction to nearest 90deg if close to it
         double translationMagnitude = new Translation2dPlus(m_velocityX.getAsDouble(), m_velocityY.getAsDouble()).getNorm();
@@ -87,7 +96,7 @@ public class PilotedDrive extends Command {
                 translationDirection = nearestPole;
             }
 
-            final Translation2dPlus targetVelocity = new Translation2dPlus(translationMagnitude * MAX_SPEED, translationDirection);
+            Translation2dPlus targetVelocity = new Translation2dPlus(translationMagnitude * MAX_SPEED, translationDirection);
 
             if (dbRotation == 0.0) {
                 // Don't move if not commanding an input
@@ -95,6 +104,10 @@ public class PilotedDrive extends Command {
                     m_swerve.setControl(m_idleRequest);
                 } else {
                     if (m_maintainHeadingGoal.isPresent()) {
+                        if (DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == DriverStation.Alliance.Red) {
+                            targetVelocity = new Translation2dPlus(targetVelocity.rotateBy(Rotation2d.kPi));
+                        }
+
                         m_swerve.setControl(m_maintainHeadingRequest
                                 .withVelocityX(targetVelocity.getX())
                                 .withVelocityY(targetVelocity.getY())

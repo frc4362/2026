@@ -27,7 +27,7 @@ public record ChoreoTraj(
     public static final ChoreoTraj LeftBasicShootAuto = new ChoreoTraj(
 	    "LeftBasicShootAuto",
 	    OptionalInt.empty(),
-	    4.50114,
+	    4.18019,
 	    new Pose2d(3.41, 5.487, Rotation2d.fromRadians(-0.81)),
 	    new Pose2d(3.015, 5.263, Rotation2d.fromRadians(-0.785))
 	);
@@ -38,6 +38,13 @@ public record ChoreoTraj(
 	    new Pose2d(3.472, 2.32, Rotation2d.fromRadians(0.8)),
 	    new Pose2d(3.072, 2.61, Rotation2d.fromRadians(0.8))
 	);
+	public static final ChoreoTraj HomeAuto = new ChoreoTraj(
+	    "HomeAuto",
+	    OptionalInt.empty(),
+	    3.18635,
+	    new Pose2d(6.32, 1.565, Rotation2d.fromRadians(2.175)),
+	    new Pose2d(3.072, 2.61, Rotation2d.fromRadians(0.8))
+	);
 
     /**
      * A map between trajectory names and their corresponding data.
@@ -45,7 +52,8 @@ public record ChoreoTraj(
      */
     public static final Map<String, ChoreoTraj> ALL_TRAJECTORIES = Map.ofEntries(
     	Map.entry("LeftBasicShootAuto", LeftBasicShootAuto),
-		Map.entry("RightBasicShootAuto", RightBasicShootAuto)
+		Map.entry("RightBasicShootAuto", RightBasicShootAuto),
+		Map.entry("HomeAuto", HomeAuto)
     );
 
     /**

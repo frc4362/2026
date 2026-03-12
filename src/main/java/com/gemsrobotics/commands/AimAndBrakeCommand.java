@@ -33,7 +33,7 @@ public final class AimAndBrakeCommand extends Command {
         m_brakeRequest.SteerRequestType = SwerveModule.SteerRequestType.MotionMagicExpo;
 
         // default tolerance
-        m_toleranceDegrees = 0.0;
+        m_toleranceDegrees = 1.0;
 
         addRequirements(m_swerve);
     }
@@ -45,6 +45,10 @@ public final class AimAndBrakeCommand extends Command {
     public Optional<Rotation2d> getAngleToGoal() {
         return m_goalSupplier.get().map(goal ->
             goal.minus(m_swerve.getState().Pose.getTranslation()).getAngle());
+    }
+
+    public Optional<Rotation2d> getErrorToGoal() {
+        return getAngleToGoal().map(angle -> angle.minus(m_swerve.getState().Pose.getRotation()));
     }
 
     @Override
