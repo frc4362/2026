@@ -1,9 +1,11 @@
 package com.gemsrobotics;
 
-import java.sql.Driver;
-import java.util.Optional;
 import java.util.Random;
 
+import edu.wpi.first.networktables.*;
+import edu.wpi.first.util.struct.Struct;
+import edu.wpi.first.util.struct.StructGenerator;
+import edu.wpi.first.util.struct.StructSerializable;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Timer;
@@ -14,28 +16,45 @@ import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import static edu.wpi.first.wpilibj2.command.Commands.runOnce;
 
 public final class MatchStateScheduler {
+
+    public static final int UNLIMITED_TIME_IN_STATE = 5940;
+
+    public enum WonAuto implements StructSerializable {
+        TRUE,
+        FALSE,
+        INDETERMINATE;
+
+        public static final Struct<WonAuto> struct = StructGenerator.genEnum(WonAuto.class);
+    }
+
     private double m_timeLeftInState;
     private boolean m_isActive;
-    private Optional<Boolean> m_wonAuto;
+    private WonAuto m_wonAuto;
 
     private final Timer m_matchTimer;
     private boolean m_hasEverEnabledTeleop;
 
     private final SendableChooser<SchedulerMode> m_schedulerModeChooser;
 
-    public MatchStateScheduler() {
-        m_timeLeftInState = 9999;
-        m_isActive = true;
-        m_wonAuto = Optional.empty();
+    private final NetworkTable m_table;
+    private final DoublePublisher m_timeLeftPublisher;
+    private final BooleanPublisher m_activePublisher;
+    private final StringPublisher m_wonAutoPublisher;
 
+    public MatchStateScheduler() {
+        m_timeLeftInState = UNLIMITED_TIME_IN_STATE;
+        m_isActive = true;
+        m_wonAuto = WonAuto.INDETERMINATE;
+
+        // Defaults to AlwaysActive so in-match disconnects do not cause timing problems
         m_schedulerModeChooser = new SendableChooser<>();
-        m_schedulerModeChooser.setDefaultOption("FmsBased", SchedulerMode.FMS_BASED);
-        m_schedulerModeChooser.addOption("AlwaysActive", SchedulerMode.ALWAYS_ACTIVE);
+        m_schedulerModeChooser.addOption("FmsBased", SchedulerMode.FMS_BASED);
+        m_schedulerModeChooser.setDefaultOption("AlwaysActive", SchedulerMode.ALWAYS_ACTIVE);
         m_schedulerModeChooser.addOption("RedWonAuto", SchedulerMode.RED_WON_AUTO);
         m_schedulerModeChooser.addOption("BlueWonAuto", SchedulerMode.BLUE_WON_AUTO);
         m_schedulerModeChooser.addOption("RandomizeOnEnable", SchedulerMode.RANDOMIZE_ON_ENABLE);
         m_schedulerModeChooser.onChange((unused) -> {
-            m_wonAuto = Optional.empty(); // Allows changes after auto winner has been determined for the first time
+            m_wonAuto = WonAuto.INDETERMINATE; // Allows changes after auto winner has been determined for the first time
         });
         SmartDashboard.putData("Match State Scheduler Mode", m_schedulerModeChooser);
 
@@ -45,7 +64,7 @@ public final class MatchStateScheduler {
         RobotModeTriggers.autonomous().onTrue(runOnce(m_matchTimer::restart));
         RobotModeTriggers.teleop().onTrue(runOnce(() -> {
             if (m_schedulerModeChooser.getSelected() == SchedulerMode.RANDOMIZE_ON_ENABLE) {
-                m_wonAuto = Optional.empty();
+                m_wonAuto = WonAuto.INDETERMINATE;
             }
             if (!m_hasEverEnabledTeleop) {
                 m_matchTimer.restart();
@@ -53,6 +72,11 @@ public final class MatchStateScheduler {
             }
         }));
         RobotModeTriggers.test().onTrue(runOnce(m_matchTimer::restart));
+
+        m_table = NetworkTableInstance.getDefault().getTable("match-state-scheduler");
+        m_timeLeftPublisher = m_table.getDoubleTopic("time_left_in_state").publish();
+        m_activePublisher = m_table.getBooleanTopic("is_active").publish();
+        m_wonAutoPublisher = m_table.getStringTopic("won_auto").publish();
     }
 
     public enum SchedulerMode {
@@ -63,25 +87,15 @@ public final class MatchStateScheduler {
         RANDOMIZE_ON_ENABLE
     }
 
-    public record MatchState(double timeLeftInState, boolean isActive, Optional<Boolean> wonAuto) {
-        public String toString() {
-            String str = "";
-
-            str += (isActive ? "active period, " : "inactive period, ");
-            if (wonAuto.isPresent()) {
-                str += (wonAuto.get() ? "won auto, " : "lost auto, ");
-            } else {
-                str += "no auto winner, ";
-            }
-            str += Math.round(timeLeftInState * 10.0) / 10.0 + "s until state change";
-
-            return str;
+    public record MatchState(double timeLeftInState, boolean isActive, WonAuto wonAuto) {
+        public double getTimeUntilActive() {
+            return isActive ? 0.0 : timeLeftInState;
         }
     }
 
     public void update() {
         // Unless inactive or in a timed period use these values
-        m_timeLeftInState = 9999;
+        m_timeLeftInState = UNLIMITED_TIME_IN_STATE;
         m_isActive = true;
 
         if (m_schedulerModeChooser.getSelected() == SchedulerMode.ALWAYS_ACTIVE
@@ -90,7 +104,7 @@ public final class MatchStateScheduler {
         }
 
         // Determine m_wonAuto
-        if (m_wonAuto.isEmpty()) {
+        if (m_wonAuto == WonAuto.INDETERMINATE) {
             switch (m_schedulerModeChooser.getSelected()) {
                 case FMS_BASED -> {
                     String gameData = DriverStation.getGameSpecificMessage();
@@ -127,20 +141,20 @@ public final class MatchStateScheduler {
             m_timeLeftInState = 20 - m_matchTimer.get();
         } else if (DriverStation.isTeleop()) {
             if (m_matchTimer.get() < 10) {
-                if (m_wonAuto.isPresent()) {
-                    m_timeLeftInState = (m_wonAuto.get() ? 10 : 35) - m_matchTimer.get();
+                if (m_wonAuto != WonAuto.INDETERMINATE) {
+                    m_timeLeftInState = (m_wonAuto == WonAuto.TRUE ? 10 : 35) - m_matchTimer.get();
                 }
             } else if (m_matchTimer.get() < 35) {
                 m_timeLeftInState = 35 - m_matchTimer.get();
-                m_isActive = !m_wonAuto.get();
+                m_isActive = m_wonAuto == WonAuto.FALSE;
             } else if (m_matchTimer.get() < 60) {
                 m_timeLeftInState = 60 - m_matchTimer.get();
-                m_isActive = m_wonAuto.get();
+                m_isActive = m_wonAuto == WonAuto.TRUE;
             } else if (m_matchTimer.get() < 85) {
                 m_timeLeftInState = 85 - m_matchTimer.get();
-                m_isActive = !m_wonAuto.get();
+                m_isActive = m_wonAuto == WonAuto.FALSE;
             } else if (m_matchTimer.get() < 110) {
-                m_isActive = m_wonAuto.get();
+                m_isActive = m_wonAuto == WonAuto.TRUE;
                 if (!m_isActive) {
                     m_timeLeftInState = 110 - m_matchTimer.get();
                 }
@@ -150,10 +164,23 @@ public final class MatchStateScheduler {
 
     private void determineIfWonAuto(Alliance winningAlliance) {
         Alliance teamAlliance = DriverStation.getAlliance().get();
-        m_wonAuto = (teamAlliance == winningAlliance) ? Optional.of(true) : Optional.of(false);
+        m_wonAuto = (teamAlliance == winningAlliance) ? WonAuto.TRUE : WonAuto.FALSE;
     }
 
     public MatchState getMatchState() {
         return new MatchState(m_timeLeftInState, m_isActive, m_wonAuto);
+    }
+
+    public void logMatchState() {
+        m_timeLeftPublisher.set(m_timeLeftInState);
+        m_activePublisher.set(m_isActive);
+
+        String wonAutoColors = switch (m_wonAuto) {
+            case TRUE -> "#4CAF50";
+            case FALSE -> "#F44336";
+            case INDETERMINATE -> "#888888f";
+        };
+
+        m_wonAutoPublisher.set(wonAutoColors);
     }
 }
