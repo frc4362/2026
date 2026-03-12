@@ -165,7 +165,7 @@ public final class Superstructure extends SubsystemBase {
 
         getSelectedLaunchParameters().ifPresent(this::conformToLaunchParameters);
 
-        if (m_isSpunUp || isReadyToLaunch()) {
+        if ((m_isSpunUp || isReadyToLaunch()) && (m_isAllowedToLaunch || m_doTuningChooser.getSelected())) {
             if (!m_isSpunUp) {
                 m_intakeLiftTimer.start();
             }
@@ -175,7 +175,7 @@ public final class Superstructure extends SubsystemBase {
                 m_intake.setDeploy();
             }
 
-            m_intake.setIntaking();
+            m_intake.setFeedingHopper();
             m_uptake.setVoltage(11);
             m_hopper.setVelocity(90);
             m_isSpunUp = true;

@@ -75,8 +75,10 @@ public class LaunchingCalculator {
 		RANGE_TO_HOOD_ANGLE.put(3.28, Rotation2d.fromDegrees(21.25));
 		RANGE_TO_HOOD_ANGLE.put(3.88, Rotation2d.fromDegrees(24.25));
 		RANGE_TO_HOOD_ANGLE.put(4.4, Rotation2d.fromDegrees(27));
-		RANGE_TO_HOOD_ANGLE_FEEDING.put(1.0, Rotation2d.fromDegrees(15.0));
-		RANGE_TO_HOOD_ANGLE_FEEDING.put(5.0, Rotation2d.fromDegrees(40.0));
+		RANGE_TO_HOOD_ANGLE_FEEDING.put(5.0, Rotation2d.fromDegrees(30.0));
+		RANGE_TO_HOOD_ANGLE_FEEDING.put(6.5, Rotation2d.fromDegrees(30.0));
+		RANGE_TO_HOOD_ANGLE_FEEDING.put(8.0, Rotation2d.fromDegrees(30.0));
+		RANGE_TO_HOOD_ANGLE_FEEDING.put(17.0, Rotation2d.fromDegrees(30.0));
 
 		RANGE_TO_WHEEL_RPS.put(1.6, 25.1);
 		RANGE_TO_WHEEL_RPS.put(2.1, 28.0);
@@ -84,8 +86,10 @@ public class LaunchingCalculator {
 		RANGE_TO_WHEEL_RPS.put(3.28, 32.0);
 		RANGE_TO_WHEEL_RPS.put(3.88, 34.25);
 		RANGE_TO_WHEEL_RPS.put(4.4, 36.25);
-		RANGE_TO_WHEEL_RPS_FEEDING.put(1.0, 30.0);
-		RANGE_TO_WHEEL_RPS_FEEDING.put(5.0, 40.0);
+		RANGE_TO_WHEEL_RPS_FEEDING.put(5.0, 28.0);
+		RANGE_TO_WHEEL_RPS_FEEDING.put(6.5, 31.0);
+		RANGE_TO_WHEEL_RPS_FEEDING.put(8.0, 33.0);
+		RANGE_TO_WHEEL_RPS_FEEDING.put(17.0, 50.0);
 
 		RANGE_TO_TOF_MAP.put(1.0, 0.9);
 		RANGE_TO_TOF_MAP.put(2.0, 1.0);
