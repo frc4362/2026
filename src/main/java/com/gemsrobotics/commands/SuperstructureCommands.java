@@ -44,7 +44,7 @@ public class SuperstructureCommands {
 				aimingCommand.alongWith(new RunCommand(() -> {
 							parametersSupplier.get().ifPresent(parameters -> {
 								superstructure.setLauncherParameters(parameters);
-								SmartDashboard.putNumber("turning error", aimingCommand.getErrorToGoal().isPresent() ? abs(aimingCommand.getErrorToGoal().get().getDegrees()) : 999.0);
+//								SmartDashboard.putNumber("turning error", aimingCommand.getErrorToGoal().isPresent() ? abs(aimingCommand.getErrorToGoal().get().getDegrees()) : 999.0);
 								final var headingOk = aimingCommand.getErrorToGoal().isPresent() && abs(aimingCommand.getErrorToGoal().get().getDegrees()) < LAUNCH_TOLERANCE.getDegrees();
 								final boolean activeOk = parameters.isFeeding() || (timeUntilActiveSupplier.getAsDouble() < LAUNCH_TIME_BEFORE_ACTIVE);
 								superstructure.setAllowedToLaunch(parameters.isValid() && superstructure.isReadyToLaunch() && headingOk && activeOk);
@@ -60,18 +60,30 @@ public class SuperstructureCommands {
 		return Commands.sequence(
 				swerve.runOnce(() -> {
 					final Rotation2d startingHeading = swerve.getState().Pose.getRotation();
-					final double velocity = 2.0 * (DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == DriverStation.Alliance.Red ? -1.0 : 1.0);
+					final double velocity = 3.0 * (DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == DriverStation.Alliance.Red ? -1.0 : 1.0);
 					swerve.setControl(request
 							.withVelocityX(velocity)
 							.withVelocityY(0.0)
 							.withTargetDirection(startingHeading));
 				}),
-				new WaitUntilCommand(() -> {
-					return abs(swerve.getRotation3d().getX()) > 0.25 || abs(swerve.getRotation3d().getY()) > 0.25;
-				}),
-				new WaitUntilCommand(() -> {
-					return abs(swerve.getRotation3d().getX()) < 0.15 || abs(swerve.getRotation3d().getY()) < 0.15;
-				}));
+				new WaitCommand(1.55)
+		);
+
+//		return Commands.sequence(
+//				swerve.runOnce(() -> {
+//					final Rotation2d startingHeading = swerve.getState().Pose.getRotation();
+//					final double velocity = 3.0 * (DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == DriverStation.Alliance.Red ? -1.0 : 1.0);
+//					swerve.setControl(request
+//							.withVelocityX(velocity)
+//							.withVelocityY(0.0)
+//							.withTargetDirection(startingHeading));
+//				}),
+//				new WaitUntilCommand(() -> {
+//					return abs(swerve.getRotation3d().getX()) > 0.1 || abs(swerve.getRotation3d().getY()) > 0.1;
+//				}),
+//				new WaitUntilCommand(() -> {
+//					return abs(swerve.getRotation3d().getX()) < 0.1 && abs(swerve.getRotation3d().getY()) < 0.1;
+//				}));
 	}
 
 	// TODO

@@ -53,17 +53,18 @@ public final class AimAndBrakeCommand extends Command {
 
     @Override
     public void execute() {
-        final Optional<Rotation2d> maybeAngleToHub = getAngleToGoal();
-        if (maybeAngleToHub.isPresent()) {
-            final Rotation2d angleToHub = maybeAngleToHub.get();
-            if (m_toleranceDegrees == 0.0 || abs(angleToHub.getDegrees()) > m_toleranceDegrees) {
+        final Optional<Rotation2d> maybeAngleToGoal = getAngleToGoal();
+        if (maybeAngleToGoal.isPresent()) {
+            final Rotation2d angleToHub = maybeAngleToGoal.get();
+            // TODO
+//            if (m_toleranceDegrees == 0.0 || abs(angleToHub.getDegrees()) > m_toleranceDegrees) {
                 m_swerve.setControl(m_turnRequest
                         .withVelocityX(0.0)
                         .withVelocityY(0.0)
                         .withTargetDirection(angleToHub));
-            } else {
-                m_swerve.setControl(m_brakeRequest);
-            }
+//            } else {
+//                m_swerve.setControl(m_brakeRequest);
+//            }
         } else {
             m_swerve.setControl(m_idleRequest);
         }
