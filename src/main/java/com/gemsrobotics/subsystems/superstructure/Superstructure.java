@@ -54,6 +54,7 @@ public final class Superstructure extends SubsystemBase {
     private LaunchingCalculator.Parameters m_launcherParameters;
     private boolean m_hasEverDeployedIntake;
     private boolean m_retractIntake;
+    private boolean m_doEarlyAgitation;
 
     private TunedLaunchStrategy m_tunedLaunchStrategy;
 
@@ -98,6 +99,7 @@ public final class Superstructure extends SubsystemBase {
         m_isAllowedToLaunch = true;
 
         m_hasEverDeployedIntake = false;
+        m_doEarlyAgitation = false;
     }
 
     @Override
@@ -159,6 +161,7 @@ public final class Superstructure extends SubsystemBase {
 
     private boolean m_isSpunUp = false;
     private Timer m_intakeLiftTimer = new Timer();
+    private double m_startAgitationTimestamp = -1;
     public SystemState handleLaunching() {
         if (m_stateChanged) {
             if (m_intakeLiftTimer.isRunning()) {
@@ -166,6 +169,7 @@ public final class Superstructure extends SubsystemBase {
             }
             m_intakeLiftTimer.reset();
             m_isSpunUp = false;
+            m_startAgitationTimestamp = -1;
         }
 
         getSelectedLaunchParameters().ifPresent(this::conformToLaunchParameters);
@@ -176,8 +180,12 @@ public final class Superstructure extends SubsystemBase {
             }
 
             if (DO_INTAKE_AGITATION) {
-                if (m_intakeLiftTimer.get() > INTAKE_AGITATION_DELAY) {
-                    final double s = m_intakeLiftTimer.get() - INTAKE_AGITATION_DELAY;
+                if (m_doEarlyAgitation || (m_intakeLiftTimer.get() > INTAKE_AGITATION_DELAY)) {
+                    if (m_startAgitationTimestamp == -1) {
+                        m_startAgitationTimestamp = m_intakeLiftTimer.get();
+                    }
+
+                    final double s = m_intakeLiftTimer.get() - m_startAgitationTimestamp;
                     if ((s % INTAKE_AGITATION_PHASE) < (INTAKE_AGITATION_PHASE / 2.0)) {
                         m_intake.setAgitating();
                     } else {
@@ -317,5 +325,9 @@ public final class Superstructure extends SubsystemBase {
 
     public void setAllowedToLaunch(final boolean allowed) {
         m_isAllowedToLaunch = allowed;
+    }
+
+    public void setDoEarlyAgitation(final boolean doAgitation) {
+        m_doEarlyAgitation = doAgitation;
     }
 }

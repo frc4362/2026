@@ -1,14 +1,17 @@
 package com.gemsrobotics.commands;
 
+import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.gemsrobotics.FieldConstants;
 import com.gemsrobotics.launching.LaunchingCalculator;
 import com.gemsrobotics.subsystems.superstructure.Superstructure;
 import com.gemsrobotics.subsystems.swerve.CommandSwerveDrivetrain;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.*;
 
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
@@ -50,6 +53,28 @@ public class SuperstructureCommands {
 				));
 	}
 
+	// please note this does not stop the drive train
+	// rotation3d is in Roll Pitch Yaw
+	public static Command driveOverBump(final CommandSwerveDrivetrain swerve) {
+		final SwerveRequest.FieldCentricFacingAngle request = CommandSwerveDrivetrain.makeAimingRequest();
+		return Commands.sequence(
+				swerve.runOnce(() -> {
+					final Rotation2d startingHeading = swerve.getState().Pose.getRotation();
+					final double velocity = 2.0 * (DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == DriverStation.Alliance.Red ? -1.0 : 1.0);
+					swerve.setControl(request
+							.withVelocityX(velocity)
+							.withVelocityY(0.0)
+							.withTargetDirection(startingHeading));
+				}),
+				new WaitUntilCommand(() -> {
+					return abs(swerve.getRotation3d().getX()) > 0.25 || abs(swerve.getRotation3d().getY()) > 0.25;
+				}),
+				new WaitUntilCommand(() -> {
+					return abs(swerve.getRotation3d().getX()) < 0.15 || abs(swerve.getRotation3d().getY()) < 0.15;
+				}));
+	}
+
+	// TODO
 	private Rotation2d calculateHeadingTolerance(final double distance) {
 		return Rotation2d.kZero;
 	}

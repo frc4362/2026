@@ -14,7 +14,6 @@ import com.gemsrobotics.lib.Flywheel;
 import com.gemsrobotics.lib.StatusSignalManager;
 import com.gemsrobotics.sim.ProjectileManager;
 import com.gemsrobotics.sim.RobotVisualizer;
-import com.gemsrobotics.subsystems.Lights;
 import com.gemsrobotics.subsystems.superstructure.*;
 import com.gemsrobotics.commands.PilotedDrive;
 import com.gemsrobotics.vision.Limelight4;
@@ -32,15 +31,14 @@ import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import com.gemsrobotics.subsystems.swerve.CommandSwerveDrivetrain;
 import com.gemsrobotics.subsystems.swerve.TunerConstants;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 
 import static com.gemsrobotics.Constants.CAN.*;
 import static edu.wpi.first.units.Units.*;
 
 public final class RobotContainer {
     private final StatusSignalManager m_signalManager;
-
-    private final CommandXboxController m_joystick;
-
+    private final CommandXboxController m_pilot, m_copilot;
     private final Superstructure m_superstructure;
     private final MatchStateScheduler m_matchStateScheduler;
     private final RobotState m_robotState;
@@ -48,26 +46,26 @@ public final class RobotContainer {
     private final CommandSwerveDrivetrain m_swerve;
     private final Vision m_vision;
     private final LaunchingCalculator m_launchCalculator;
-    private final Lights m_lights;
     private final Autos m_autos;
-
     private final ProjectileManager m_projectileManager;
+    private final Trigger m_doEarlyAgitationTrigger;
 
     public RobotContainer(MatchStateScheduler matchStateScheduler) {
         m_signalManager = new StatusSignalManager();
-        m_joystick = new CommandXboxController(0);
+        m_pilot = new CommandXboxController(0);
+        m_copilot = new CommandXboxController(1);
 
         m_matchStateScheduler = matchStateScheduler;
 
         m_visualizer = new RobotVisualizer();
         m_robotState = new RobotState();
-        m_swerve = TunerConstants.createDrivetrain(m_robotState, m_joystick);
+        m_swerve = TunerConstants.createDrivetrain(m_robotState, m_pilot);
         m_swerve.setDefaultCommand(new PilotedDrive(
                 m_swerve,
-                m_joystick.rightBumper(),
-                () -> -m_joystick.getLeftY(),
-                () -> -m_joystick.getLeftX(),
-                () -> -m_joystick.getRightX()));
+                m_pilot.rightBumper(),
+                () -> -m_pilot.getLeftY(),
+                () -> -m_pilot.getLeftX(),
+                () -> -m_pilot.getRightX()));
 
         m_robotState.addPoseEstimateConsumer(estimate -> {
             if (Constants.Vision.ACCEPT_VISION_MEASUREMENTS) {
@@ -114,25 +112,25 @@ public final class RobotContainer {
                 new Uptake(m_signalManager,"uptake", new TalonFX(UPTAKE_EAST, kAUX_BUS), new TalonFX(UPTAKE_WEST, kAUX_BUS)),
                 new Hood(m_signalManager, new TalonFX(HOOD, kAUX_BUS)),
                 new Intake(m_signalManager,  new TalonFX(INTAKE_TRANSLATION_LEADER, kAUX_BUS), new TalonFX(INTAKE_TRANSLATION_FOLLOWER, kAUX_BUS), new TalonFX(INTAKE_DEPLOYER, kAUX_BUS)));
-        m_lights = null;// new Lights();
         m_autos = new Autos(this);
 
-//        m_joystick.rightTrigger().onTrue(Commands.runOnce(() -> m_superstructure.getHopper().setVelocity(90)));
-//        m_joystick.rightTrigger().onFalse(Commands.runOnce(() -> m_superstructure.getHopper().setIdle()));
+        m_pilot.rightStick().onTrue(new RunCommand(() -> m_superstructure.setRetractIntake(true)));
+        m_pilot.rightStick().onFalse(new RunCommand(() -> m_superstructure.setRetractIntake(false)));
 
-        m_joystick.rightStick().onTrue(new RunCommand(() -> m_superstructure.setRetractIntake(true)));
-        m_joystick.rightStick().onFalse(new RunCommand(() -> m_superstructure.setRetractIntake(false)));
+        m_pilot.leftTrigger().onTrue(m_superstructure.applyWantedState(Superstructure.SystemState.INTAKING));
+        m_pilot.leftTrigger().onFalse(m_superstructure.applyWantedState(Superstructure.SystemState.IDLE));
 
-        m_joystick.leftTrigger().onTrue(m_superstructure.applyWantedState(Superstructure.SystemState.INTAKING));
-        m_joystick.leftTrigger().onFalse(m_superstructure.applyWantedState(Superstructure.SystemState.IDLE));
-
-        m_joystick.a().onTrue(m_superstructure.applyWantedState(Superstructure.SystemState.SPITTING));
-        m_joystick.a().onFalse(m_superstructure.applyWantedState(Superstructure.SystemState.IDLE));
+        m_pilot.a().onTrue(m_superstructure.applyWantedState(Superstructure.SystemState.SPITTING));
+        m_pilot.a().onFalse(m_superstructure.applyWantedState(Superstructure.SystemState.IDLE));
 
 //        m_joystick.rightBumper().whileTrue(new AimAndBrakeCommand(m_drivetrain, () -> Optional.of(AllianceFlipUtil.apply(FieldConstants.Hub.topCenterPoint.toTranslation2d()))));
 //        m_joystick.rightTrigger().whileTrue(SuperstructureCommands.makeLaunchCommand(m_swerve, m_superstructure, m_launchCalculator));
-        m_joystick.rightTrigger().whileTrue(SuperstructureCommands.makeLaunchCommand_MatchState(m_swerve, m_superstructure, m_launchCalculator, () -> m_matchStateScheduler.getMatchState().getTimeUntilActive()));
-        m_joystick.rightTrigger().onFalse(m_superstructure.applyWantedState(Superstructure.SystemState.IDLE));
+        m_pilot.rightTrigger().whileTrue(SuperstructureCommands.makeLaunchCommand_MatchState(m_swerve, m_superstructure, m_launchCalculator, () -> m_matchStateScheduler.getMatchState().getTimeUntilActive()));
+        m_pilot.rightTrigger().onFalse(m_superstructure.applyWantedState(Superstructure.SystemState.IDLE));
+
+        m_pilot.y().onTrue(SuperstructureCommands.driveOverBump(m_swerve));
+
+        m_doEarlyAgitationTrigger = new Trigger(DriverStation::isAutonomous).or(m_copilot.a());
 
         m_projectileManager = new ProjectileManager(
                 m_robotState,
@@ -147,6 +145,7 @@ public final class RobotContainer {
         // Conspicuously, we don't update Superstructure.
         // This is because it is a Subsystem, so it is updated periodically inside the Scheduler
         m_signalManager.periodic();
+        m_superstructure.setDoEarlyAgitation(m_doEarlyAgitationTrigger.getAsBoolean());
         m_vision.update();
         m_launchCalculator.periodic();
 
@@ -218,7 +217,7 @@ public final class RobotContainer {
     }
 
     public CommandXboxController getPilot() {
-        return m_joystick;
+        return m_pilot;
     }
 
     public CommandSwerveDrivetrain getSwerve() {

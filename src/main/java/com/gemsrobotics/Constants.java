@@ -57,7 +57,7 @@ public final class Constants {
 
     public static final double HIGH_VARIANCE = 1_000_000.0;
     // skips N frames and then processes one
-    public static final int DISABLED_THROTTLE = 20;
+    public static final int DISABLED_THROTTLE = 0;
     // how fast the Limelight IMU filter converges on the Pigeon, default 0.001
     public static final double IMU_ALPHA = 0.005;
 

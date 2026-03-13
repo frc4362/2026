@@ -154,10 +154,10 @@ public final class MatchStateScheduler {
                 m_timeLeftInState = 85 - m_matchTimer.get();
                 m_isActive = m_wonAuto == WonAuto.FALSE;
             } else if (m_matchTimer.get() < 110) {
+                m_timeLeftInState = (m_wonAuto == WonAuto.TRUE ? 140 : 110) - m_matchTimer.get();
                 m_isActive = m_wonAuto == WonAuto.TRUE;
-                if (!m_isActive) {
-                    m_timeLeftInState = 110 - m_matchTimer.get();
-                }
+            } else if (m_matchTimer.get() < 140) {
+                m_timeLeftInState = 140 - m_matchTimer.get();
             }
         }
     }
