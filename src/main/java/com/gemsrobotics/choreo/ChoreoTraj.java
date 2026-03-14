@@ -52,6 +52,13 @@ public record ChoreoTraj(
 	    new Pose2d(2.793, 5.502, Rotation2d.fromRadians(-0.689)),
 	    new Pose2d(2.919, 5.753, Rotation2d.fromRadians(-2.271))
 	);
+	public static final ChoreoTraj LeftSkipBump2Loop = new ChoreoTraj(
+	    "LeftSkipBump2Loop",
+	    OptionalInt.empty(),
+	    5.27156,
+	    new Pose2d(2.793, 5.502, Rotation2d.fromRadians(-0.689)),
+	    new Pose2d(2.852, 5.535, Rotation2d.fromRadians(-2.271))
+	);
 	public static final ChoreoTraj RightBasicShootAuto = new ChoreoTraj(
 	    "RightBasicShootAuto",
 	    OptionalInt.empty(),
@@ -73,6 +80,27 @@ public record ChoreoTraj(
 	    new Pose2d(2.829, 2.531, Rotation2d.fromRadians(0.639)),
 	    new Pose2d(2.811, 2.245, Rotation2d.fromRadians(2.416))
 	);
+	public static final ChoreoTraj RightSkipBump2Alt = new ChoreoTraj(
+	    "RightSkipBump2Alt",
+	    OptionalInt.empty(),
+	    5.70714,
+	    new Pose2d(2.829, 2.531, Rotation2d.fromRadians(0.639)),
+	    new Pose2d(2.811, 2.245, Rotation2d.fromRadians(2.416))
+	);
+	public static final ChoreoTraj RightSkipBump2Loop = new ChoreoTraj(
+	    "RightSkipBump2Loop",
+	    OptionalInt.empty(),
+	    4.81369,
+	    new Pose2d(2.829, 2.531, Rotation2d.fromRadians(0.639)),
+	    new Pose2d(2.811, 2.445, Rotation2d.fromRadians(2.416))
+	);
+	public static final ChoreoTraj LeftSkipBump2Hot = new ChoreoTraj(
+	    "LeftSkipBump2Hot",
+	    OptionalInt.empty(),
+	    6.62298,
+	    new Pose2d(2.793, 5.502, Rotation2d.fromRadians(-0.689)),
+	    new Pose2d(8.288, 3.838, Rotation2d.fromRadians(1.885))
+	);
 
     /**
      * A map between trajectory names and their corresponding data.
@@ -83,9 +111,13 @@ public record ChoreoTraj(
 		Map.entry("LeftBasicShootAuto", LeftBasicShootAuto),
 		Map.entry("LeftSkipBump", LeftSkipBump),
 		Map.entry("LeftSkipBump2", LeftSkipBump2),
+		Map.entry("LeftSkipBump2Loop", LeftSkipBump2Loop),
 		Map.entry("RightBasicShootAuto", RightBasicShootAuto),
 		Map.entry("RightSkipBump", RightSkipBump),
-		Map.entry("RightSkipBump2", RightSkipBump2)
+		Map.entry("RightSkipBump2", RightSkipBump2),
+		Map.entry("RightSkipBump2Alt", RightSkipBump2Alt),
+		Map.entry("RightSkipBump2Loop", RightSkipBump2Loop),
+		Map.entry("LeftSkipBump2Hot", LeftSkipBump2Hot)
     );
 
     /**

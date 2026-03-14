@@ -74,6 +74,8 @@ public class LaunchingCalculator {
 		RANGE_TO_HOOD_ANGLE.put(3.28, Rotation2d.fromDegrees(21.25));
 		RANGE_TO_HOOD_ANGLE.put(3.88, Rotation2d.fromDegrees(24.25));
 		RANGE_TO_HOOD_ANGLE.put(4.4, Rotation2d.fromDegrees(27));
+		RANGE_TO_HOOD_ANGLE.put(5.0, Rotation2d.fromDegrees(29));
+		RANGE_TO_HOOD_ANGLE.put(5.5, Rotation2d.fromDegrees(30));
 		RANGE_TO_HOOD_ANGLE_FEEDING.put(5.0, Rotation2d.fromDegrees(30.0));
 		RANGE_TO_HOOD_ANGLE_FEEDING.put(6.5, Rotation2d.fromDegrees(30.0));
 		RANGE_TO_HOOD_ANGLE_FEEDING.put(8.0, Rotation2d.fromDegrees(30.0));
@@ -83,8 +85,10 @@ public class LaunchingCalculator {
 		RANGE_TO_WHEEL_RPS.put(2.1, 27.5);
 		RANGE_TO_WHEEL_RPS.put(2.63, 29.75);
 		RANGE_TO_WHEEL_RPS.put(3.28, 31.75);
-		RANGE_TO_WHEEL_RPS.put(3.88, 36.0);
-		RANGE_TO_WHEEL_RPS.put(4.4, 37.5);
+		RANGE_TO_WHEEL_RPS.put(3.88, 33.7);
+		RANGE_TO_WHEEL_RPS.put(4.4, 35.0);
+		RANGE_TO_WHEEL_RPS.put(5.0, 39.3);
+		RANGE_TO_WHEEL_RPS.put(5.5, 43.62);
 		RANGE_TO_WHEEL_RPS_FEEDING.put(5.0, 32.0);
 		RANGE_TO_WHEEL_RPS_FEEDING.put(6.5, 35.0);
 		RANGE_TO_WHEEL_RPS_FEEDING.put(8.0, 39.0);
@@ -108,7 +112,7 @@ public class LaunchingCalculator {
 	private static final double TOF_EPSILON = 0.001;
 	private static final double PHASE_LAG_SECONDS = 0.03;
 	private static final double MIN_RANGE_METERS = 1.6;
-	private static final double MAX_RANGE_METERS = 4.4;
+	private static final double MAX_RANGE_METERS = 5.5;
 
 	private final RobotState m_robotState;
 	private final StructPublisher<Parameters> m_launchingParametersPublisher;

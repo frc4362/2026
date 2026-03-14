@@ -129,7 +129,7 @@ public final class RobotContainer {
         m_pilot.rightTrigger().whileTrue(SuperstructureCommands.makeLaunchCommand_MatchState(m_swerve, m_superstructure, m_launchCalculator, () -> m_matchStateScheduler.getMatchState().getTimeUntilActive()));
         m_pilot.rightTrigger().onFalse(m_superstructure.applyWantedState(Superstructure.SystemState.IDLE));
 
-        m_pilot.y().onTrue(SuperstructureCommands.driveOverBump(m_swerve).andThen(m_swerve.runOnce(() -> m_swerve.setControl(new SwerveRequest.Idle()))));
+//        m_pilot.y().onTrue(SuperstructureCommands.driveOverBump(m_swerve).andThen(m_swerve.runOnce(() -> m_swerve.setControl(new SwerveRequest.Idle()))));
 
         m_doEarlyAgitationTrigger = new Trigger(DriverStation::isAutonomous).or(m_copilot.a());
 

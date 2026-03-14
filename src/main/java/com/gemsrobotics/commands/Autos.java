@@ -35,9 +35,10 @@ public final class Autos {
         m_swerve = m_robot.getSwerve();
 
         m_autoChooser = new AutoChooser();
-        m_autoChooser.addRoutine("Left Auto", this::leftShoot);
+//        m_autoChooser.addRoutine("Left Auto", this::leftShoot);
+        m_autoChooser.addRoutine("Left Auto Hot", this::leftHotAuto);
         m_autoChooser.addRoutine("Left Auto Skip Bump", this::leftSkipBump);
-        m_autoChooser.addRoutine("Right Auto", this::rightShoot);
+//        m_autoChooser.addRoutine("Right Auto", this::rightShoot);
         m_autoChooser.addRoutine("Right Auto Skip Bump", this::rightSkipBump);
         m_autoChooser.addRoutine("Home Auto", this::homeAuto);
     }
@@ -74,7 +75,7 @@ public final class Autos {
         final Translation2d startingTranslation = drivePath.getInitialPose().map(Pose2d::getTranslation)
                 .orElseGet(() -> AllianceFlipUtil.apply(new Translation2d(5.75, 5.5)));
 
-        final AutoTrajectory drivePath2 = ChoreoTraj.LeftSkipBump2.asAutoTraj(routine);
+        final AutoTrajectory drivePath2 = ChoreoTraj.LeftSkipBump2Loop.asAutoTraj(routine);
 
         routine.active().onTrue(SuperstructureCommands.driveOverBump(m_swerve)
                 .andThen(() -> m_swerve.resetTranslation(startingTranslation))
@@ -82,7 +83,7 @@ public final class Autos {
                 .andThen(drivePath.cmd())
                 .andThen(m_superstructure.setWantedState(Superstructure.SystemState.INTAKING)));
         drivePath.done().onTrue(SuperstructureCommands.makeLaunchCommand(m_swerve, m_superstructure, m_robot.getLaunchCalculator())
-                .withTimeout(5.0)
+                .withTimeout(4.75)
                 .andThen(m_superstructure.setWantedState(Superstructure.SystemState.INTAKING))
                 .andThen(drivePath2.cmd()));
         drivePath2.done().onTrue(SuperstructureCommands.makeLaunchCommand(m_swerve, m_superstructure, m_robot.getLaunchCalculator())
@@ -98,7 +99,7 @@ public final class Autos {
         final Translation2d startingTranslation = drivePath.getInitialPose().map(Pose2d::getTranslation)
                 .orElseGet(() -> AllianceFlipUtil.apply(new Translation2d(5.75, 2.42)));
 
-        final AutoTrajectory drivePath2 = ChoreoTraj.RightSkipBump2.asAutoTraj(routine);
+        final AutoTrajectory drivePath2 = ChoreoTraj.LeftSkipBump2Loop.asAutoTraj(routine);
 
         routine.active().onTrue(SuperstructureCommands.driveOverBump(m_swerve)
                 .andThen(() -> m_swerve.resetTranslation(startingTranslation))
@@ -106,12 +107,33 @@ public final class Autos {
                 .andThen(drivePath.cmd())
                 .andThen(m_superstructure.setWantedState(Superstructure.SystemState.INTAKING)));
         drivePath.done().onTrue(SuperstructureCommands.makeLaunchCommand(m_swerve, m_superstructure, m_robot.getLaunchCalculator())
-                .withTimeout(5.0)
+                .withTimeout(4.75)
                 .andThen(m_superstructure.setWantedState(Superstructure.SystemState.INTAKING))
                 .andThen(drivePath2.cmd()));
         drivePath2.done().onTrue(SuperstructureCommands.makeLaunchCommand(m_swerve, m_superstructure, m_robot.getLaunchCalculator())
                 .withTimeout(5.0)
                 .andThen(m_superstructure.setWantedState(Superstructure.SystemState.IDLE)));
+
+        return routine;
+    }
+
+    public AutoRoutine leftHotAuto() {
+        final AutoRoutine routine = m_autoFactory.newRoutine("Left Skip Bump Hot Auto");
+        final AutoTrajectory drivePath = ChoreoTraj.LeftSkipBump.asAutoTraj(routine);
+        final Translation2d startingTranslation = drivePath.getInitialPose().map(Pose2d::getTranslation)
+                .orElseGet(() -> AllianceFlipUtil.apply(new Translation2d(5.75, 5.5)));
+
+        final AutoTrajectory drivePath2 = ChoreoTraj.LeftSkipBump2Hot.asAutoTraj(routine);
+
+        routine.active().onTrue(SuperstructureCommands.driveOverBump(m_swerve)
+                .andThen(() -> m_swerve.resetTranslation(startingTranslation))
+                .andThen(m_superstructure.setWantedState(Superstructure.SystemState.INTAKING))
+                .andThen(drivePath.cmd())
+                .andThen(m_superstructure.setWantedState(Superstructure.SystemState.INTAKING)));
+        drivePath.done().onTrue(SuperstructureCommands.makeLaunchCommand(m_swerve, m_superstructure, m_robot.getLaunchCalculator())
+                .withTimeout(5.5)
+                .andThen(m_superstructure.setWantedState(Superstructure.SystemState.INTAKING))
+                .andThen(drivePath2.cmd()));
 
         return routine;
     }
