@@ -327,9 +327,9 @@ public final class CommandSwerveDrivetrain extends TunerConstants.TunerSwerveDri
      * @return the unsigned 3d-tilt of the robot, combining yaw, pitch, and roll
      */
     public Rotation2d getTilt() {
-        Pose3d currentNormal = ROBOT_NORMAL.transformBy(new Transform3d(new Translation3d(), getRotation3d()));
-        currentNormal = currentNormal.times(1.0 / currentNormal.getTranslation().getNorm());
-        return Rotation2d.fromRadians(acos(currentNormal.getZ()));
+        final Pose3d currentNormal = ROBOT_NORMAL.transformBy(new Transform3d(new Translation3d(), getRotation3d()));
+        final Pose3d unitNormal = currentNormal.times(1.0 / currentNormal.getTranslation().getNorm());
+        return Rotation2d.fromRadians(acos(unitNormal.getZ()));
     }
 
     /**

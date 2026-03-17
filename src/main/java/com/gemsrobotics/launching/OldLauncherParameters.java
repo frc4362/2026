@@ -4,10 +4,10 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.interpolation.Interpolatable;
 import edu.wpi.first.math.interpolation.Interpolator;
 
-public record LauncherParameters(Rotation2d hoodAngle, double rps) implements Interpolatable<LauncherParameters>, HoodAndRps {
+public record OldLauncherParameters(Rotation2d hoodAngle, double rps) implements Interpolatable<OldLauncherParameters>, HoodAndRps {
     @Override
-    public LauncherParameters interpolate(final LauncherParameters other, final double t) {
-        return new LauncherParameters(
+    public OldLauncherParameters interpolate(final OldLauncherParameters other, final double t) {
+        return new OldLauncherParameters(
                 this.hoodAngle.interpolate(other.hoodAngle, t),
                 Interpolator.forDouble().interpolate(this.rps, other.rps, t));
     }

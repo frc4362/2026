@@ -108,7 +108,7 @@ public class LaunchingCalculator {
 	}
 
 	private static final boolean DO_LINEAR_DRAG_COMPENSATION = false;
-	private static final double DRAG_CONSTANT_INVERSE_SECONDS = 0.2;
+	private static final double DRAG_CONSTANT_INVERSE_SECONDS = 0.47;
 	private static final double TOF_EPSILON = 0.001;
 	private static final double PHASE_LAG_SECONDS = 0.03;
 	private static final double MIN_RANGE_METERS = 1.6;

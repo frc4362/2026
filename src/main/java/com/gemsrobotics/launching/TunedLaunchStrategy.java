@@ -20,7 +20,7 @@ public final class TunedLaunchStrategy extends LaunchStrategy {
 	}
 
 	@Override
-	protected LauncherParameters unsafeParametersFor(final double rangeMetersUnused) {
+	protected OldLauncherParameters unsafeParametersFor(final double rangeMetersUnused) {
 		double safeHoodAngleDegrees = m_hoodAngleSubscriber.get();
 		if (safeHoodAngleDegrees < Hood.MIN_ANGLE.getDegrees()) {
 			safeHoodAngleDegrees = Hood.MIN_ANGLE.getDegrees();
@@ -28,7 +28,7 @@ public final class TunedLaunchStrategy extends LaunchStrategy {
 			safeHoodAngleDegrees = Hood.MAX_ANGLE.getDegrees();
 		}
 
-		return new LauncherParameters(Rotation2d.fromDegrees(safeHoodAngleDegrees), m_rpsSubscriber.get());
+		return new OldLauncherParameters(Rotation2d.fromDegrees(safeHoodAngleDegrees), m_rpsSubscriber.get());
 	}
 
 	@Override

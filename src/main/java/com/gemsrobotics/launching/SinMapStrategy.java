@@ -16,10 +16,10 @@ public final class SinMapStrategy extends LaunchStrategy {
 	// 45 : 30 : 18
 
 	@Override
-	protected LauncherParameters unsafeParametersFor(final double rangeMeters) {
+	protected OldLauncherParameters unsafeParametersFor(final double rangeMeters) {
 		final var x = RPS_OFFSET_FORWARD + RPS_PER_METER_FORWARD * rangeMeters;
 		final var y = RPS_OFFSET_UP + RPS_PER_METER_UP * rangeMeters;
-		return new LauncherParameters(Rotation2d.fromRadians(Math.atan(x / y)).plus(HOOD_ANGLE_OFFSET), Math.hypot(x, y));
+		return new OldLauncherParameters(Rotation2d.fromRadians(Math.atan(x / y)).plus(HOOD_ANGLE_OFFSET), Math.hypot(x, y));
 	}
 
 	@Override
