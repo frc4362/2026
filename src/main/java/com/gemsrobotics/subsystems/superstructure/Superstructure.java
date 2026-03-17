@@ -8,6 +8,7 @@ import com.gemsrobotics.util.AllianceFlipUtil;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.networktables.*;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -42,7 +43,7 @@ public final class Superstructure extends SubsystemBase {
 
     private final StringPublisher m_systemStatePublisher;
     private final StringPublisher m_wantedStatePublisher;
-    private final DoublePublisher m_hubDistancePublisher, m_launchVelocityPublisher;
+    private final DoublePublisher m_hubDistancePublisher, m_launchVelocityPublisher, m_stateChangeTimePublisher;
     private final StructPublisher<Rotation2d> m_launchAnglePublisher;
 
     private SystemState m_state;
@@ -81,6 +82,7 @@ public final class Superstructure extends SubsystemBase {
         m_wantedStatePublisher = myTable.getStringTopic("wanted_state").publish();
         m_systemStatePublisher = myTable.getStringTopic("system_state").publish();
         m_hubDistancePublisher = myTable.getDoubleTopic("target_distance_m").publish();
+        m_stateChangeTimePublisher = myTable.getDoubleTopic("state_change_time").publish();
         m_launchVelocityPublisher = myTable.getDoubleTopic("launch_velocity_rps").publish();
         m_launchAnglePublisher = myTable.getStructTopic("launch_angle", Rotation2d.struct).publish();
 
@@ -107,6 +109,7 @@ public final class Superstructure extends SubsystemBase {
         m_systemStatePublisher.set(m_state.name());
         m_wantedStatePublisher.set(m_stateWanted.name());
         m_hubDistancePublisher.set(getDistanceToHub());
+        m_stateChangeTimePublisher.set(m_stateChangedTimer.get());
 
         getSelectedLaunchParameters().ifPresent(parameters -> {
             m_launchVelocityPublisher.set(parameters.getRps());
@@ -114,7 +117,6 @@ public final class Superstructure extends SubsystemBase {
         });
 
         // update subsystems periodically
-//        m_launcher.periodic();
         m_hopper.periodic();
         m_uptake.periodic();
         m_hood.periodic();
@@ -136,11 +138,10 @@ public final class Superstructure extends SubsystemBase {
         } else {
             m_stateChanged = false;
         }
-
-        SmartDashboard.putNumber("stateChangedTimer", m_stateChangedTimer.get());
     }
 
     public SystemState conformToWantedState() {
+        // this could contain more complex state-change logic later on
         return m_stateWanted;
     }
 
@@ -278,7 +279,8 @@ public final class Superstructure extends SubsystemBase {
     }
 
     public Optional<HoodAndRps> getSelectedLaunchParameters() {
-        if (m_doTuningChooser.getSelected()) {
+        // never use tuning cals if we're attached to the FMS
+        if (m_doTuningChooser.getSelected() && !DriverStation.isFMSAttached()) {
             return Optional.ofNullable(m_tunedLaunchStrategy.getParameters(getDistanceToHub()));
         } else {
             return Optional.ofNullable(m_launcherParameters);
