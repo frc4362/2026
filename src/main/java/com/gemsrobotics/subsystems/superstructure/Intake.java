@@ -25,11 +25,10 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import edu.wpi.first.wpilibj.simulation.SingleJointedArmSim;
 
-public class Intake {
-    //TODO: fix values (because these are just copied from last year)
+public final class Intake {
     private static final double INTAKE_STARTING_ROTATIONS = -0.43;
     // Assumes the intake is retracted at 0 rotations and deploys in the positive direction
-    private static final double INTAKE_STOWED_ROTATIONS = -0.4;
+    private static final double INTAKE_STOWED_ROTATIONS = -0.31;
     private static final double INTAKE_FEEDING_ROTATIONS = -0.295;
     private static final double INTAKE_AGITATING_ROTATIONS = -0.17;
     private static final double INTAKE_DEPLOYED_ROTATIONS = 0.0;   // (135deg/360deg)
@@ -73,6 +72,8 @@ public class Intake {
         cfg.Slot0.kP = 8.0;
         cfg.Slot0.kA = 0.0;
         m_intakeLeader.getConfigurator().apply(cfg);
+        cfg.CurrentLimits.StatorCurrentLimit = 40;
+        cfg.CurrentLimits.StatorCurrentLimitEnable = true;
         m_intakeFollower.getConfigurator().apply(cfg);
 
         m_intakeDeployer = deployerMotor;

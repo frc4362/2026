@@ -49,7 +49,7 @@ public final class RobotContainer {
     private final LaunchingCalculator m_launchCalculator;
     private final Autos m_autos;
     private final ProjectileManager m_projectileManager;
-    private final Trigger m_doEarlyAgitationTrigger;
+    private final Trigger m_doEarlyAgitationTrigger, m_retractIntakeTrigger;
 
     public RobotContainer(MatchStateScheduler matchStateScheduler) {
         m_signalManager = new StatusSignalManager();
@@ -115,9 +115,6 @@ public final class RobotContainer {
                 new Intake(m_signalManager,  new TalonFX(INTAKE_TRANSLATION_LEADER, kAUX_BUS), new TalonFX(INTAKE_TRANSLATION_FOLLOWER, kAUX_BUS), new TalonFX(INTAKE_DEPLOYER, kAUX_BUS)));
         m_autos = new Autos(this);
 
-        m_pilot.rightStick().onTrue(new RunCommand(() -> m_superstructure.setRetractIntake(true)));
-        m_pilot.rightStick().onFalse(new RunCommand(() -> m_superstructure.setRetractIntake(false)));
-
         m_pilot.leftTrigger().onTrue(m_superstructure.applyWantedState(Superstructure.SystemState.INTAKING));
         m_pilot.leftTrigger().onFalse(m_superstructure.applyWantedState(Superstructure.SystemState.IDLE));
 
@@ -132,6 +129,7 @@ public final class RobotContainer {
 //        m_pilot.y().onTrue(SuperstructureCommands.driveOverBump(m_swerve).andThen(m_swerve.runOnce(() -> m_swerve.setControl(new SwerveRequest.Idle()))));
 
         m_doEarlyAgitationTrigger = new Trigger(DriverStation::isAutonomous).or(m_copilot.a());
+        m_retractIntakeTrigger = m_copilot.y();
 
         m_projectileManager = new ProjectileManager(
                 m_robotState,
@@ -147,6 +145,7 @@ public final class RobotContainer {
         // This is because it is a Subsystem, so it is updated periodically inside the Scheduler
         m_signalManager.periodic();
         m_superstructure.setDoEarlyAgitation(m_doEarlyAgitationTrigger.getAsBoolean());
+        m_superstructure.setRetractIntake(m_retractIntakeTrigger.getAsBoolean());
         m_vision.update();
         m_launchCalculator.periodic();
 

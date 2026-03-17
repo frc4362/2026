@@ -178,7 +178,7 @@ public final class MatchStateScheduler {
         String wonAutoColors = switch (m_wonAuto) {
             case TRUE -> "#4CAF50";
             case FALSE -> "#F44336";
-            case INDETERMINATE -> "#888888f";
+            case INDETERMINATE -> "#888888";
         };
 
         m_wonAutoPublisher.set(wonAutoColors);
