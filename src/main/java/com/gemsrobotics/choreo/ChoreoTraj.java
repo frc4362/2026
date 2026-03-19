@@ -1,4 +1,4 @@
-
+// spotless:off
 package com.gemsrobotics.choreo;
 
 import edu.wpi.first.math.geometry.Pose2d;
@@ -6,10 +6,10 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import java.util.Map;
 import java.util.OptionalInt;
 
-// If these imports cause errors because you're not using ChoreoLib,
-// turn off "Include ChoreoLib-specific Helpers" in Choreo's codegen settings.
 import choreo.auto.AutoRoutine;
 import choreo.auto.AutoTrajectory;
+// If the 2 imports above cause errors because you're not using ChoreoLib,
+// turn off "Include ChoreoLib-specific Helpers" in Choreo's codegen settings.
 
 /**
  * A class containing the name, start pose, end pose, and total time of every Choreo trajectory.
@@ -25,107 +25,123 @@ public record ChoreoTraj(
     Pose2d endPoseBlue
 ) {
     public static final ChoreoTraj HomeAuto = new ChoreoTraj(
-	    "HomeAuto",
-	    OptionalInt.empty(),
-	    3.58362,
-	    new Pose2d(6.32, 1.565, Rotation2d.fromRadians(2.175)),
-	    new Pose2d(3.072, 2.61, Rotation2d.fromRadians(0.8))
-	);
-	public static final ChoreoTraj LeftBasicShootAuto = new ChoreoTraj(
-	    "LeftBasicShootAuto",
-	    OptionalInt.empty(),
-	    5.42007,
-	    new Pose2d(3.437, 5.574, Rotation2d.fromRadians(-0.793)),
-	    new Pose2d(2.793, 5.502, Rotation2d.fromRadians(-2.393))
-	);
-	public static final ChoreoTraj LeftSkipBump = new ChoreoTraj(
-	    "LeftSkipBump",
-	    OptionalInt.empty(),
-	    4.56893,
-	    new Pose2d(5.755, 5.513, Rotation2d.fromRadians(-0.859)),
-	    new Pose2d(2.793, 5.602, Rotation2d.fromRadians(-2.393))
-	);
-	public static final ChoreoTraj LeftSkipBump2 = new ChoreoTraj(
-	    "LeftSkipBump2",
-	    OptionalInt.empty(),
-	    5.61185,
-	    new Pose2d(2.793, 5.502, Rotation2d.fromRadians(-0.689)),
-	    new Pose2d(2.919, 5.753, Rotation2d.fromRadians(-2.271))
-	);
-	public static final ChoreoTraj LeftSkipBump2Hot = new ChoreoTraj(
-	    "LeftSkipBump2Hot",
-	    OptionalInt.empty(),
-	    6.62298,
-	    new Pose2d(2.793, 5.502, Rotation2d.fromRadians(-0.689)),
-	    new Pose2d(8.288, 3.838, Rotation2d.fromRadians(1.885))
-	);
-	public static final ChoreoTraj LeftSkipBump2Loop = new ChoreoTraj(
-	    "LeftSkipBump2Loop",
-	    OptionalInt.empty(),
-	    5.27156,
-	    new Pose2d(2.793, 5.502, Rotation2d.fromRadians(-0.689)),
-	    new Pose2d(2.852, 5.535, Rotation2d.fromRadians(-2.271))
-	);
-	public static final ChoreoTraj RightBasicShootAuto = new ChoreoTraj(
-	    "RightBasicShootAuto",
-	    OptionalInt.empty(),
-	    5.31127,
-	    new Pose2d(3.456, 2.514, Rotation2d.fromRadians(0.767)),
-	    new Pose2d(2.829, 2.531, Rotation2d.fromRadians(2.416))
-	);
-	public static final ChoreoTraj RightSkipBump = new ChoreoTraj(
-	    "RightSkipBump",
-	    OptionalInt.empty(),
-	    4.50882,
-	    new Pose2d(5.731, 2.42, Rotation2d.fromRadians(0.8)),
-	    new Pose2d(2.829, 2.331, Rotation2d.fromRadians(2.416))
-	);
-	public static final ChoreoTraj RightSkipBump2 = new ChoreoTraj(
-	    "RightSkipBump2",
-	    OptionalInt.empty(),
-	    5.48894,
-	    new Pose2d(2.829, 2.531, Rotation2d.fromRadians(0.639)),
-	    new Pose2d(2.811, 2.245, Rotation2d.fromRadians(2.416))
-	);
-	public static final ChoreoTraj RightSkipBump2Alt = new ChoreoTraj(
-	    "RightSkipBump2Alt",
-	    OptionalInt.empty(),
-	    5.70714,
-	    new Pose2d(2.829, 2.531, Rotation2d.fromRadians(0.639)),
-	    new Pose2d(2.811, 2.245, Rotation2d.fromRadians(2.416))
-	);
-	public static final ChoreoTraj RightSkipBump2Hot = new ChoreoTraj(
-	    "RightSkipBump2Hot",
-	    OptionalInt.empty(),
-	    5.49825,
-	    new Pose2d(2.829, 2.531, Rotation2d.fromRadians(0.639)),
-	    new Pose2d(8.843, 5.896, Rotation2d.fromRadians(-1.48))
-	);
-	public static final ChoreoTraj RightSkipBump2Loop = new ChoreoTraj(
-	    "RightSkipBump2Loop",
-	    OptionalInt.empty(),
-	    4.8163,
-	    new Pose2d(2.829, 2.531, Rotation2d.fromRadians(0.639)),
-	    new Pose2d(2.811, 2.445, Rotation2d.fromRadians(2.416))
-	);
+        "HomeAuto",
+        OptionalInt.empty(),
+        3.58362,
+        new Pose2d(6.31951, 1.56454, Rotation2d.fromRadians(2.17505)),
+        new Pose2d(3.07231, 2.61028, Rotation2d.fromRadians(0.80038))
+    );
+    public static final ChoreoTraj LeftBasicShootAuto = new ChoreoTraj(
+        "LeftBasicShootAuto",
+        OptionalInt.empty(),
+        5.42007,
+        new Pose2d(3.43698, 5.57431, Rotation2d.fromRadians(-0.7927)),
+        new Pose2d(2.79341, 5.50232, Rotation2d.fromRadians(-2.39321))
+    );
+    public static final ChoreoTraj LeftSkipBump = new ChoreoTraj(
+        "LeftSkipBump",
+        OptionalInt.empty(),
+        4.56874,
+        new Pose2d(5.7549, 5.5475, Rotation2d.fromRadians(-0.8591)),
+        new Pose2d(2.7936, 5.6381, Rotation2d.fromRadians(-2.3932))
+    );
+    public static final ChoreoTraj LeftSkipBump2Hot = new ChoreoTraj(
+        "LeftSkipBump2Hot",
+        OptionalInt.empty(),
+        6.62298,
+        new Pose2d(2.79341, 5.50232, Rotation2d.fromRadians(-0.68892)),
+        new Pose2d(8.2884, 3.83771, Rotation2d.fromRadians(1.88503))
+    );
+    public static final ChoreoTraj LeftSkipBump2Loop = new ChoreoTraj(
+        "LeftSkipBump2Loop",
+        OptionalInt.empty(),
+        5.27156,
+        new Pose2d(2.79341, 5.50232, Rotation2d.fromRadians(-0.68892)),
+        new Pose2d(2.85228, 5.53533, Rotation2d.fromRadians(-2.27069))
+    );
+    public static final ChoreoTraj RightBasicShootAuto = new ChoreoTraj(
+        "RightBasicShootAuto",
+        OptionalInt.empty(),
+        5.31127,
+        new Pose2d(3.45647, 2.51438, Rotation2d.fromRadians(0.76653)),
+        new Pose2d(2.82921, 2.53109, Rotation2d.fromRadians(2.41636))
+    );
+    public static final ChoreoTraj RightSkipBump = new ChoreoTraj(
+        "RightSkipBump",
+        OptionalInt.empty(),
+        4.53755,
+        new Pose2d(5.7549, 2.5225, Rotation2d.fromRadians(0.8591)),
+        new Pose2d(2.7936, 2.4319, Rotation2d.fromRadians(2.3932))
+    );
+    public static final ChoreoTraj RightSkipBump2 = new ChoreoTraj(
+        "RightSkipBump2",
+        OptionalInt.empty(),
+        5.61311,
+        new Pose2d(2.8292, 2.5311, Rotation2d.fromRadians(0.6394)),
+        new Pose2d(2.7113, 2.2447, Rotation2d.fromRadians(2.4164))
+    );
+    public static final ChoreoTraj RightSkipBump2Alt = new ChoreoTraj(
+        "RightSkipBump2Alt",
+        OptionalInt.empty(),
+        5.70714,
+        new Pose2d(2.82921, 2.53109, Rotation2d.fromRadians(0.63939)),
+        new Pose2d(2.81131, 2.2447, Rotation2d.fromRadians(2.41636))
+    );
+    public static final ChoreoTraj RightSkipBump2Hot = new ChoreoTraj(
+        "RightSkipBump2Hot",
+        OptionalInt.empty(),
+        5.49825,
+        new Pose2d(2.82921, 2.53109, Rotation2d.fromRadians(0.63939)),
+        new Pose2d(8.84327, 5.89609, Rotation2d.fromRadians(-1.48014))
+    );
+    public static final ChoreoTraj RightSkipBump2Loop = new ChoreoTraj(
+        "RightSkipBump2Loop",
+        OptionalInt.empty(),
+        4.8163,
+        new Pose2d(2.82921, 2.53109, Rotation2d.fromRadians(0.63939)),
+        new Pose2d(2.81131, 2.4447, Rotation2d.fromRadians(2.41636))
+    );
+    public static final ChoreoTraj LeftFlippedShooter = new ChoreoTraj(
+        "LeftFlippedShooter",
+        OptionalInt.empty(),
+        4.53775,
+        new Pose2d(5.7549, 5.5475, Rotation2d.fromRadians(0.8591)),
+        new Pose2d(3.4716, 5.3367, Rotation2d.fromRadians(1.3597))
+    );
+    public static final ChoreoTraj LeftSkipBump2 = new ChoreoTraj(
+        "LeftSkipBump2",
+        OptionalInt.empty(),
+        5.61182,
+        new Pose2d(2.8292, 5.5389, Rotation2d.fromRadians(0.6394)),
+        new Pose2d(2.7113, 5.8253, Rotation2d.fromRadians(2.4164))
+    );
+    public static final ChoreoTraj RightFlippedShooter = new ChoreoTraj(
+        "RightFlippedShooter",
+        OptionalInt.empty(),
+        4.53775,
+        new Pose2d(5.7549, 2.5225, Rotation2d.fromRadians(-0.8591)),
+        new Pose2d(3.4716, 2.7333, Rotation2d.fromRadians(-1.3597))
+    );
 
     /**
      * A map between trajectory names and their corresponding data.
      * This allows for trajectory data to be looked up with strings during runtime.
      */
     public static final Map<String, ChoreoTraj> ALL_TRAJECTORIES = Map.ofEntries(
-    	Map.entry("HomeAuto", HomeAuto),
-		Map.entry("LeftBasicShootAuto", LeftBasicShootAuto),
-		Map.entry("LeftSkipBump", LeftSkipBump),
-		Map.entry("LeftSkipBump2", LeftSkipBump2),
-		Map.entry("LeftSkipBump2Hot", LeftSkipBump2Hot),
-		Map.entry("LeftSkipBump2Loop", LeftSkipBump2Loop),
-		Map.entry("RightBasicShootAuto", RightBasicShootAuto),
-		Map.entry("RightSkipBump", RightSkipBump),
-		Map.entry("RightSkipBump2", RightSkipBump2),
-		Map.entry("RightSkipBump2Alt", RightSkipBump2Alt),
-		Map.entry("RightSkipBump2Hot", RightSkipBump2Hot),
-		Map.entry("RightSkipBump2Loop", RightSkipBump2Loop)
+        Map.entry("HomeAuto", HomeAuto),
+        Map.entry("LeftBasicShootAuto", LeftBasicShootAuto),
+        Map.entry("LeftSkipBump", LeftSkipBump),
+        Map.entry("LeftSkipBump2Hot", LeftSkipBump2Hot),
+        Map.entry("LeftSkipBump2Loop", LeftSkipBump2Loop),
+        Map.entry("RightBasicShootAuto", RightBasicShootAuto),
+        Map.entry("RightSkipBump", RightSkipBump),
+        Map.entry("RightSkipBump2", RightSkipBump2),
+        Map.entry("RightSkipBump2Alt", RightSkipBump2Alt),
+        Map.entry("RightSkipBump2Hot", RightSkipBump2Hot),
+        Map.entry("RightSkipBump2Loop", RightSkipBump2Loop),
+        Map.entry("LeftFlippedShooter", LeftFlippedShooter),
+        Map.entry("LeftSkipBump2", LeftSkipBump2),
+        Map.entry("RightFlippedShooter", RightFlippedShooter)
     );
 
     /**
@@ -152,3 +168,4 @@ public record ChoreoTraj(
         return routine.trajectory(this.name);
     }
 }
+// spotless:on
