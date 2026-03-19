@@ -26,8 +26,8 @@ import java.util.Optional;
 import static java.lang.Math.abs;
 import static java.lang.Math.exp;
 
-public class LaunchingCalculator {
-	public static boolean DO_MOVE_AND_SHOOT = false;
+public final class LaunchingCalculator {
+	public static final boolean DO_MOVE_AND_SHOOT = false;
 	public static final double FEED_DISTANCE_FROM_WALL = 0.5;
 
 	public record Parameters(
@@ -99,7 +99,6 @@ public class LaunchingCalculator {
 		RANGE_TO_TOF_MAP.put(3.0, 1.1);
 		RANGE_TO_TOF_MAP.put(4.0, 1.115);
 		RANGE_TO_TOF_MAP.put(5.0, 1.2);
-
 		RANGE_TO_TOF_MAP_FEEDING.put(1.0, 0.9);
 		RANGE_TO_TOF_MAP_FEEDING.put(2.0, 1.0);
 		RANGE_TO_TOF_MAP_FEEDING.put(3.0, 1.1);
@@ -158,6 +157,10 @@ public class LaunchingCalculator {
 		final List<Double> contractionRates = new ArrayList<>(Constants.TOF_RECURSION_LIMIT);
 
 		if (DO_MOVE_AND_SHOOT) {
+			// the imparted velocity of the robot times the flight time of the launch
+			// clearly, the time of the launch is not the same as when it is taken while still
+			// therefore we recurse
+			final var impartedVelocity = new Translation2d(launcherVelocity.vxMetersPerSecond, launcherVelocity.vyMetersPerSecond);
 			for (int i = 1; i <= Constants.TOF_RECURSION_LIMIT; i++) {
 				// calculate new tof and log how much the tof contracted
 				final double newTof = getTimeOfFlight(lookaheadLauncherToTargetDistance, isFeeding);
@@ -171,12 +174,6 @@ public class LaunchingCalculator {
 					contractionRates.add(0.0);
 				}
 				tof = newTof;
-
-				// the imparted velocity of the robot times the flight time of the launch
-				// clearly, the time of the launch is not the same as when it is taken while still
-				// therefore we recurse
-				final var impartedVelocity = new Translation2d(launcherVelocity.vxMetersPerSecond, launcherVelocity.vyMetersPerSecond);
-
 				// reduce our effective tof by the imparted w
 				final double effectiveTof;
 				if (DO_LINEAR_DRAG_COMPENSATION) {
@@ -194,8 +191,7 @@ public class LaunchingCalculator {
 		}
 
 		// this is all fine to do still if we just skip the "calculate while moving" portion
-
-		// ugly one liner.. think its the best way around the boxing?
+		// ugly one-liner... think it's the best way around the boxing?
 		m_contractionRatePublisher.set(contractionRates.stream().mapToDouble(Double::doubleValue).toArray());
 
 		// when the loop is done, we're stuck with whatever we have converged on after N iterations
@@ -223,7 +219,7 @@ public class LaunchingCalculator {
 		return Optional.ofNullable(m_latestParameters);
 	}
 
-	private double getFlywheelVelocity(final double launcherToTargetDistance, final boolean isFeeding) {
+	private static double getFlywheelVelocity(final double launcherToTargetDistance, final boolean isFeeding) {
 		if (isFeeding) {
 			return RANGE_TO_WHEEL_RPS_FEEDING.get(launcherToTargetDistance);
 		} else {
@@ -231,7 +227,7 @@ public class LaunchingCalculator {
 		}
 	}
 
-	private Rotation2d getHoodAngle(final double launcherToTargetDistance, final boolean isFeeding) {
+	private static Rotation2d getHoodAngle(final double launcherToTargetDistance, final boolean isFeeding) {
 		if (isFeeding) {
 			return RANGE_TO_HOOD_ANGLE_FEEDING.get(launcherToTargetDistance);
 		} else {
@@ -239,7 +235,7 @@ public class LaunchingCalculator {
 		}
 	}
 
-	private double getTimeOfFlight(final double launcherToTargetDistance, final boolean isFeeding) {
+	private static double getTimeOfFlight(final double launcherToTargetDistance, final boolean isFeeding) {
 		if (isFeeding) {
 			return RANGE_TO_TOF_MAP_FEEDING.get(launcherToTargetDistance);
 		} else {
@@ -247,11 +243,11 @@ public class LaunchingCalculator {
 		}
 	}
 
-	private boolean isValidLaunchRange(final double launcherToTargetDistance, final boolean isFeeding) {
+	private static boolean isValidLaunchRange(final double launcherToTargetDistance, final boolean isFeeding) {
 		return isFeeding || (launcherToTargetDistance < MAX_RANGE_METERS && launcherToTargetDistance > MIN_RANGE_METERS);
 	}
 
-	private boolean isValidLaunchVelocity(final ChassisSpeeds launcherVelocity, final boolean isFeeding) {
+	private static boolean isValidLaunchVelocity(final ChassisSpeeds launcherVelocity, final boolean isFeeding) {
 		if (DO_MOVE_AND_SHOOT || isFeeding) { // Can feed at any robot velocity
 			return true;
 		} else {

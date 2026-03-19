@@ -31,6 +31,7 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.*;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
@@ -174,16 +175,34 @@ public final class CommandSwerveDrivetrain extends TunerConstants.TunerSwerveDri
 
         m_driveSpeedsRequest = new SwerveRequest.ApplyFieldSpeeds();
         //These PID values may need to be changed
-        m_pathXController = new PIDController(2.5, 0, 0);
-        m_pathYController = new PIDController(2.5, 0, 0);
+        m_pathXController = new PIDController(6.0, 0, 0);
+        m_pathYController = new PIDController(6.0, 0, 0);
         m_pathThetaController = new PIDController(5, 0, 0.2);
         m_pathThetaController.enableContinuousInput(-Math.PI, Math.PI);
 
         m_robotState = robotState;
         m_yawVelocity = getPigeon2().getAngularVelocityZWorld(false);
+        m_yawVelocity.setUpdateFrequency(250);
 
         m_logger = new Telemetry(MAX_SPEED);
-        registerTelemetry(m_logger::telemeterize);
+        registerTelemetry(state -> {
+            m_logger.telemeterize(state);
+            // submit info to RobotState
+            final var swerveState = getStateCopy();
+            final double robotTime = Timer.getTimestamp();
+            final double omegaRadiansPerSecond = m_yawVelocity.refresh().getValue().in(RadiansPerSecond);
+            final ChassisSpeeds measuredChassisSpeeds = getKinematics().toChassisSpeeds(swerveState.ModuleStates);
+            final ChassisSpeeds fusedChassisSpeeds = new ChassisSpeeds(
+                    measuredChassisSpeeds.vxMetersPerSecond,
+                    measuredChassisSpeeds.vyMetersPerSecond,
+                    omegaRadiansPerSecond);
+            
+            m_robotState.addDriveSample(
+                    robotTime,
+                    swerveState.Pose,
+                    omegaRadiansPerSecond,
+                    fusedChassisSpeeds);
+        });
 
         m_timer = new Timer();
         m_linearPathController = new LinearPath(
@@ -293,15 +312,6 @@ public final class CommandSwerveDrivetrain extends TunerConstants.TunerSwerveDri
                 m_hasAppliedOperatorPerspective = true;
             });
         }
-
-        // submit info to RobotState
-        final var swerveState = getStateCopy();
-        final double robotTime = Timer.getTimestamp();
-        m_robotState.addDriveSample(
-                robotTime,
-                swerveState.Pose,
-                m_yawVelocity.refresh().getValue().in(RadiansPerSecond),
-                getKinematics().toChassisSpeeds(swerveState.ModuleStates));
     }
 
     private void startSimThread() {

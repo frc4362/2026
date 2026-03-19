@@ -7,6 +7,7 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.units.measure.AngularVelocity;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
 import static edu.wpi.first.units.Units.RadiansPerSecond;
@@ -21,23 +22,23 @@ public final class RobotState {
 	// units in radians per second
 	private final ConcurrentTimeInterpolatableBuffer<Double> m_vehicleAngularVelocity;
 
-	private PoseEstimate m_lastVisionPoseEstimate;
-	private double m_lastVisionPoseEstimateTimestamp;
-	private ChassisSpeeds m_recentVehicleRelativeVelocity;
-	private ChassisSpeeds m_recentFieldRelativeVelocity;
+	private final AtomicReference<PoseEstimate> m_lastVisionPoseEstimate;
+	private final AtomicReference<Double> m_lastVisionPoseEstimateTimestamp;
+	private final AtomicReference<ChassisSpeeds> m_recentVehicleRelativeVelocity;
+	private final AtomicReference<ChassisSpeeds> m_recentFieldRelativeVelocity;
 
 	public RobotState() {
 		m_visionPoseEstimateConsumers = new ArrayList<>();
-		m_lastVisionPoseEstimate = PoseEstimate.NULL;
-		m_lastVisionPoseEstimateTimestamp = 0.0;
+		m_lastVisionPoseEstimate = new AtomicReference<>(PoseEstimate.NULL);
+		m_lastVisionPoseEstimateTimestamp = new AtomicReference<>(0.0);
 
 		m_fieldToVehicle = ConcurrentTimeInterpolatableBuffer.createBuffer(LOOKBACK_TIME_SECONDS);
 		m_fieldToVehicle.addSample(0.0, Pose2d.kZero);
 
 		m_vehicleAngularVelocity = ConcurrentTimeInterpolatableBuffer.createDoubleBuffer(LOOKBACK_TIME_SECONDS);
 		m_vehicleAngularVelocity.addSample(0.0, 0.0);
-		m_recentVehicleRelativeVelocity = new ChassisSpeeds();
-		m_recentFieldRelativeVelocity = new ChassisSpeeds();
+		m_recentVehicleRelativeVelocity = new AtomicReference<>(new ChassisSpeeds());
+		m_recentFieldRelativeVelocity = new AtomicReference<>(new ChassisSpeeds());
 	}
 
 	public void addPoseEstimateConsumer(final Consumer<PoseEstimate> consumer) {
@@ -45,17 +46,17 @@ public final class RobotState {
 	}
 
 	public void updatePoseEstimate(final PoseEstimate poseEstimate) {
-		m_lastVisionPoseEstimate = poseEstimate;
-		m_lastVisionPoseEstimateTimestamp = poseEstimate.timestampSeconds();
+		m_lastVisionPoseEstimate.set(poseEstimate);
+		m_lastVisionPoseEstimateTimestamp.set(poseEstimate.timestampSeconds());
 		m_visionPoseEstimateConsumers.forEach(consumer -> consumer.accept(poseEstimate));
 	}
 
 	public PoseEstimate getLastVisionPoseEstimate() {
-		return m_lastVisionPoseEstimate;
+		return m_lastVisionPoseEstimate.get();
 	}
 
 	public double getLastVisionPoseEstimateTimestamp() {
-		return m_lastVisionPoseEstimateTimestamp;
+		return m_lastVisionPoseEstimateTimestamp.get();
 	}
 
 	public void addDriveSample(
@@ -66,8 +67,8 @@ public final class RobotState {
 	) {
 		m_fieldToVehicle.addSample(timeSeconds, driveLocation);
 		m_vehicleAngularVelocity.addSample(timeSeconds, driveAngularVelocity);
-		m_recentVehicleRelativeVelocity = driveRelativeVelocity;
-		m_recentFieldRelativeVelocity = ChassisSpeeds.fromRobotRelativeSpeeds(driveRelativeVelocity, driveLocation.getRotation());
+		m_recentVehicleRelativeVelocity.set(driveRelativeVelocity);
+		m_recentFieldRelativeVelocity.set(ChassisSpeeds.fromRobotRelativeSpeeds(driveRelativeVelocity, driveLocation.getRotation()));
 	}
 
 	public Map.Entry<Double, Pose2d> getLatestFieldToVehicle() {
@@ -75,11 +76,11 @@ public final class RobotState {
 	}
 
 	public ChassisSpeeds getLatestChassisSpeeds_VehicleRelative() {
-		return m_recentVehicleRelativeVelocity;
+		return m_recentVehicleRelativeVelocity.get();
 	}
 
 	public ChassisSpeeds getLatestChassisSpeeds_FieldRelative() {
-		return m_recentFieldRelativeVelocity;
+		return m_recentFieldRelativeVelocity.get();
 	}
 
 	public Optional<Pose2d> getFieldToVehicle(final double timeSeconds) {
