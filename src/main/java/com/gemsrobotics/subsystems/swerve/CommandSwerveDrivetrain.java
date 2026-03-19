@@ -32,6 +32,7 @@ import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
@@ -166,10 +167,10 @@ public final class CommandSwerveDrivetrain extends TunerConstants.TunerSwerveDri
      * @param modules               Constants for each specific module
      */
     public CommandSwerveDrivetrain(
-        SwerveDrivetrainConstants drivetrainConstants,
+        final SwerveDrivetrainConstants drivetrainConstants,
         final RobotState robotState,
         final CommandXboxController joystick,
-        SwerveModuleConstants<?, ?, ?>... modules
+        final SwerveModuleConstants<?, ?, ?>... modules
     ) {
         super(drivetrainConstants, modules);
 
@@ -184,21 +185,23 @@ public final class CommandSwerveDrivetrain extends TunerConstants.TunerSwerveDri
         m_yawVelocity = getPigeon2().getAngularVelocityZWorld(false);
         m_yawVelocity.setUpdateFrequency(250);
 
+        // do two forms of telemetry here. submit the CTRE stuff to dashboard, and also RobotState
         m_logger = new Telemetry(MAX_SPEED);
         registerTelemetry(state -> {
             m_logger.telemeterize(state);
+
             // submit info to RobotState
-            final var swerveState = getStateCopy();
-            final double robotTime = Timer.getTimestamp();
+            final SwerveDriveState swerveState = getStateCopy();
+            final double sampleTime = Utils.currentTimeToFPGATime(swerveState.Timestamp);
             final double omegaRadiansPerSecond = m_yawVelocity.refresh().getValue().in(RadiansPerSecond);
             final ChassisSpeeds measuredChassisSpeeds = getKinematics().toChassisSpeeds(swerveState.ModuleStates);
             final ChassisSpeeds fusedChassisSpeeds = new ChassisSpeeds(
                     measuredChassisSpeeds.vxMetersPerSecond,
                     measuredChassisSpeeds.vyMetersPerSecond,
                     omegaRadiansPerSecond);
-            
+
             m_robotState.addDriveSample(
-                    robotTime,
+                    sampleTime,
                     swerveState.Pose,
                     omegaRadiansPerSecond,
                     fusedChassisSpeeds);
