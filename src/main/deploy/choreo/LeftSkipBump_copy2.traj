@@ -1,5 +1,5 @@
 {
- "name":"LeftSkipBump",
+ "name":"LeftSkipBump_copy2",
  "version":3,
  "snapshot":{
   "waypoints":[
@@ -26,8 +26,8 @@
     {"x":{"exp":"midx - pass1x2", "val":6.659599999999999}, "y":{"exp":"midy + pass1y2", "val":7.2019}, "heading":{"exp":"-pass1r2", "val":-2.1657}, "intervals":23, "split":false, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false},
     {"x":{"exp":"midx - pass1x3", "val":7.9125}, "y":{"exp":"midy + pass1y3", "val":7.005000000000001}, "heading":{"exp":"-pass1r3", "val":-1.5946}, "intervals":35, "split":false, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false},
     {"x":{"exp":"midx - pass1x4", "val":7.8588}, "y":{"exp":"midy + pass1y4", "val":4.8035}, "heading":{"exp":"-pass1r4", "val":-1.5708}, "intervals":31, "split":false, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false},
-    {"x":{"exp":"midx - pass1x5", "val":6.0572}, "y":{"exp":"midy + pass1y5", "val":5.3449}, "heading":{"exp":"-pass1r5", "val":1.3597}, "intervals":27, "split":false, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false},
-    {"x":{"exp":"midx - pass1x6", "val":3.4715999999999996}, "y":{"exp":"midy + pass1y6", "val":5.3367}, "heading":{"exp":"-pass1r6", "val":1.3597}, "intervals":40, "split":false, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false}],
+    {"x":{"exp":"midx - pass1x5", "val":5.7646}, "y":{"exp":"midy + pass1y5", "val":5.7089}, "heading":{"exp":"-pass1r5", "val":-2.4292}, "intervals":27, "split":false, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false},
+    {"x":{"exp":"midx - pass1x6", "val":2.7935999999999996}, "y":{"exp":"midy + pass1y6", "val":5.6381}, "heading":{"exp":"-pass1r6", "val":-2.3932}, "intervals":40, "split":false, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false}],
   "constraints":[
     {"from":"first", "to":null, "data":{"type":"StopPoint", "props":{}}, "enabled":true},
     {"from":"last", "to":null, "data":{"type":"StopPoint", "props":{}}, "enabled":true},

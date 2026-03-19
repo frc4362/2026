@@ -3,7 +3,309 @@
  "version":2,
  "type":"Swerve",
  "variables":{
-  "expressions":{},
+  "expressions":{
+   "fieldx":{
+    "dimension":"Length",
+    "var":{
+     "exp":"16.54 m",
+     "val":16.54
+    }
+   },
+   "fieldy":{
+    "dimension":"Length",
+    "var":{
+     "exp":"8.07 m",
+     "val":8.07
+    }
+   },
+   "midx":{
+    "dimension":"Length",
+    "var":{
+     "exp":"fieldx / 2",
+     "val":8.27
+    }
+   },
+   "midy":{
+    "dimension":"Length",
+    "var":{
+     "exp":"fieldy / 2",
+     "val":4.035
+    }
+   },
+   "pass1r1":{
+    "dimension":"Angle",
+    "var":{
+     "exp":"0.8591 rad",
+     "val":0.8591
+    }
+   },
+   "pass1r2":{
+    "dimension":"Angle",
+    "var":{
+     "exp":"2.1657 rad",
+     "val":2.1657
+    }
+   },
+   "pass1r3":{
+    "dimension":"Angle",
+    "var":{
+     "exp":"1.5946 rad",
+     "val":1.5946
+    }
+   },
+   "pass1r4":{
+    "dimension":"Angle",
+    "var":{
+     "exp":"1.5708 rad",
+     "val":1.5708
+    }
+   },
+   "pass1r5":{
+    "dimension":"Angle",
+    "var":{
+     "exp":"-1.3597 rad",
+     "val":-1.3597
+    }
+   },
+   "pass1r6":{
+    "dimension":"Angle",
+    "var":{
+     "exp":"-1.3597 rad",
+     "val":-1.3597
+    }
+   },
+   "pass1x1":{
+    "dimension":"Length",
+    "var":{
+     "exp":"2.5151 m",
+     "val":2.5151
+    }
+   },
+   "pass1x2":{
+    "dimension":"Length",
+    "var":{
+     "exp":"1.6104 m",
+     "val":1.6104
+    }
+   },
+   "pass1x3":{
+    "dimension":"Length",
+    "var":{
+     "exp":"0.3575 m",
+     "val":0.3575
+    }
+   },
+   "pass1x4":{
+    "dimension":"Length",
+    "var":{
+     "exp":"0.4112 m",
+     "val":0.4112
+    }
+   },
+   "pass1x5":{
+    "dimension":"Length",
+    "var":{
+     "exp":"2.2128 m",
+     "val":2.2128
+    }
+   },
+   "pass1x6":{
+    "dimension":"Length",
+    "var":{
+     "exp":"4.7984 m",
+     "val":4.7984
+    }
+   },
+   "pass1y1":{
+    "dimension":"Length",
+    "var":{
+     "exp":"1.5125 m",
+     "val":1.5125
+    }
+   },
+   "pass1y2":{
+    "dimension":"Length",
+    "var":{
+     "exp":"3.1669 m",
+     "val":3.1669
+    }
+   },
+   "pass1y3":{
+    "dimension":"Length",
+    "var":{
+     "exp":"2.97 m",
+     "val":2.97
+    }
+   },
+   "pass1y4":{
+    "dimension":"Length",
+    "var":{
+     "exp":"0.7685 m",
+     "val":0.7685
+    }
+   },
+   "pass1y5":{
+    "dimension":"Length",
+    "var":{
+     "exp":"1.3099 m",
+     "val":1.3099
+    }
+   },
+   "pass1y6":{
+    "dimension":"Length",
+    "var":{
+     "exp":"1.3017 m",
+     "val":1.3017
+    }
+   },
+   "pass2r1":{
+    "dimension":"Angle",
+    "var":{
+     "exp":"0.6394 rad",
+     "val":0.6394
+    }
+   },
+   "pass2r2":{
+    "dimension":"Angle",
+    "var":{
+     "exp":"0.6394 rad",
+     "val":0.6394
+    }
+   },
+   "pass2r3":{
+    "dimension":"Angle",
+    "var":{
+     "exp":"2.1017 rad",
+     "val":2.1017
+    }
+   },
+   "pass2r4":{
+    "dimension":"Angle",
+    "var":{
+     "exp":"1.5708 rad",
+     "val":1.5708
+    }
+   },
+   "pass2r5":{
+    "dimension":"Angle",
+    "var":{
+     "exp":"1.5886 rad",
+     "val":1.5886
+    }
+   },
+   "pass2r6":{
+    "dimension":"Angle",
+    "var":{
+     "exp":"2.4164 rad",
+     "val":2.4164
+    }
+   },
+   "pass2r7":{
+    "dimension":"Angle",
+    "var":{
+     "exp":"2.4164 rad",
+     "val":2.4164
+    }
+   },
+   "pass2x1":{
+    "dimension":"Length",
+    "var":{
+     "exp":"5.4408 m",
+     "val":5.4408
+    }
+   },
+   "pass2x2":{
+    "dimension":"Length",
+    "var":{
+     "exp":"2.391 m",
+     "val":2.391
+    }
+   },
+   "pass2x3":{
+    "dimension":"Length",
+    "var":{
+     "exp":"1.5388 m",
+     "val":1.5388
+    }
+   },
+   "pass2x4":{
+    "dimension":"Length",
+    "var":{
+     "exp":"0.3754 m",
+     "val":0.3754
+    }
+   },
+   "pass2x5":{
+    "dimension":"Length",
+    "var":{
+     "exp":"0.4088 m",
+     "val":0.4088
+    }
+   },
+   "pass2x6":{
+    "dimension":"Length",
+    "var":{
+     "exp":"2.4461 m",
+     "val":2.4461
+    }
+   },
+   "pass2x7":{
+    "dimension":"Length",
+    "var":{
+     "exp":"5.5587 m",
+     "val":5.5587
+    }
+   },
+   "pass2y1":{
+    "dimension":"Length",
+    "var":{
+     "exp":"1.5039 m",
+     "val":1.5039
+    }
+   },
+   "pass2y2":{
+    "dimension":"Length",
+    "var":{
+     "exp":"1.5679 m",
+     "val":1.5679
+    }
+   },
+   "pass2y3":{
+    "dimension":"Length",
+    "var":{
+     "exp":"3.1327 m",
+     "val":3.1327
+    }
+   },
+   "pass2y4":{
+    "dimension":"Length",
+    "var":{
+     "exp":"2.9358 m",
+     "val":2.9358
+    }
+   },
+   "pass2y5":{
+    "dimension":"Length",
+    "var":{
+     "exp":"0.7215 m",
+     "val":0.7215
+    }
+   },
+   "pass2y6":{
+    "dimension":"Length",
+    "var":{
+     "exp":"1.737 m",
+     "val":1.737
+    }
+   },
+   "pass2y7":{
+    "dimension":"Length",
+    "var":{
+     "exp":"1.7903 m",
+     "val":1.7903
+    }
+   }
+  },
   "poses":{}
  },
  "config":{
