@@ -19,11 +19,12 @@ import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Current;
+import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 
-import java.util.function.DoubleSupplier;
+import java.util.Map;
 
 public final class Hood {
     private static final double GEARING = 171.0; // 19:9:1
@@ -37,7 +38,8 @@ public final class Hood {
     private final PositionTorqueCurrentFOC m_request;
 
     private final StatusSignal<Angle> m_motorRotations;
-    private final StatusSignal<Current> m_motorAmps;
+    private final StatusSignal<Current> m_motorTorqueCurrent, m_motorSupplyCurrent;
+    private final StatusSignal<Voltage> m_motorSupplyVoltage;
     private final DoublePublisher m_referencePublisher;
     private final StructPublisher<Rotation2d> m_worldAnglePublisher, m_referenceWorldPublisher;
 
@@ -73,14 +75,20 @@ public final class Hood {
         m_request.Slot = 0;
 
         m_motorRotations = m_motor.getPosition(false);
-        m_motorAmps = m_motor.getTorqueCurrent(false);
+        m_motorTorqueCurrent = m_motor.getTorqueCurrent(false);
 
         final NetworkTable nt = NetworkTableInstance.getDefault().getTable("hood");
+        final var powerSignals = signalManager.registerPowerTracking(nt, m_motor);
+        m_motorSupplyCurrent = powerSignals.get(motor.getDeviceID()).supplyCurrentSignal();
+        m_motorSupplyVoltage = powerSignals.get(motor.getDeviceID()).supplyVoltageSignal();
+
         m_worldAnglePublisher = nt.getStructTopic("rotations_world", Rotation2d.struct).publish();
         m_referencePublisher = nt.getDoubleTopic("reference_motor").publish();
         m_referenceWorldPublisher = nt.getStructTopic("reference_world", Rotation2d.struct).publish();
         signalManager.registerPublished(m_motorRotations, nt, "rotations_motor");
-        signalManager.registerPublished(m_motorAmps, nt, "amps");
+        signalManager.registerPublished(m_motorTorqueCurrent, nt, "amps");
+
+        // need to give signals to power management
 
         // sim
         m_motorModel = new DCMotorSim(

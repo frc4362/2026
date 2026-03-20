@@ -40,7 +40,6 @@ import static edu.wpi.first.units.Units.*;
 
 public final class RobotContainer {
     private final StatusSignalManager m_signalManager;
-    private final EnergyLogger m_energyLogger;
     private final CommandXboxController m_pilot, m_copilot;
     private final Superstructure m_superstructure;
     private final MatchStateScheduler m_matchStateScheduler;
@@ -55,7 +54,6 @@ public final class RobotContainer {
 
     public RobotContainer(MatchStateScheduler matchStateScheduler) {
         m_signalManager = new StatusSignalManager();
-        m_energyLogger = new EnergyLogger();
         m_pilot = new CommandXboxController(0);
         m_copilot = new CommandXboxController(1);
 
@@ -147,7 +145,6 @@ public final class RobotContainer {
         // Conspicuously, we don't update Superstructure.
         // This is because it is a Subsystem, so it is updated periodically inside the Scheduler
         m_signalManager.periodic();
-        m_energyLogger.periodic();
         m_superstructure.setDoEarlyAgitation(m_doEarlyAgitationTrigger.getAsBoolean());
         m_superstructure.setRetractIntake(m_retractIntakeTrigger.getAsBoolean());
         m_vision.update();
