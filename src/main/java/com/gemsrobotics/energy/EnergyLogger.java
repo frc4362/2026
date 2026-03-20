@@ -43,18 +43,11 @@ public final class EnergyLogger {
 
     private double m_totalCurrentAmps;
     private double m_totalPowerWatts;
-    private double m_totalEnergyJoules;
+    private double m_totalEnergyWattHours;
 
     private final List<PowerSink> m_powerSinks;
 
     public EnergyLogger() {
-        m_powerSinks = new ArrayList<>();
-        m_powerSinks.add(new RoborioPowerDraw());
-        m_powerSinks.add(ConstantPowerSinks.Radio);
-        m_powerSinks.add(ConstantPowerSinks.CANivores);
-        m_powerSinks.add(ConstantPowerSinks.SwerveCANcoders);
-        m_powerSinks.add(ConstantPowerSinks.Pigeon);
-
         m_sinkLoggers = new HashMap<>();
         m_sinkCurrents = new HashMap<>();
         m_sinkPowers = new HashMap<>();
@@ -66,6 +59,13 @@ public final class EnergyLogger {
         m_totalCurrentPublisher = myTable.getDoubleTopic("total_current_amps").publish();
         m_totalPowerPublisher = myTable.getDoubleTopic("total_power_watts").publish();
         m_totalEnergyPublisher = myTable.getDoubleTopic("total_energy_wh").publish();
+
+        m_powerSinks = new ArrayList<>();
+        registerPowerSink(new RoborioPowerDraw());
+        registerPowerSink(ConstantPowerSinks.Radio);
+        registerPowerSink(ConstantPowerSinks.CANivores);
+        registerPowerSink(ConstantPowerSinks.SwerveCANcoders);
+        registerPowerSink(ConstantPowerSinks.Pigeon);
     }
 
     // if you are adding a MotorPowerSink, make sure the signals are updated from the StatusSignalManager
@@ -85,15 +85,16 @@ public final class EnergyLogger {
             final double power = sink.getPower();
             m_sinkPowers.put(sink.getName(), power);
             m_totalPowerWatts += power;
-            final double energy = power * Constants.kLoopPeriodSeconds;
-            m_totalEnergyJoules += energy;
-            m_sinkEnergies.merge(sink.getName(), energy, Double::sum);
+            final double newEnergyConsumed = joulesToWattHours(power * Constants.kLoopPeriodSeconds);
+            m_totalEnergyWattHours += newEnergyConsumed;
+            final double totalSinkEnergy = m_sinkEnergies.merge(sink.getName(), newEnergyConsumed, Double::sum);
+            m_sinkLoggers.get(sink.getName()).log(current, power, joulesToWattHours(totalSinkEnergy));
         }
 
         m_batteryVoltagePublisher.set(RobotController.getBatteryVoltage());
         m_totalCurrentPublisher.set(m_totalCurrentAmps);
         m_totalPowerPublisher.set(m_totalPowerWatts);
-        m_totalEnergyPublisher.set(joulesToWattHours(m_totalEnergyJoules));
+        m_totalEnergyPublisher.set(m_totalEnergyWattHours);
     }
 
     private static double joulesToWattHours(final double joules) {
