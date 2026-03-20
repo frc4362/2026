@@ -4,7 +4,7 @@ import edu.wpi.first.wpilibj.RobotController;
 
 import static java.lang.Math.abs;
 
-public enum ConstantPowerDraws implements PowerTracking {
+public enum ConstantPowerSinks implements PowerSink {
     CANcoder("cancoder", 0.05),
     SwerveCANcoders("swerve_cancoders", 0.05 * 4),
     Pigeon("pigeon", 0.04),
@@ -15,7 +15,7 @@ public enum ConstantPowerDraws implements PowerTracking {
     private final String m_name;
     private final double m_constantDrawAmps;
 
-    ConstantPowerDraws(final String name, final double constantDrawAmps) {
+    ConstantPowerSinks(final String name, final double constantDrawAmps) {
         m_name = name;
         m_constantDrawAmps = constantDrawAmps;
     }

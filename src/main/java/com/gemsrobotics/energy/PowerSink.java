@@ -1,6 +1,6 @@
 package com.gemsrobotics.energy;
 
-public interface PowerTracking {
+public interface PowerSink {
     String getName();
     double getCurrent();
     double getVoltage();

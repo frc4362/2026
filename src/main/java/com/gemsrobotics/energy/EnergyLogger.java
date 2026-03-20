@@ -14,72 +14,87 @@ import java.util.Map;
 import static java.lang.Math.abs;
 
 public final class EnergyLogger {
-    private final Map<String, Double> m_subsytemCurrents;
-    private final Map<String, Double> m_subsytemPowers;
-    private final Map<String, Double> m_subsytemEnergies;
+    public static final String CURRENTS_TABLE_NAME = "currents";
+    public static final String POWERS_TABLE_NAME = "powers";
+    public static final String ENERGIES_TABLE_NAME = "energies";
 
+    public static final class PowerSinkLogger {
+        private final DoublePublisher m_currentPublisher, m_powerPublisher, m_energyPublisher;
+
+        public PowerSinkLogger(final PowerSink sink, final NetworkTable baseTable) {
+            m_currentPublisher = baseTable.getSubTable(CURRENTS_TABLE_NAME).getDoubleTopic(sink.getName()).publish();
+            m_powerPublisher = baseTable.getSubTable(POWERS_TABLE_NAME).getDoubleTopic(sink.getName()).publish();
+            m_energyPublisher = baseTable.getSubTable(ENERGIES_TABLE_NAME).getDoubleTopic(sink.getName()).publish();
+        }
+
+        public void log(final double currentAmps, final double powerWatts, final double energyWattHrs) {
+            m_currentPublisher.set(currentAmps);
+            m_powerPublisher.set(powerWatts);
+            m_energyPublisher.set(energyWattHrs);
+        }
+    }
+
+    private final NetworkTable m_sinksTable;
+    private final Map<String, PowerSinkLogger> m_sinkLoggers;
+    private final Map<String, Double> m_sinkCurrents,
+            m_sinkPowers, m_sinkEnergies;
     private final DoublePublisher m_batteryVoltagePublisher, m_totalCurrentPublisher,
             m_totalPowerPublisher, m_totalEnergyPublisher;
 
     private double m_totalCurrentAmps;
     private double m_totalPowerWatts;
-    private double m_totalEnergyJouls;
+    private double m_totalEnergyJoules;
 
-    private final List<PowerTracking> m_powerSinks;
+    private final List<PowerSink> m_powerSinks;
 
     public EnergyLogger() {
         m_powerSinks = new ArrayList<>();
         m_powerSinks.add(new RoborioPowerDraw());
-        m_powerSinks.add(ConstantPowerDraws.Radio);
-        m_powerSinks.add(ConstantPowerDraws.CANivores);
-        m_powerSinks.add(ConstantPowerDraws.SwerveCANcoders);
-        m_powerSinks.add(ConstantPowerDraws.Pigeon);
+        m_powerSinks.add(ConstantPowerSinks.Radio);
+        m_powerSinks.add(ConstantPowerSinks.CANivores);
+        m_powerSinks.add(ConstantPowerSinks.SwerveCANcoders);
+        m_powerSinks.add(ConstantPowerSinks.Pigeon);
 
-        m_subsytemCurrents = new HashMap<>();
-        m_subsytemPowers = new HashMap<>();
-        m_subsytemEnergies = new HashMap<>();
+        m_sinkLoggers = new HashMap<>();
+        m_sinkCurrents = new HashMap<>();
+        m_sinkPowers = new HashMap<>();
+        m_sinkEnergies = new HashMap<>();
 
         final NetworkTable myTable = NetworkTableInstance.getDefault().getTable("energy");
+        m_sinksTable = myTable.getSubTable("sinks");
         m_batteryVoltagePublisher = myTable.getDoubleTopic("battery_volts").publish();
         m_totalCurrentPublisher = myTable.getDoubleTopic("total_current_amps").publish();
         m_totalPowerPublisher = myTable.getDoubleTopic("total_power_watts").publish();
         m_totalEnergyPublisher = myTable.getDoubleTopic("total_energy_wh").publish();
     }
 
+    // if you are adding a MotorPowerSink, make sure the signals are updated from the StatusSignalManager
+    public void registerPowerSink(final PowerSink sink) {
+        m_sinkLoggers.put(sink.getName(), new PowerSinkLogger(sink, m_sinksTable));
+        m_powerSinks.add(sink);
+    }
+
     public void periodic() {
         m_totalCurrentAmps = 0.0;
         m_totalPowerWatts = 0.0;
 
-        for (final PowerTracking sink : m_powerSinks) {
-            m_totalCurrentAmps += sink.getCurrent();
+        for (final PowerSink sink : m_powerSinks) {
+            final double current = sink.getCurrent();
+            m_sinkCurrents.put(sink.getName(), current);
+            m_totalCurrentAmps += current;
             final double power = sink.getPower();
+            m_sinkPowers.put(sink.getName(), power);
             m_totalPowerWatts += power;
-            m_totalEnergyJouls += power * Constants.kLoopPeriodSeconds;
+            final double energy = power * Constants.kLoopPeriodSeconds;
+            m_totalEnergyJoules += energy;
+            m_sinkEnergies.merge(sink.getName(), energy, Double::sum);
         }
 
         m_batteryVoltagePublisher.set(RobotController.getBatteryVoltage());
         m_totalCurrentPublisher.set(m_totalCurrentAmps);
         m_totalPowerPublisher.set(m_totalPowerWatts);
-        m_totalEnergyPublisher.set(joulesToWattHours(m_totalEnergyJouls));
+        m_totalEnergyPublisher.set(joulesToWattHours(m_totalEnergyJoules));
     }
-
-//    public void reportCurrentUsage(final String subsystemName, final double... amps) {
-//        double totalAmps = 0.0;
-//        for (final double amp : amps) {
-//            totalAmps += abs(amp);
-//        }
-//
-//        final double power = totalAmps * m_batteryVoltage;
-//        final double energy = power * 0.02;
-//
-//        m_totalCurrent += totalAmps;
-//        m_totalPower += power;
-//        m_totalEnergy += energy;
-//
-//        m_subsytemCurrents.put(subsystemName, totalAmps);
-//        m_subsytemPowers.put(subsystemName, power);
-//        m_subsytemEnergies.merge(subsystemName, energy, Double::sum);
-//    }
 
     private static double joulesToWattHours(final double joules) {
         return joules / 3600.0;

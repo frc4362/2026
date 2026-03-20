@@ -2,7 +2,7 @@ package com.gemsrobotics.energy;
 
 import edu.wpi.first.wpilibj.RobotController;
 
-public class RoborioPowerDraw implements PowerTracking {
+public class RoborioPowerDraw implements PowerSink {
 
     @Override
     public String getName() {

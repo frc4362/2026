@@ -4,12 +4,12 @@ import com.ctre.phoenix6.StatusSignal;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Voltage;
 
-public class MotorPowerDraw implements PowerTracking {
+public class MotorPowerSink implements PowerSink {
     private final String m_name;
     private final StatusSignal<Current> m_supplyCurrentSignal;
     private final StatusSignal<Voltage> m_supplyVoltageSignal;
 
-    public MotorPowerDraw(final String name, final StatusSignal<Voltage> supplyVoltageSignal, final StatusSignal<Current> supplyCurrentSignal) {
+    public MotorPowerSink(final String name, final StatusSignal<Voltage> supplyVoltageSignal, final StatusSignal<Current> supplyCurrentSignal) {
         m_name = name;
         m_supplyVoltageSignal = supplyVoltageSignal;
         m_supplyCurrentSignal = supplyCurrentSignal;
