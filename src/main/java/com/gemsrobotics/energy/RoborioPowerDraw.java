@@ -15,7 +15,7 @@ public class RoborioPowerDraw implements PowerSink {
     }
 
     @Override
-    public double getVoltage() {
-        return RobotController.getInputVoltage();
+    public double getPower() {
+        return getCurrent() * RobotController.getInputVoltage();
     }
 }

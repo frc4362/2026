@@ -31,7 +31,7 @@ public enum ConstantPowerSinks implements PowerSink {
     }
 
     @Override
-    public double getVoltage() {
-        return RobotController.getBatteryVoltage();
+    public double getPower() {
+        return getCurrent() * RobotController.getBatteryVoltage();
     }
 }

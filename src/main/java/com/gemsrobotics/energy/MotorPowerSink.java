@@ -4,10 +4,12 @@ import com.ctre.phoenix6.StatusSignal;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Voltage;
 
+import static java.lang.Math.abs;
+
 public class MotorPowerSink implements PowerSink {
-    private final String m_name;
-    private final StatusSignal<Current> m_supplyCurrentSignal;
-    private final StatusSignal<Voltage> m_supplyVoltageSignal;
+    protected final String m_name;
+    protected final StatusSignal<Current> m_supplyCurrentSignal;
+    protected final StatusSignal<Voltage> m_supplyVoltageSignal;
 
     public MotorPowerSink(final String name, final StatusSignal<Voltage> supplyVoltageSignal, final StatusSignal<Current> supplyCurrentSignal) {
         m_name = name;
@@ -22,11 +24,11 @@ public class MotorPowerSink implements PowerSink {
 
     @Override
     public double getCurrent() {
-        return m_supplyCurrentSignal.getValueAsDouble();
+        return abs(m_supplyCurrentSignal.getValueAsDouble());
     }
 
     @Override
-    public double getVoltage() {
-        return m_supplyVoltageSignal.getValueAsDouble();
+    public double getPower() {
+        return getCurrent() * m_supplyVoltageSignal.getValueAsDouble();
     }
 }
