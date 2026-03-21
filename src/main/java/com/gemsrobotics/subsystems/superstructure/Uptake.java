@@ -119,4 +119,12 @@ public class Uptake {
     public double getVelocity() {
         return m_leaderVelocitySignal.getValueAsDouble();
     }
+
+    public TalonFX getLeaderMotor() {
+        return m_motorLeader;
+    }
+
+    public TalonFX getFollowerMotor() {
+        return m_motorFollower;
+    }
 }

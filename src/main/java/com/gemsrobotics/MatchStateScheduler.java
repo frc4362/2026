@@ -13,6 +13,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 
+import static com.gemsrobotics.Constants.LAUNCH_TIME_AFTER_ACTIVE;
 import static edu.wpi.first.wpilibj2.command.Commands.runOnce;
 
 public final class MatchStateScheduler {
@@ -140,24 +141,24 @@ public final class MatchStateScheduler {
         if (DriverStation.isAutonomous()) {
             m_timeLeftInState = 20 - m_matchTimer.get();
         } else if (DriverStation.isTeleop()) {
-            if (m_matchTimer.get() < 10) {
+            if (m_matchTimer.get() < 10 + LAUNCH_TIME_AFTER_ACTIVE) {
                 if (m_wonAuto != WonAuto.INDETERMINATE) {
-                    m_timeLeftInState = (m_wonAuto == WonAuto.TRUE ? 10 : 35) - m_matchTimer.get();
+                    m_timeLeftInState = (m_wonAuto == WonAuto.TRUE ? 10 : 35) + LAUNCH_TIME_AFTER_ACTIVE - m_matchTimer.get();
                 }
-            } else if (m_matchTimer.get() < 35) {
-                m_timeLeftInState = 35 - m_matchTimer.get();
+            } else if (m_matchTimer.get() < 35 + LAUNCH_TIME_AFTER_ACTIVE) {
+                m_timeLeftInState = 35 + LAUNCH_TIME_AFTER_ACTIVE - m_matchTimer.get();
                 m_isActive = m_wonAuto == WonAuto.FALSE;
-            } else if (m_matchTimer.get() < 60) {
-                m_timeLeftInState = 60 - m_matchTimer.get();
+            } else if (m_matchTimer.get() < 60 + LAUNCH_TIME_AFTER_ACTIVE) {
+                m_timeLeftInState = 60 + LAUNCH_TIME_AFTER_ACTIVE - m_matchTimer.get();
                 m_isActive = m_wonAuto == WonAuto.TRUE;
-            } else if (m_matchTimer.get() < 85) {
-                m_timeLeftInState = 85 - m_matchTimer.get();
+            } else if (m_matchTimer.get() < 85 + LAUNCH_TIME_AFTER_ACTIVE) {
+                m_timeLeftInState = 85 + LAUNCH_TIME_AFTER_ACTIVE - m_matchTimer.get();
                 m_isActive = m_wonAuto == WonAuto.FALSE;
-            } else if (m_matchTimer.get() < 110) {
-                m_timeLeftInState = (m_wonAuto == WonAuto.TRUE ? 140 : 110) - m_matchTimer.get();
+            } else if (m_matchTimer.get() < 110 + LAUNCH_TIME_AFTER_ACTIVE) {
+                m_timeLeftInState = (m_wonAuto == WonAuto.TRUE ? 140 : 110) + LAUNCH_TIME_AFTER_ACTIVE - m_matchTimer.get();
                 m_isActive = m_wonAuto == WonAuto.TRUE;
-            } else if (m_matchTimer.get() < 140) {
-                m_timeLeftInState = 140 - m_matchTimer.get();
+            } else if (m_matchTimer.get() < 140 + LAUNCH_TIME_AFTER_ACTIVE) {
+                m_timeLeftInState = 140 + LAUNCH_TIME_AFTER_ACTIVE - m_matchTimer.get();
             }
         }
     }

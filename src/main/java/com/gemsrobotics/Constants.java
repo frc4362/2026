@@ -18,7 +18,8 @@ import static edu.wpi.first.units.Units.RadiansPerSecond;
 public final class Constants {
   public static final double kLoopPeriodSeconds = 0.02;
 
-  public static final double LAUNCH_TIME_BEFORE_ACTIVE = 1.5;
+  public static final double LAUNCH_TIME_AFTER_ACTIVE = 1.0;
+  public static final double LAUNCH_TIME_BEFORE_ACTIVE = 1.5 + LAUNCH_TIME_AFTER_ACTIVE;
   public static final int TOF_RECURSION_LIMIT = 10;
 
   public static final Distance BUMPER_DEPTH = Inches.of(3.5);
