@@ -1,0 +1,4 @@
+Fitted Parameters:
+  Thermal Capacitance (C):    12.5952 J/°C
+  Thermal Resistance (R):     2.0071 °C/W
+  Thermal Time Constant (τ):  25.28 s
