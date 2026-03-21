@@ -54,8 +54,8 @@ public final class RobotContainer {
 
     public RobotContainer(MatchStateScheduler matchStateScheduler) {
         m_signalManager = new StatusSignalManager();
-        m_pilot = new CommandXboxController(0);
-        m_copilot = new CommandXboxController(1);
+        m_pilot = new CommandXboxController(Constants.OperatorConstants.kPilotControllerPort);
+        m_copilot = new CommandXboxController(Constants.OperatorConstants.kCopilotControllerPort);
 
         m_matchStateScheduler = matchStateScheduler;
 

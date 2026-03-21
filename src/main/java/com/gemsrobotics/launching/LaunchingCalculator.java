@@ -145,9 +145,8 @@ public final class LaunchingCalculator {
 		final Pose2d launcherStartingPose = currentPose.transformBy(Constants.ROBOT_TO_LAUNCHER);
 		final double startingLauncherToTargetDistance = target.getDistance(launcherStartingPose.getTranslation());
 
-		final Rotation2d currentRotation = currentPose.getRotation();
 		// the velocity of the launcher will not always be the same as the velocity of the robot
-		final ChassisSpeeds launcherVelocity = GeometryUtil.transformVelocity(currentVelocity, Constants.ROBOT_TO_LAUNCHER, currentRotation);
+		final ChassisSpeeds launcherVelocity = GeometryUtil.transformVelocity(currentVelocity, Constants.ROBOT_TO_LAUNCHER, currentPose.getRotation());
 
 		double tof = getTimeOfFlight(startingLauncherToTargetDistance, isFeeding);
 		Pose2d lookaheadLauncherPose = launcherStartingPose;
@@ -198,7 +197,8 @@ public final class LaunchingCalculator {
 		// when the loop is done, we're stuck with whatever we have converged on after N iterations
 		final Pose2d lookaheadRobotPose = lookaheadLauncherPose.transformBy(Constants.ROBOT_TO_LAUNCHER.inverse());
 		// TODO if we ever move shooter off center, we need to calculate the heading with that in mind
-		final Rotation2d desiredRobotRotation = target.minus(lookaheadRobotPose.getTranslation()).getAngle();
+		final Rotation2d desiredRobotRotation = target.minus(lookaheadRobotPose.getTranslation()).getAngle()
+				.rotateBy(Constants.ROBOT_TO_LAUNCHER.getRotation());
 		m_lookaheadPosePublisher.set(new Pose2d(lookaheadRobotPose.getTranslation(), desiredRobotRotation));
 
 		final var ret = new Parameters(

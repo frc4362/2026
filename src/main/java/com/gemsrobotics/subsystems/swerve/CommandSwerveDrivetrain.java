@@ -65,11 +65,6 @@ public final class CommandSwerveDrivetrain extends TunerConstants.TunerSwerveDri
     private double m_lastSimTime;
 
     private final Telemetry m_logger;
-
-    private final Timer m_timer;
-    private final LinearPath m_linearPathController;
-    private LinearPath.State m_initialLinearState;
-
     private final SwerveRequest.ApplyFieldSpeeds m_driveSpeedsRequest;
     private final PIDController m_pathXController;
     private final PIDController m_pathYController;
@@ -206,11 +201,6 @@ public final class CommandSwerveDrivetrain extends TunerConstants.TunerSwerveDri
                     omegaRadiansPerSecond,
                     fusedChassisSpeeds);
         });
-
-        m_timer = new Timer();
-        m_linearPathController = new LinearPath(
-                new TrapezoidProfile.Constraints(MAX_SPEED, MAX_SPEED),
-                new TrapezoidProfile.Constraints(MAX_ANGULAR_RATE, MAX_ANGULAR_RATE));
 
         m_goalPosePublisher = NetworkTableInstance.getDefault()
                 .getTable("DriveState")

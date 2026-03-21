@@ -48,6 +48,8 @@ public final class StatusSignalManager {
     public record PowerTrackingStatusSignals(StatusSignal<Current> supplyCurrentSignal, StatusSignal<Voltage> supplyVoltageSignal) {
     }
 
+
+
     public Map<Integer, PowerTrackingStatusSignals> registerPowerTracking(final NetworkTable table, final TalonFX... motors) {
         final List<TalonFX> motorList = Arrays.asList(motors);
         final List<String> ids;
