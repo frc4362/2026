@@ -1,7 +1,9 @@
 package com.gemsrobotics.subsystems.superstructure;
 
+import com.ctre.phoenix6.Orchestra;
 import com.gemsrobotics.Constants;
 import com.gemsrobotics.FieldConstants;
+import com.gemsrobotics.RobotState;
 import com.gemsrobotics.launching.*;
 import com.gemsrobotics.subsystems.swerve.CommandSwerveDrivetrain;
 import com.gemsrobotics.util.AllianceFlipUtil;
@@ -40,6 +42,10 @@ public final class Superstructure extends SubsystemBase {
     private final Uptake m_uptake;
     private final Hood m_hood;
     private final Intake m_intake;
+    private final RobotState m_robotState;
+
+    private final Orchestra m_orchestra;
+    private final String CHRP_FILENAME = "MoonlightSonata.chrp";
 
     private final StringPublisher m_systemStatePublisher;
     private final StringPublisher m_wantedStatePublisher;
@@ -68,8 +74,9 @@ public final class Superstructure extends SubsystemBase {
             final Hopper hopper,
             final Uptake uptakeEast,
             final Hood hood,
-            final Intake intake
-    ) {
+            final Intake intake,
+            final RobotState robotState
+            ) {
         m_swerve = swerve;
         m_launcherEast = launcherEast;
         m_launcherWest = launcherWest;
@@ -77,6 +84,14 @@ public final class Superstructure extends SubsystemBase {
         m_uptake = uptakeEast;// uptake;
         m_hood =  hood;
         m_intake = intake;
+        m_robotState = robotState;
+
+        //region Orchestra tomfoolery
+        m_orchestra = new Orchestra();
+        m_orchestra.addInstrument(m_uptake.getLeaderMotor());
+        m_orchestra.addInstrument(m_uptake.getFollowerMotor());
+        m_orchestra.loadMusic(CHRP_FILENAME);
+        //endregion
 
         final NetworkTable myTable = NetworkTableInstance.getDefault().getTable(NT_KEY);
         m_wantedStatePublisher = myTable.getStringTopic("wanted_state").publish();
@@ -138,6 +153,10 @@ public final class Superstructure extends SubsystemBase {
         } else {
             m_stateChanged = false;
         }
+
+        if (m_orchestra.isPlaying() && DriverStation.isEnabled()) {
+            m_orchestra.stop();
+        }
     }
 
     public SystemState conformToWantedState() {
@@ -146,6 +165,9 @@ public final class Superstructure extends SubsystemBase {
     }
 
     public SystemState handleIdle() {
+        if (DriverStation.isDisabled() && m_robotState.getLastVisionPoseEstimate().tagCount() > 1) {
+            m_orchestra.play();
+        }
         if (m_retractIntake) {
             m_intake.setRetract();
         } else if (m_hasEverDeployedIntake) {
