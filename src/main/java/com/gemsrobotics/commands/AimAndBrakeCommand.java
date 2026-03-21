@@ -10,6 +10,7 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj2.command.Command;
 
 import java.util.Optional;
+import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
 import static java.lang.Math.abs;
@@ -19,13 +20,21 @@ public final class AimAndBrakeCommand extends Command {
     private final SwerveRequest.FieldCentricFacingAngle m_turnRequest;
     private final SwerveRequest.SwerveDriveBrake m_brakeRequest;
     private final SwerveRequest.Idle m_idleRequest;
-    private final Supplier<Optional<Translation2d>> m_goalSupplier;
+    private final Supplier<Optional<Rotation2d>> m_goalSupplier;
+    private final DoubleSupplier m_velocityX, m_velocityY;
 
     private double m_toleranceDegrees;
 
-    public AimAndBrakeCommand(final CommandSwerveDrivetrain swerve, final Supplier<Optional<Translation2d>> goalSupplier) {
+    public AimAndBrakeCommand(
+            final CommandSwerveDrivetrain swerve,
+            final Supplier<Optional<Rotation2d>> goalSupplier,
+            final DoubleSupplier velocityX,
+            final DoubleSupplier velocityY
+    ) {
         m_swerve = swerve;
         m_goalSupplier = goalSupplier;
+        m_velocityX = velocityX;
+        m_velocityY = velocityY;
 
         m_turnRequest = CommandSwerveDrivetrain.makeAimingRequest();
         m_idleRequest = new SwerveRequest.Idle();
@@ -38,13 +47,18 @@ public final class AimAndBrakeCommand extends Command {
         addRequirements(m_swerve);
     }
 
+//    public AimAndBrakeCommand(final CommandSwerveDrivetrain swerve, final Supplier<Optional<Translation2d>> goalSupplier) {
+//        this(swerve, goalSupplier, () -> 0.0, () -> 0.0);
+//    }
+
     public void setTolerance(final Rotation2d newTolerance) {
         m_toleranceDegrees = newTolerance.getDegrees();
     }
 
     public Optional<Rotation2d> getAngleToGoal() {
-        return m_goalSupplier.get().map(goal ->
-            goal.minus(m_swerve.getState().Pose.getTranslation()).getAngle());
+        return m_goalSupplier.get();
+//        return m_goalSupplier.get().map(goal ->
+//            goal.minus(m_swerve.getState().Pose.getTranslation()).getAngle());
     }
 
     public Optional<Rotation2d> getErrorToGoal() {
@@ -59,8 +73,8 @@ public final class AimAndBrakeCommand extends Command {
             // TODO
 //            if (m_toleranceDegrees == 0.0 || abs(angleToHub.getDegrees()) > m_toleranceDegrees) {
                 m_swerve.setControl(m_turnRequest
-                        .withVelocityX(0.0)
-                        .withVelocityY(0.0)
+                        .withVelocityX(m_velocityX.getAsDouble())
+                        .withVelocityY(m_velocityY.getAsDouble())
                         .withTargetDirection(angleToHub));
 //            } else {
 //                m_swerve.setControl(m_brakeRequest);

@@ -124,7 +124,13 @@ public final class RobotContainer {
 
 //        m_joystick.rightBumper().whileTrue(new AimAndBrakeCommand(m_drivetrain, () -> Optional.of(AllianceFlipUtil.apply(FieldConstants.Hub.topCenterPoint.toTranslation2d()))));
 //        m_joystick.rightTrigger().whileTrue(SuperstructureCommands.makeLaunchCommand(m_swerve, m_superstructure, m_launchCalculator));
-        m_pilot.rightTrigger().whileTrue(SuperstructureCommands.makeLaunchCommand_MatchState(m_swerve, m_superstructure, m_launchCalculator, () -> m_matchStateScheduler.getMatchState().getTimeUntilActive()));
+        m_pilot.rightTrigger().whileTrue(SuperstructureCommands.makeLaunchCommand_MatchState(
+                m_swerve,
+                m_superstructure,
+                m_launchCalculator,
+                () -> m_matchStateScheduler.getMatchState().getTimeUntilActive(),
+                () -> -m_pilot.getLeftY(),
+                () -> -m_pilot.getLeftX()));
         m_pilot.rightTrigger().onFalse(m_superstructure.applyWantedState(Superstructure.SystemState.IDLE));
 
 //        m_pilot.y().onTrue(SuperstructureCommands.driveOverBump(m_swerve).andThen(m_swerve.runOnce(() -> m_swerve.setControl(new SwerveRequest.Idle()))));

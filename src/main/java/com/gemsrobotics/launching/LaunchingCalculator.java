@@ -27,8 +27,14 @@ import static java.lang.Math.abs;
 import static java.lang.Math.exp;
 
 public final class LaunchingCalculator {
-	public static final boolean DO_MOVE_AND_SHOOT = false;
-	public static final double FEED_DISTANCE_FROM_WALL = 0.5;
+	private static final boolean DO_MOVE_AND_SHOOT = true;
+	private static final double FEED_DISTANCE_FROM_WALL = 0.5;
+	private static final boolean DO_LINEAR_DRAG_COMPENSATION = true;
+	private static final double DRAG_CONSTANT_INVERSE_SECONDS = 0.1;
+	private static final double TOF_EPSILON = 0.001;
+	private static final double PHASE_LAG_SECONDS = 0.03;
+	private static final double MIN_RANGE_METERS = 1.6;
+	private static final double MAX_RANGE_METERS = 5.5;
 
 	public record Parameters(
 			double timestamp,
@@ -94,24 +100,18 @@ public final class LaunchingCalculator {
 		RANGE_TO_WHEEL_RPS_FEEDING.put(8.0, 39.0);
 		RANGE_TO_WHEEL_RPS_FEEDING.put(17.0, 70.0);
 
-		RANGE_TO_TOF_MAP.put(1.0, 0.9);
-		RANGE_TO_TOF_MAP.put(2.0, 1.0);
-		RANGE_TO_TOF_MAP.put(3.0, 1.1);
-		RANGE_TO_TOF_MAP.put(4.0, 1.115);
-		RANGE_TO_TOF_MAP.put(5.0, 1.2);
+		RANGE_TO_TOF_MAP.put(1.6, 0.9);
+		RANGE_TO_TOF_MAP.put(2.0, 1.1);
+		RANGE_TO_TOF_MAP.put(3.0, 1.15);
+		RANGE_TO_TOF_MAP.put(4.0, 1.2);
+		RANGE_TO_TOF_MAP.put(5.0, 1.25);
+		RANGE_TO_TOF_MAP.put(5.5, 1.3);
 		RANGE_TO_TOF_MAP_FEEDING.put(1.0, 0.9);
 		RANGE_TO_TOF_MAP_FEEDING.put(2.0, 1.0);
 		RANGE_TO_TOF_MAP_FEEDING.put(3.0, 1.1);
 		RANGE_TO_TOF_MAP_FEEDING.put(4.0, 1.115);
 		RANGE_TO_TOF_MAP_FEEDING.put(5.0, 1.2);
 	}
-
-	private static final boolean DO_LINEAR_DRAG_COMPENSATION = false;
-	private static final double DRAG_CONSTANT_INVERSE_SECONDS = 0.47;
-	private static final double TOF_EPSILON = 0.001;
-	private static final double PHASE_LAG_SECONDS = 0.03;
-	private static final double MIN_RANGE_METERS = 1.6;
-	private static final double MAX_RANGE_METERS = 5.5;
 
 	private final RobotState m_robotState;
 	private final StructPublisher<Parameters> m_launchingParametersPublisher;
@@ -173,6 +173,7 @@ public final class LaunchingCalculator {
 				} else {
 					contractionRates.add(0.0);
 				}
+
 				tof = newTof;
 				// reduce our effective tof by the imparted w
 				final double effectiveTof;
@@ -214,6 +215,11 @@ public final class LaunchingCalculator {
 		m_launchingParametersPublisher.set(ret);
 		m_latestParameters = ret;
 	}
+
+//	private Rotation2d getDriveAngleWithLauncherOffset(final Pose2d vehiclePose, final Translation2d target) {
+//		final Rotation2d fieldToTarget = target.minus(vehiclePose.getTranslation()).getAngle();
+//
+//	}
 
 	public Optional<Parameters> getLatestLaunchParameters() {
 		return Optional.ofNullable(m_latestParameters);

@@ -26,17 +26,19 @@ public class SuperstructureCommands {
 
 	// determines if you should feed or score in hub or do nothing and wait
 	public static Command makeLaunchCommand(final CommandSwerveDrivetrain swerve, final Superstructure superstructure, final LaunchingCalculator calculator) {
-		return makeLaunchCommand_MatchState(swerve, superstructure, calculator, () -> 0.0);
+		return makeLaunchCommand_MatchState(swerve, superstructure, calculator, () -> 0.0, () -> 0.0, () -> 0.0);
 	}
 
 	public static Command makeLaunchCommand_MatchState(
 			final CommandSwerveDrivetrain swerve,
 			final Superstructure superstructure,
 			final LaunchingCalculator calculator,
-			final DoubleSupplier timeUntilActiveSupplier
+			final DoubleSupplier timeUntilActiveSupplier,
+			final DoubleSupplier velocityX,
+			final DoubleSupplier velocityY
 	) {
 		final Supplier<Optional<LaunchingCalculator.Parameters>> parametersSupplier = calculator::getLatestLaunchParameters;
-		final AimAndBrakeCommand aimingCommand = new AimAndBrakeCommand(swerve, () -> parametersSupplier.get().map(LaunchingCalculator.Parameters::target));
+		final AimAndBrakeCommand aimingCommand = new AimAndBrakeCommand(swerve, () -> parametersSupplier.get().map(LaunchingCalculator.Parameters::vehicleRotation), velocityX, velocityY);
 
 		return new SequentialCommandGroup(
 				new InstantCommand(() -> superstructure.setAllowedToLaunch(false)),
