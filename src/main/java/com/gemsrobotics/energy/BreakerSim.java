@@ -12,9 +12,9 @@ public final class BreakerSim {
 	private double m_temperature;
 
 	// degrees per watt
-	private static final double THERMAL_RESISTANCE = 1.9043;
+	private static final double THERMAL_RESISTANCE = 1.49;
 	// joules per degree
-	private static final double THERMAL_CAPACITANCE = 15.6137;
+	private static final double THERMAL_CAPACITANCE = 10.503;
 
 	public BreakerSim(final Temperature ambientTemperature) {
 		m_lastTimestamp = Double.NaN;

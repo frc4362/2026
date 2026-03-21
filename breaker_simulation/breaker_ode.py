@@ -57,7 +57,7 @@ T_AMBIENT = 25.0
 # Trip temperature (°C) — bimetallic strip deflection threshold.
 # Not published directly; 100–130°C is typical for automotive breakers.
 # This is a tuning parameter — adjust until simulated trip times match datasheet.
-T_TRIP_RANGE = (160, 190)
+T_TRIP_RANGE = (100, 240)
 
 # Internal resistance of the breaker (Ohms).
 # Used to convert I^2*R -> heat power into the strip.
@@ -75,12 +75,12 @@ R_BREAKER = 0.003  # 1 mΩ — measure this
 TRIP_DATA = [
     # (1.35, 100.0),
     # (1.5, 40.0),
-    # (1.65, 30.0),
-    # (1.8, 20.0),
-    (2.25, 15.0),
-    (2.65, 10.0),
-    (3.5, 5.0),  # 350% rated current -> ~5s trip   (estimate)
-    (6.0, 2.0),  # 600% rated current -> ~2s trip    (estimate)
+    (1.75, 15.0),
+    (2.0, 10.0),
+    (2.5, 5.0),
+    (2.75, 3.0),
+    (3.9, 2.0),  # 350% rated current -> ~5s trip   (estimate)
+    (5.0, 1.0),  # 500% rated current -> ~1s trip    (estimate)
 ]
 
 # sort by the trip times
@@ -120,11 +120,11 @@ if __name__ == '__main__':
     print(f'  Point 2: {p2[0] * 100:.0f}% rated ({p2[0] * I_RATED:.0f}A) -> {p2[1]:.1f}s\n')
 
     line_colors = ['b', 'g', 'C1', 'C4', 'C6', 'C8', 'C9']
-    T_TRIP_INCREMENT = (T_TRIP_RANGE[1] - T_TRIP_RANGE[0]) / (len(line_colors) - 1)
+    T_TRIP_INCREMENT = (T_TRIP_RANGE[1] - T_TRIP_RANGE[0]) / float(len(line_colors) - 1)
 
     for i in range(len(line_colors)):
         LINE_COLOR = line_colors[i]
-        T_TRIP = T_TRIP_RANGE[0] + T_TRIP_INCREMENT * i
+        T_TRIP = T_TRIP_RANGE[0] + (T_TRIP_INCREMENT * i)
 
         def trip_time_model(multiplier, C, R_thermal):
             '''
