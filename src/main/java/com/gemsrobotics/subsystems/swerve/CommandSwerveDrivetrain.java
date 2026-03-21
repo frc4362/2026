@@ -5,8 +5,11 @@ import static com.gemsrobotics.Constants.MAX_SPEED;
 import static edu.wpi.first.units.Units.*;
 import static java.lang.Math.*;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 import choreo.Choreo;
 import choreo.auto.AutoFactory;
@@ -15,6 +18,7 @@ import choreo.trajectory.TrajectorySample;
 import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.Utils;
+import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.swerve.SwerveDrivetrainConstants;
 import com.ctre.phoenix6.swerve.SwerveModule;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
@@ -24,6 +28,7 @@ import com.ctre.phoenix6.swerve.SwerveRequest.FieldCentricFacingAngle;
 import com.ctre.phoenix6.swerve.utility.LinearPath;
 import com.gemsrobotics.Constants;
 import com.gemsrobotics.RobotState;
+import com.gemsrobotics.lib.StatusSignalManager;
 import com.gemsrobotics.lib.math.Rotation2dPlus;
 import com.gemsrobotics.lib.math.Translation2dPlus;
 import com.gemsrobotics.lib.swerve.FieldCentricEvasion;
@@ -36,6 +41,7 @@ import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
+import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.units.measure.AngularVelocity;
@@ -44,6 +50,7 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.motorcontrol.Talon;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -162,10 +169,10 @@ public final class CommandSwerveDrivetrain extends TunerConstants.TunerSwerveDri
      * @param modules               Constants for each specific module
      */
     public CommandSwerveDrivetrain(
-        final SwerveDrivetrainConstants drivetrainConstants,
-        final RobotState robotState,
-        final CommandXboxController joystick,
-        final SwerveModuleConstants<?, ?, ?>... modules
+            final StatusSignalManager signalManager,
+            final RobotState robotState,
+            final SwerveDrivetrainConstants drivetrainConstants,
+            final SwerveModuleConstants<?, ?, ?>... modules
     ) {
         super(drivetrainConstants, modules);
 
@@ -180,8 +187,12 @@ public final class CommandSwerveDrivetrain extends TunerConstants.TunerSwerveDri
         m_yawVelocity = getPigeon2().getAngularVelocityZWorld(false);
         m_yawVelocity.setUpdateFrequency(250);
 
+        final NetworkTable stateTable = NetworkTableInstance.getDefault().getTable("swerve_state");
+
         // do two forms of telemetry here. submit the CTRE stuff to dashboard, and also RobotState
-        m_logger = new Telemetry(MAX_SPEED);
+        // notably, we use the timestamps from the swerve odometry thread (timesynced)
+        // and insert the gyro velocity over the odometerized velocity
+        m_logger = new Telemetry(stateTable);
         registerTelemetry(state -> {
             m_logger.telemeterize(state);
 
@@ -202,12 +213,16 @@ public final class CommandSwerveDrivetrain extends TunerConstants.TunerSwerveDri
                     fusedChassisSpeeds);
         });
 
-        m_goalPosePublisher = NetworkTableInstance.getDefault()
-                .getTable("DriveState")
-                .getStructTopic("TrackingPose", Pose2d.struct)
-                .publish();
+        m_goalPosePublisher = stateTable.getStructTopic("tracking_pose", Pose2d.struct).publish();
         m_goalPosePublisher.setDefault(new Pose2d());
 
+        // power tracking
+//        final NetworkTable motorsTable = NetworkTableInstance.getDefault().getTable("swerve_motors");
+//        final TalonFX[] moduleMotors = Arrays.stream(getModules()).flatMap(module ->
+//            Stream.of(module.getDriveMotor(), module.getSteerMotor())).toArray(TalonFX[]::new);
+//        signalManager.registerPowerTracking(motorsTable, moduleMotors);
+
+        // sim
         if (Utils.isSimulation()) {
             startSimThread();
         }

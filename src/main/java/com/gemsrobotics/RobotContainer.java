@@ -58,10 +58,9 @@ public final class RobotContainer {
         m_copilot = new CommandXboxController(Constants.OperatorConstants.kCopilotControllerPort);
 
         m_matchStateScheduler = matchStateScheduler;
-
         m_visualizer = new RobotVisualizer();
         m_robotState = new RobotState();
-        m_swerve = TunerConstants.createDrivetrain(m_robotState, m_pilot);
+        m_swerve = TunerConstants.createDrivetrain(m_signalManager, m_robotState);
         m_swerve.setDefaultCommand(new PilotedDrive(
                 m_swerve,
                 m_pilot.rightBumper(),
@@ -136,6 +135,10 @@ public final class RobotContainer {
 
 //        m_pilot.y().onTrue(SuperstructureCommands.driveOverBump(m_swerve).andThen(m_swerve.runOnce(() -> m_swerve.setControl(new SwerveRequest.Idle()))));
 
+        m_pilot.povRight().whileTrue(m_swerve.applyRequest(() -> {
+            return new SwerveRequest.FieldCentric().withVelocityY(-2.75);
+        }));
+
         m_doEarlyAgitationTrigger = new Trigger(DriverStation::isAutonomous).or(m_copilot.a());
         m_retractIntakeTrigger = m_copilot.y();
 
@@ -187,8 +190,7 @@ public final class RobotContainer {
         cfg.MotorOutput.Inverted = invert;
         motor.getConfigurator().apply(cfg);
         return new Flywheel(
-                NetworkTableInstance.getDefault().getTable(ntTable),
-                "lower_wheel",
+                NetworkTableInstance.getDefault().getTable(ntTable).getSubTable("lower_wheel"),
                 m_signalManager,
                 Inches.of(2.0),
                 motor
@@ -203,13 +205,12 @@ public final class RobotContainer {
         cfg.Feedback.SensorToMechanismRatio = 1.0 / 2.5;
         cfg.Slot0.kP = 6.0;
         cfg.Slot0.kS = 23.0;
-        cfg.Slot0.kA = 1;
+        cfg.Slot0.kA = 1.0;
         cfg.MotionMagic.MotionMagicAcceleration = 1000;
         cfg.MotorOutput.Inverted = invert;
         motor.getConfigurator().apply(cfg);
         return new Flywheel(
-                NetworkTableInstance.getDefault().getTable(ntTable),
-                "upper_wheel",
+                NetworkTableInstance.getDefault().getTable(ntTable).getSubTable("upper_wheel"),
                 m_signalManager,
                 Inches.of(1.0),
                 motor

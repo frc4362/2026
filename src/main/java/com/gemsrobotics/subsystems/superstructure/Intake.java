@@ -5,7 +5,6 @@ import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.*;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
-import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.sim.TalonFXSimState;
 
@@ -21,23 +20,25 @@ import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotController;
-import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import edu.wpi.first.wpilibj.simulation.SingleJointedArmSim;
 
+import java.util.List;
+
 public final class Intake {
-    private static final double INTAKE_STARTING_ROTATIONS = -0.43;
+//    private static final double INTAKE_STARTING_ROTATIONS = -0.43;
+    private static final double INTAKE_STARTING_ROTATIONS = -0.44;
     // Assumes the intake is retracted at 0 rotations and deploys in the positive direction
     private static final double INTAKE_STOWED_ROTATIONS = -0.31;
     private static final double INTAKE_FEEDING_ROTATIONS = -0.295;
     private static final double INTAKE_AGITATING_ROTATIONS = -0.17;
     private static final double INTAKE_DEPLOYED_ROTATIONS = 0.0;   // (135deg/360deg)
 //    private static final double INTAKE_ASSERT_ROTATIONS = 0.5;
-    private static final double INTAKE_VELOCITY = 30;
+    private static final double INTAKE_VELOCITY = 33.0;
     private static final double IDLE_VElOCITY = 0;
     private static final double SIM_UPDATE_SECONDS = 0.001;
 
-    private static final double INTAKE_GEARING = 3.0 / 1.0;
+    private static final double INTAKE_GEARING = 2.62;
     private static final double DEPLOYER_GEARING = 23.0 * (32.0 / 36.0);
     private static final double DEPLOYER_ARM_LENGTH = 0.37;
 
@@ -55,14 +56,14 @@ public final class Intake {
 
     private final VelocityTorqueCurrentFOC m_request;
     private final DynamicMotionMagicTorqueCurrentFOC m_deployRequest;
-    private final TalonFX m_intakeLeader, m_intakeFollower;
-    private final TalonFX m_intakeDeployer;
+    private final TalonFX m_translationLeader, m_translationFollower;
+    private final TalonFX m_deployer;
 
     public Intake(final StatusSignalManager signalManager, final TalonFX intakeLeader, final TalonFX intakeFollower, final TalonFX deployerMotor) {
-        m_intakeLeader = intakeLeader;
-        m_intakeFollower = intakeFollower;
+        m_translationLeader = intakeLeader;
+        m_translationFollower = intakeFollower;
         final var cfg = new TalonFXConfiguration();
-        cfg.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+        cfg.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
         cfg.Feedback.SensorToMechanismRatio = INTAKE_GEARING;
         cfg.CurrentLimits.StatorCurrentLimit = 120;
         cfg.CurrentLimits.StatorCurrentLimitEnable = true;
@@ -71,17 +72,17 @@ public final class Intake {
         cfg.MotorOutput.NeutralMode = NeutralModeValue.Coast;
         cfg.Slot0.kP = 8.0;
         cfg.Slot0.kA = 0.0;
-        m_intakeLeader.getConfigurator().apply(cfg);
-        cfg.CurrentLimits.StatorCurrentLimit = 40;
-        cfg.CurrentLimits.StatorCurrentLimitEnable = true;
-        m_intakeFollower.getConfigurator().apply(cfg);
+        cfg.CurrentLimits.SupplyCurrentLimit = 50.0;
+        cfg.CurrentLimits.SupplyCurrentLimitEnable = true;
+        m_translationLeader.getConfigurator().apply(cfg);
+        m_translationFollower.getConfigurator().apply(cfg);
 
-        m_intakeDeployer = deployerMotor;
+        m_deployer = deployerMotor;
         final var cfgDep = new TalonFXConfiguration();
         cfgDep.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
-        cfgDep.CurrentLimits.StatorCurrentLimit = 70;
+        cfgDep.CurrentLimits.StatorCurrentLimit = 80;
         cfgDep.CurrentLimits.StatorCurrentLimitEnable = true;
-        cfgDep.CurrentLimits.SupplyCurrentLimit = 35;
+        cfgDep.CurrentLimits.SupplyCurrentLimit = 30;
         cfgDep.CurrentLimits.SupplyCurrentLimitEnable = true;
         cfgDep.Voltage.PeakForwardVoltage = 12;
         cfgDep.Voltage.PeakReverseVoltage = -12;
@@ -90,43 +91,48 @@ public final class Intake {
         cfgDep.Slot0.kD = 30;
         cfgDep.MotionMagic.MotionMagicAcceleration = 2.0;
         cfgDep.Feedback.SensorToMechanismRatio = DEPLOYER_GEARING;
-        m_intakeDeployer.getConfigurator().apply(cfgDep);
+        m_deployer.getConfigurator().apply(cfgDep);
 
-        m_intakeDeployer.setPosition(INTAKE_STARTING_ROTATIONS);
+        m_deployer.setPosition(INTAKE_STARTING_ROTATIONS);
 
         m_request = new VelocityTorqueCurrentFOC(0);
         m_deployRequest = new DynamicMotionMagicTorqueCurrentFOC(0, 0, 0);
-        m_deployRequest.Acceleration = 7;
-
-        m_intakeVelocitySignal = m_intakeLeader.getVelocity(false);
-        m_intakeStatorCurrentSignal = m_intakeLeader.getStatorCurrent(false);
-        m_deployerStatorCurrentSignal = m_intakeDeployer.getStatorCurrent(false);
-        m_intakeSupplyCurrentSignal = m_intakeLeader.getSupplyCurrent(false);
-        m_deployerSupplyCurrentSignal = m_intakeDeployer.getSupplyCurrent(false);
-        m_deployerPosition = m_intakeDeployer.getPosition(false);
-
-        // do this so the follower stays tapped in
-        m_intakeLeader.getTorqueCurrent(false).setUpdateFrequency(250.0);
+        m_deployRequest.Acceleration = 7.0; // lol
 
         final NetworkTable nt = NetworkTableInstance.getDefault().getTable("intake");
+        final var powerStatusSignals = signalManager.registerPowerTracking(
+                nt,
+                List.of("deployer", "roller_top", "roller_bot"),
+                List.of(m_deployer, m_translationLeader, m_translationFollower));
+
+        m_intakeVelocitySignal = m_translationLeader.getVelocity(false);
+        m_intakeStatorCurrentSignal = m_translationLeader.getStatorCurrent(false);
+        m_deployerStatorCurrentSignal = m_deployer.getStatorCurrent(false);
+        m_intakeSupplyCurrentSignal = powerStatusSignals.get(m_translationLeader.getDeviceID()).supplyCurrentSignal();
+        m_deployerSupplyCurrentSignal = powerStatusSignals.get(m_deployer.getDeviceID()).supplyCurrentSignal();
+        m_deployerPosition = m_deployer.getPosition(false);
+
+        // do this so the follower stays tapped in
+        m_translationLeader.getTorqueCurrent(false).setUpdateFrequency(250.0);
+
         signalManager.registerPublished(m_intakeVelocitySignal, nt, "intake_velocity_rps");
         signalManager.registerPublished(m_intakeStatorCurrentSignal, nt, "intake_stator_current");
         signalManager.registerPublished(m_deployerStatorCurrentSignal, nt, "deployer_stator_current");
-        signalManager.registerPublished(m_intakeSupplyCurrentSignal, nt, "intake_supply_current");
-        signalManager.registerPublished(m_deployerSupplyCurrentSignal, nt, "deployer_supply_current");
+//        signalManager.registerPublished(m_intakeSupplyCurrentSignal, nt, "intake_supply_current");
+//        signalManager.registerPublished(m_deployerSupplyCurrentSignal, nt, "deployer_supply_current");
         signalManager.registerPublished(m_deployerPosition, nt, "deployer_position");
 
         // sim code
         m_intakeModel = DCMotor.getKrakenX60Foc(1);
         m_deployerModel = DCMotor.getKrakenX44Foc(1);
 
-        m_intakeSimState = m_intakeLeader.getSimState();
+        m_intakeSimState = m_translationLeader.getSimState();
         m_intakeSim = new DCMotorSim(
                 LinearSystemId.createDCMotorSystem(m_intakeModel, 0.001, INTAKE_GEARING),
                 m_intakeModel
         );
 
-        m_deployerSimState = m_intakeDeployer.getSimState();
+        m_deployerSimState = m_deployer.getSimState();
         m_deployerSim = new SingleJointedArmSim(
                 LinearSystemId.createSingleJointedArmSystem(m_deployerModel, 0.01, DEPLOYER_GEARING),
                 m_deployerModel,
@@ -146,49 +152,49 @@ public final class Intake {
     }
 
     public void setDeploy() {
-        m_intakeDeployer.setControl(m_deployRequest
+        m_deployer.setControl(m_deployRequest
                 .withPosition(INTAKE_DEPLOYED_ROTATIONS)
                 .withVelocity(10));
     }
 
     public void setRetract() {
-        m_intakeDeployer.setControl(m_deployRequest
+        m_deployer.setControl(m_deployRequest
                 .withPosition(INTAKE_STOWED_ROTATIONS)
                 .withVelocity(10));
     }
 
     public void setRetractSlowly() {
-        m_intakeDeployer.setControl(m_deployRequest
+        m_deployer.setControl(m_deployRequest
                 .withPosition(INTAKE_FEEDING_ROTATIONS)
                 .withVelocity(1.1 / 6.0));
     }
 
     public void setAgitating() {
-        m_intakeDeployer.setControl(m_deployRequest
+        m_deployer.setControl(m_deployRequest
                 .withPosition(INTAKE_AGITATING_ROTATIONS)
                 .withVelocity(15));
     }
 
     public void setFeedingHopper() {
-        m_intakeLeader.setControl(m_request.withVelocity(INTAKE_VELOCITY));
-        m_intakeFollower.setControl(m_request.withVelocity(INTAKE_VELOCITY));
+        m_translationLeader.setControl(m_request.withVelocity(INTAKE_VELOCITY));
+        m_translationFollower.setControl(m_request.withVelocity(INTAKE_VELOCITY));
     }
 
     public void setIntaking() {
-        m_intakeLeader.setControl(new DutyCycleOut(1.0));
-        m_intakeFollower.setControl(new DutyCycleOut(1.0));
+        m_translationLeader.setControl(new DutyCycleOut(1.0));
+        m_translationFollower.setControl(new DutyCycleOut(1.0));
 //        m_intakeLeader.setControl(m_request.withVelocity(INTAKE_VELOCITY));
 //        m_intakeFollower.setControl(m_request.withVelocity(INTAKE_VELOCITY));
     }
 
     public void setSpitting() {
-        m_intakeLeader.setControl(m_request.withVelocity(-INTAKE_VELOCITY));
-        m_intakeFollower.setControl(m_request.withVelocity(-INTAKE_VELOCITY));
+        m_translationLeader.setControl(m_request.withVelocity(-INTAKE_VELOCITY));
+        m_translationFollower.setControl(m_request.withVelocity(-INTAKE_VELOCITY));
     }
 
     public void setStop() {
-        m_intakeLeader.setControl(new CoastOut());
-        m_intakeFollower.setControl(new CoastOut());
+        m_translationLeader.setControl(new CoastOut());
+        m_translationFollower.setControl(new CoastOut());
     }
 
     public Rotation2d getAngle() {

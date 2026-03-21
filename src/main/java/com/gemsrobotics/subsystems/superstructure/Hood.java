@@ -29,9 +29,9 @@ import java.util.Map;
 public final class Hood {
     private static final double GEARING = 171.0; // 19:9:1
     // 15 degrees forward from the vertical, or 75 degrees up from the horizon
-    public static final Rotation2d MIN_ANGLE  = Rotation2d.fromDegrees(6.65);
+    public static final Rotation2d MIN_ANGLE = Rotation2d.fromDegrees(5.65);
     // this is 30.85 degrees
-    public static final Rotation2d MAX_ANGLE  = MIN_ANGLE.plus(Rotation2d.fromRotations(0.07));
+    public static final Rotation2d MAX_ANGLE = Rotation2d.fromDegrees(31.85);
     private static final Rotation2d DEFAULT_TOLERANCE = Rotation2d.fromDegrees(0.5);
 
     private final TalonFX m_motor;
@@ -53,6 +53,8 @@ public final class Hood {
         m_motor = motor;
 
         final var cfg = new TalonFXConfiguration();
+        cfg.Audio.BeepOnBoot = false;
+        cfg.Audio.BeepOnConfig = false;
         cfg.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
         cfg.Feedback.SensorToMechanismRatio = GEARING;
         cfg.Slot0.kP = 4000.0;

@@ -27,7 +27,6 @@ public class Flywheel {
     protected final StatusSignal<Temperature> m_leaderTemperatureSignal;
 
     public Flywheel(final NetworkTable nt,
-                    final String ntName,
                     final StatusSignalManager signalManager,
                     final Distance wheelRadius,
                     final TalonFX motorLeader,
@@ -41,31 +40,16 @@ public class Flywheel {
 
         m_leaderVelocitySignal = m_motorLeader.getVelocity(false);
         m_leaderVelocityReferenceSignal = m_motorLeader.getClosedLoopReference(false);
-        m_leaderSupplyCurrentSignal = m_motorLeader.getSupplyCurrent(false);
         m_leaderStatorCurrentSignal = m_motorLeader.getStatorCurrent(false);
         m_leaderTemperatureSignal = m_motorLeader.getDeviceTemp(false);
 
-        final NetworkTable myTable = nt.getSubTable(ntName);
-
+        final NetworkTable myTable = nt;
+        final var powerSignals = signalManager.registerPowerTracking(myTable, m_motorLeader);
+        m_leaderSupplyCurrentSignal = powerSignals.get(m_motorLeader.getDeviceID()).supplyCurrentSignal();
         signalManager.registerPublished(m_leaderVelocitySignal, myTable, "velocity_rps");
         signalManager.registerPublished(m_leaderVelocityReferenceSignal, myTable, "velocity_reference_rps");
-        signalManager.registerPublished(m_leaderSupplyCurrentSignal, myTable, "supply_current_amps");
         signalManager.registerPublished(m_leaderStatorCurrentSignal, myTable, "stator_current_amps");
         signalManager.registerPublished(m_leaderTemperatureSignal, myTable, "temp_c");
-    }
-
-    public Flywheel(final String ntName,
-                    final StatusSignalManager signalManager,
-                    final Distance wheelRadius,
-                    final TalonFX motorLeader,
-                    final TalonFX... motorFollowers) {
-        this(
-                NetworkTableInstance.getDefault().getTable(ntName),
-                ntName,
-                signalManager,
-                wheelRadius,
-                motorLeader,
-                motorFollowers);
     }
 
     public void setAngularVelocity(double rps) {

@@ -24,6 +24,7 @@ import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.FlywheelSim;
 
+import java.util.List;
 import java.util.function.DoubleSupplier;
 
 public class Uptake {
@@ -48,6 +49,7 @@ public class Uptake {
         m_motorFollower = motorFollower;
 
         final var cfg = new TalonFXConfiguration();
+        cfg.Audio.AllowMusicDurDisable = true;
         cfg.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
         cfg.CurrentLimits.StatorCurrentLimitEnable = true;
         cfg.CurrentLimits.StatorCurrentLimit = 80.0;
@@ -88,13 +90,16 @@ public class Uptake {
         m_leaderStatorCurrentSignal = m_motorLeader.getStatorCurrent(false);
 
         final NetworkTable nt = NetworkTableInstance.getDefault().getTable("uptake").getSubTable(ntName);
+        final var powerSignals = signalManager.registerPowerTracking(
+                nt,
+                List.of("leader", "follower"),
+                List.of(m_motorLeader, m_motorFollower));
+
         signalManager.registerPublished(m_leaderVelocitySignal, nt, "velocity_rps");
         signalManager.registerPublished(m_leaderVoltsAppliedSignal, nt, "volts");
         signalManager.registerPublished(m_leaderStatorCurrentSignal, nt, "stator_amps");
         //endregion
-    }
 
-    public void periodic() {
         m_motorFollower.setControl(new Follower(m_motorLeader.getDeviceID(), MotorAlignmentValue.Opposed));
     }
 

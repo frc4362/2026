@@ -38,7 +38,7 @@ public class Hopper {
     private final Follower m_followerRequest;
 
     private final StatusSignal<AngularVelocity> m_leaderVelocitySignal, m_followerVelocitySignal;
-    private final StatusSignal<Voltage> m_leaderVoltsAppliedSignal, m_followerVoltsAppliedSignal;
+    private final StatusSignal<Voltage> m_leaderVoltsAppliedSignal, m_followerVoltsAppliedSignal, m_leaderSupplyVoltageSignal, m_followerSupplyVoltageSignal;
     private final StatusSignal<Current> m_leaderStatorAmpsSignal, m_leaderSupplyAmpsSignal,
             m_followerStatorAmpsSignal, m_followerSupplyAmpsSignal;
 
@@ -59,7 +59,7 @@ public class Hopper {
         cfg.Slot0.kP = 35.0;
         cfg.Slot0.kV = 0.0;
         cfg.Slot0.kA = 0.0;
-        //cfg.CurrentLimits.SupplyCurrentLimitEnable = true;
+//        cfg.CurrentLimits.SupplyCurrentLimitEnable = true;
         //cfg.CurrentLimits.SupplyCurrentLimit = 50.0;
         cfg.TorqueCurrent.PeakForwardTorqueCurrent = 150.0;
         cfg.TorqueCurrent.PeakReverseTorqueCurrent = -150.0;
@@ -93,24 +93,26 @@ public class Hopper {
         //endregion
 
         //region logging code
+        final NetworkTable nt = NetworkTableInstance.getDefault().getTable("hopper");
+        final var powerStatusSignals = signalManager.registerPowerTracking(nt, m_motorLeader, m_motorFollower);
+
         m_leaderVelocitySignal = m_motorLeader.getVelocity(false);
         m_leaderVoltsAppliedSignal = m_motorLeader.getMotorVoltage(false);
         m_leaderStatorAmpsSignal = m_motorLeader.getStatorCurrent(false);
-        m_leaderSupplyAmpsSignal = m_motorLeader.getSupplyCurrent(false);
+        m_leaderSupplyAmpsSignal = powerStatusSignals.get(m_motorLeader.getDeviceID()).supplyCurrentSignal();
+        m_leaderSupplyVoltageSignal = powerStatusSignals.get(m_motorLeader.getDeviceID()).supplyVoltageSignal();
         m_followerVelocitySignal = m_motorFollower.getVelocity(false);
         m_followerVoltsAppliedSignal = m_motorFollower.getMotorVoltage(false);
         m_followerStatorAmpsSignal = m_motorFollower.getStatorCurrent(false);
-        m_followerSupplyAmpsSignal = m_motorFollower.getSupplyCurrent(false);
+        m_followerSupplyAmpsSignal = powerStatusSignals.get(m_motorFollower.getDeviceID()).supplyCurrentSignal();
+        m_followerSupplyVoltageSignal = powerStatusSignals.get(m_motorFollower.getDeviceID()).supplyVoltageSignal();
 
-        final NetworkTable nt = NetworkTableInstance.getDefault().getTable("hopper");
         signalManager.registerPublished(m_leaderVelocitySignal, nt, "leader_velocity_rps");
         signalManager.registerPublished(m_leaderVoltsAppliedSignal, nt, "leader_volts");
         signalManager.registerPublished(m_leaderStatorAmpsSignal, nt, "leader_stator_amps");
-        signalManager.registerPublished(m_leaderSupplyAmpsSignal, nt, "leader_supply_amps");
         signalManager.registerPublished(m_followerVelocitySignal, nt, "follower_velocity_rps");
         signalManager.registerPublished(m_followerVoltsAppliedSignal, nt, "follower_volts");
         signalManager.registerPublished(m_followerStatorAmpsSignal, nt, "follower_stator_amps");
-        signalManager.registerPublished(m_followerSupplyAmpsSignal, nt, "follower_supply_amps");
         //endregion
     }
 

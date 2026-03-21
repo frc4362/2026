@@ -9,6 +9,7 @@ import com.ctre.phoenix6.swerve.*;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants.*;
 
 import com.gemsrobotics.RobotState;
+import com.gemsrobotics.lib.StatusSignalManager;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.numbers.N1;
@@ -207,9 +208,9 @@ public final class TunerConstants {
      * Creates a CommandSwerveDrivetrain instance.
      * This should only be called once in your robot program,.
      */
-    public static CommandSwerveDrivetrain createDrivetrain(final RobotState robotState, final CommandXboxController joystick) {
+    public static CommandSwerveDrivetrain createDrivetrain(final StatusSignalManager signalManager, final RobotState robotState) {
         return new CommandSwerveDrivetrain(
-            DrivetrainConstants, robotState, joystick, FrontLeft, FrontRight, BackLeft, BackRight
+            signalManager, robotState, DrivetrainConstants, FrontLeft, FrontRight, BackLeft, BackRight
         );
     }
 
