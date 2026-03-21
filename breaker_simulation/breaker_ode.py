@@ -36,7 +36,7 @@ HOW TO USE:
    For the CB285-120, this is typically in the range of 0.5–2 mΩ.
    If you don't have it, use the power-based mode (see P_IN_WATTS_MODE).
 
-4. Run: python breaker_param_fit.py
+4. Run: python breaker_ode.py
 -----------------------------------------------------------------------
 '''
 
@@ -73,14 +73,14 @@ R_BREAKER = 0.003  # 1 mΩ — measure this
 # Read the actual values off your datasheet before using for real design work.
 # ---------------------------------------------------------------
 TRIP_DATA = [
-    (1.35, 100.0),
-    (1.5, 40.0),
-    (1.65, 30.0),
-    (1.8, 20.0),
+    # (1.35, 100.0),
+    # (1.5, 40.0),
+    # (1.65, 30.0),
+    # (1.8, 20.0),
     (2.25, 15.0),
     (2.65, 10.0),
     (3.5, 5.0),  # 350% rated current -> ~5s trip   (estimate)
-    (6.0, 2.0),  # 600% rated current -> ~1s trip    (estimate)
+    (6.0, 2.0),  # 600% rated current -> ~2s trip    (estimate)
 ]
 
 # sort by the trip times

@@ -34,12 +34,13 @@ public final class EnergyLogger {
         }
     }
 
+    private final BreakerSim m_breakerSim;
     private final NetworkTable m_sinksTable;
     private final Map<String, PowerSinkLogger> m_sinkLoggers;
     private final Map<String, Double> m_sinkCurrents,
             m_sinkPowers, m_sinkEnergies;
     private final DoublePublisher m_batteryVoltagePublisher, m_totalCurrentPublisher,
-            m_totalPowerPublisher, m_totalEnergyPublisher;
+            m_totalPowerPublisher, m_totalEnergyPublisher, m_estimatedBreakerTemperaturePublisher;
 
     private double m_totalCurrentAmps;
     private double m_totalPowerWatts;
@@ -48,12 +49,14 @@ public final class EnergyLogger {
     private final List<PowerSink> m_powerSinks;
 
     public EnergyLogger() {
+        m_breakerSim = new BreakerSim();
         m_sinkLoggers = new HashMap<>();
         m_sinkCurrents = new HashMap<>();
         m_sinkPowers = new HashMap<>();
         m_sinkEnergies = new HashMap<>();
 
         final NetworkTable myTable = NetworkTableInstance.getDefault().getTable("energy");
+        m_estimatedBreakerTemperaturePublisher = myTable.getDoubleTopic("estimated_breaker_temperature").publish();
         m_sinksTable = myTable.getSubTable("sinks");
         m_batteryVoltagePublisher = myTable.getDoubleTopic("battery_volts").publish();
         m_totalCurrentPublisher = myTable.getDoubleTopic("total_current_amps").publish();
@@ -91,6 +94,9 @@ public final class EnergyLogger {
             m_sinkLoggers.get(sink.getName()).log(current, power, joulesToWattHours(totalSinkEnergy));
         }
 
+        m_breakerSim.update(m_totalPowerWatts);
+
+        m_estimatedBreakerTemperaturePublisher.set(m_breakerSim.getTemperature());
         m_batteryVoltagePublisher.set(RobotController.getBatteryVoltage());
         m_totalCurrentPublisher.set(m_totalCurrentAmps);
         m_totalPowerPublisher.set(m_totalPowerWatts);
