@@ -88,7 +88,7 @@ public final class EnergyLogger {
             final double power = sink.getPower();
             m_sinkPowers.put(sink.getName(), power);
             m_totalPowerWatts += power;
-            final double newEnergyConsumed = joulesToWattHours(power * Constants.kLoopPeriodSeconds);
+            final double newEnergyConsumed = joulesToWattHours(power * Constants.LOOP_PERIOD_SECONDS);
             m_totalEnergyWattHours += newEnergyConsumed;
             final double totalSinkEnergy = m_sinkEnergies.merge(sink.getName(), newEnergyConsumed, Double::sum);
             m_sinkLoggers.get(sink.getName()).log(current, power, joulesToWattHours(totalSinkEnergy));

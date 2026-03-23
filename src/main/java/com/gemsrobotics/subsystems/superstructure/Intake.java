@@ -38,7 +38,7 @@ public final class Intake {
     private static final double IDLE_VElOCITY = 0;
     private static final double SIM_UPDATE_SECONDS = 0.001;
 
-    private static final double INTAKE_GEARING = 2.62;
+    public static final double TRANSLATION_GEARING = 2.62;
     private static final double DEPLOYER_GEARING = 23.0 * (32.0 / 36.0);
     private static final double DEPLOYER_ARM_LENGTH = 0.37;
 
@@ -64,7 +64,7 @@ public final class Intake {
         m_translationFollower = intakeFollower;
         final var cfg = new TalonFXConfiguration();
         cfg.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
-        cfg.Feedback.SensorToMechanismRatio = INTAKE_GEARING;
+        cfg.Feedback.SensorToMechanismRatio = TRANSLATION_GEARING;
         cfg.CurrentLimits.StatorCurrentLimit = 120;
         cfg.CurrentLimits.StatorCurrentLimitEnable = true;
         cfg.Voltage.PeakForwardVoltage = 12;
@@ -128,7 +128,7 @@ public final class Intake {
 
         m_intakeSimState = m_translationLeader.getSimState();
         m_intakeSim = new DCMotorSim(
-                LinearSystemId.createDCMotorSystem(m_intakeModel, 0.001, INTAKE_GEARING),
+                LinearSystemId.createDCMotorSystem(m_intakeModel, 0.001, TRANSLATION_GEARING),
                 m_intakeModel
         );
 
@@ -210,7 +210,7 @@ public final class Intake {
         m_deployerSim.setInputVoltage(m_deployerSimState.getMotorVoltage());
         m_deployerSim.update(SIM_UPDATE_SECONDS);
 
-        m_intakeSimState.setRotorVelocity(m_intakeSim.getAngularVelocity().times(INTAKE_GEARING));
+        m_intakeSimState.setRotorVelocity(m_intakeSim.getAngularVelocity().times(TRANSLATION_GEARING));
         m_deployerSimState.setRawRotorPosition(m_deployerSim.getAngleRads() / 2 * Math.PI * DEPLOYER_GEARING);
     }
 

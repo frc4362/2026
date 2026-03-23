@@ -10,7 +10,6 @@ import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.gemsrobotics.commands.Autos;
 import com.gemsrobotics.commands.SuperstructureCommands;
-import com.gemsrobotics.energy.EnergyLogger;
 import com.gemsrobotics.launching.LaunchingCalculator;
 import com.gemsrobotics.lib.Flywheel;
 import com.gemsrobotics.lib.StatusSignalManager;
@@ -29,10 +28,9 @@ import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import com.gemsrobotics.subsystems.swerve.CommandSwerveDrivetrain;
-import com.gemsrobotics.subsystems.swerve.TunerConstants;
+import com.gemsrobotics.subsystems.swerve.SwerveConstants;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 
 import static com.gemsrobotics.Constants.CAN.*;
@@ -60,13 +58,16 @@ public final class RobotContainer {
         m_matchStateScheduler = matchStateScheduler;
         m_visualizer = new RobotVisualizer();
         m_robotState = new RobotState();
-        m_swerve = TunerConstants.createDrivetrain(m_signalManager, m_robotState);
+        m_swerve = SwerveConstants.createDrivetrain(m_signalManager, m_robotState);
         m_swerve.setDefaultCommand(new PilotedDrive(
+                m_robotState,
                 m_swerve,
-                m_pilot.rightBumper(),
                 () -> -m_pilot.getLeftY(),
                 () -> -m_pilot.getLeftX(),
-                () -> -m_pilot.getRightX()));
+                () -> -m_pilot.getRightX(),
+                () -> false,
+                () -> false,
+                () -> false));
 
         m_robotState.addPoseEstimateConsumer(estimate -> {
             if (Constants.Vision.ACCEPT_VISION_MEASUREMENTS) {

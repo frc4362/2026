@@ -5,13 +5,10 @@ import com.ctre.phoenix6.swerve.SwerveDrivetrain;
 import com.ctre.phoenix6.swerve.SwerveModule;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
-import com.gemsrobotics.Constants;
 import com.gemsrobotics.lib.math.Translation2dPlus;
-import com.gemsrobotics.subsystems.swerve.TunerConstants;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.units.measure.Distance;
 
 import static edu.wpi.first.units.Units.Meters;
@@ -193,8 +190,15 @@ public class FieldCentricEvasion implements SwerveRequest {
         return new Translation2d(newCenter.getNorm() + 2 * m_bumperThickness, newCenter.getAngle());
     }
 
+    private static final boolean DO_OPERATOR_PERSPECTIVE = false;
+
     public StatusCode apply(SwerveDrivetrain.SwerveControlParameters parameters, SwerveModule... modulesToApply) {
-        Translation2d v = new Translation2d(VelocityX, VelocityY).rotateBy(parameters.operatorForwardDirection);
+        final Translation2d v;
+        if (DO_OPERATOR_PERSPECTIVE) {
+            v = new Translation2d(VelocityX, VelocityY).rotateBy(parameters.operatorForwardDirection);
+        } else {
+            v = new Translation2d(VelocityX, VelocityY);
+        }
 
         double toApplyX = v.getX();
         double toApplyY = v.getY();

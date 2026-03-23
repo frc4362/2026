@@ -32,7 +32,6 @@ public final class LaunchingCalculator {
 	private static final boolean DO_LINEAR_DRAG_COMPENSATION = true;
 	private static final double DRAG_CONSTANT_INVERSE_SECONDS = 0.1;
 	private static final double TOF_EPSILON = 0.001;
-	private static final double PHASE_LAG_SECONDS = 0.03;
 	private static final double MIN_RANGE_METERS = 1.6;
 	private static final double MAX_RANGE_METERS = 5.5;
 
@@ -132,13 +131,13 @@ public final class LaunchingCalculator {
 	}
 
 	public void periodic() {
+		// get the most current pose, accounting for phase lag in how it may have changed
 		Pose2d currentPose = m_robotState.getLatestFieldToVehicle().getValue();
-
 		final ChassisSpeeds currentVelocity = m_robotState.getLatestChassisSpeeds_FieldRelative();
 		currentPose = currentPose.exp(new Twist2d(
-				currentVelocity.vxMetersPerSecond * PHASE_LAG_SECONDS,
-				currentVelocity.vyMetersPerSecond * PHASE_LAG_SECONDS,
-				currentVelocity.omegaRadiansPerSecond * PHASE_LAG_SECONDS));
+				currentVelocity.vxMetersPerSecond * Constants.PHASE_LAG_SECONDS,
+				currentVelocity.vyMetersPerSecond * Constants.PHASE_LAG_SECONDS,
+				currentVelocity.omegaRadiansPerSecond * Constants.PHASE_LAG_SECONDS));
 
 		final boolean isFeeding = shouldFeed(currentPose);
 		final Translation2d target = isFeeding ? getFeedingTarget(currentPose) : getHubTarget();

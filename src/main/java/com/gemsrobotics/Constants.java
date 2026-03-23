@@ -5,8 +5,11 @@
 package com.gemsrobotics;
 
 import com.ctre.phoenix6.CANBus;
-import com.gemsrobotics.subsystems.swerve.TunerConstants;
+import com.gemsrobotics.lib.math.Translation2dPlus;
+import com.gemsrobotics.subsystems.superstructure.Intake;
+import com.gemsrobotics.subsystems.swerve.SwerveConstants;
 import edu.wpi.first.math.geometry.*;
+import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Distance;
@@ -14,9 +17,12 @@ import edu.wpi.first.units.measure.Mass;
 
 import static edu.wpi.first.units.Units.*;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
+import static java.lang.Math.abs;
+import static java.lang.Math.sqrt;
 
 public final class Constants {
-  public static final double kLoopPeriodSeconds = 0.02;
+  public static final double LOOP_PERIOD_SECONDS = 0.02;
+  public static final double PHASE_LAG_SECONDS = 0.03;
 
   public static final double LAUNCH_TIME_AFTER_ACTIVE = 1.0;
   public static final double LAUNCH_TIME_BEFORE_ACTIVE = 1.5 + LAUNCH_TIME_AFTER_ACTIVE;
@@ -24,7 +30,17 @@ public final class Constants {
 
   public static final Distance BUMPER_DEPTH = Inches.of(3.5);
 
-  public static final double MAX_SPEED = 1.0 * TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
+  // robot is square
+  public static final Distance ROBOT_WIDTH = Inches.of(27.5);
+  public static final Distance ROBOT_RADIUS = SwerveConstants.moduleTranslations[0].getMeasureX().times(sqrt(2));
+  public static final Distance INTAKE_WIDTH = Inches.of(26.0);
+  public static final Distance INTAKE_REACH = Inches.of(10.5);
+  public static final Transform2d INTAKE_CORNER_NW = new Transform2d(ROBOT_WIDTH.div(2).plus(INTAKE_REACH), INTAKE_WIDTH.div(2), Rotation2d.kZero);
+  public static final Transform2d INTAKE_CORNER_NE = new Transform2d(ROBOT_WIDTH.div(2).plus(INTAKE_REACH), INTAKE_WIDTH.div(2).unaryMinus(), Rotation2d.kZero);
+  public static final Distance INTAKE_ROLLER_RADIUS = Inches.of(1.32).div(2);
+  public static final double INTAKE_MAX_VELOCITY = DCMotor.getKrakenX60(2).withReduction(Intake.TRANSLATION_GEARING).freeSpeedRadPerSec * INTAKE_ROLLER_RADIUS.in(Meters);
+
+  public static final double MAX_SPEED = SwerveConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
   public static final double MAX_ANGULAR_RATE = RotationsPerSecond.of(1.0).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
   public static final Mass ROBOT_WEIGHT = Pounds.of(115.0 + 20.0 + 13.0);
   public static final Distance BALL_RADIUS = Inches.of(5.91).div(2.0);
@@ -62,10 +78,10 @@ public final class Constants {
     public static final String LIMELIGHT_LAUNCHER_NAME = "limelight-launch";
     public static final String LIMELIGHT_CLIMBER_NAME = "limelight-climb";
 
-    // we flipped the shooter lol
 //    public static final Transform3d LIMELIGHT_LAUNCHER_TRANSFORM = new Transform3d(
 //            new Translation3d(Inches.of(-11.14), Inches.of(0.0), Inches.of(28.97)),
 //            new Rotation3d(Degrees.of(0.0), Degrees.of(10.0), Degrees.of(0.0)));
+    // we flipped the shooter lol
     public static final Transform3d LIMELIGHT_LAUNCHER_TRANSFORM = new Transform3d(
             new Translation3d(Inches.of(-2.96), Inches.of(0.0), Inches.of(29.151)),
             new Rotation3d(Degrees.of(0.0), Degrees.of(10), Degrees.of(-180.0)));
