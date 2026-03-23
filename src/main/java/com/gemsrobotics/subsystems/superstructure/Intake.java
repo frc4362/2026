@@ -55,6 +55,7 @@ public final class Intake {
     private final Notifier m_simNotifier;
 
     private final VelocityTorqueCurrentFOC m_request;
+    private final DutyCycleOut m_intakingRequest;
     private final DynamicMotionMagicTorqueCurrentFOC m_deployRequest;
     private final TalonFX m_translationLeader, m_translationFollower;
     private final TalonFX m_deployer;
@@ -94,6 +95,9 @@ public final class Intake {
         m_deployer.getConfigurator().apply(cfgDep);
 
         m_deployer.setPosition(INTAKE_STARTING_ROTATIONS);
+
+        m_intakingRequest = new DutyCycleOut(1.0);
+        m_intakingRequest.EnableFOC = true;
 
         m_request = new VelocityTorqueCurrentFOC(0);
         m_deployRequest = new DynamicMotionMagicTorqueCurrentFOC(0, 0, 0);
@@ -181,10 +185,8 @@ public final class Intake {
     }
 
     public void setIntaking() {
-        m_translationLeader.setControl(new DutyCycleOut(1.0));
-        m_translationFollower.setControl(new DutyCycleOut(1.0));
-//        m_intakeLeader.setControl(m_request.withVelocity(INTAKE_VELOCITY));
-//        m_intakeFollower.setControl(m_request.withVelocity(INTAKE_VELOCITY));
+        m_translationLeader.setControl(m_intakingRequest);
+        m_translationFollower.setControl(m_intakingRequest);
     }
 
     public void setSpitting() {
