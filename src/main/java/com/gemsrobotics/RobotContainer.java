@@ -55,6 +55,9 @@ public final class RobotContainer {
         m_pilot = new CommandXboxController(Constants.OperatorConstants.kPilotControllerPort);
         m_copilot = new CommandXboxController(Constants.OperatorConstants.kCopilotControllerPort);
 
+        final Trigger pilotIntakingTrigger = m_pilot.leftTrigger();
+        final Trigger pilotSnakingTrigger = m_pilot.rightBumper();
+
         m_matchStateScheduler = matchStateScheduler;
         m_visualizer = new RobotVisualizer();
         m_robotState = new RobotState();
@@ -66,8 +69,8 @@ public final class RobotContainer {
                 () -> -m_pilot.getLeftX(),
                 () -> -m_pilot.getRightX(),
                 () -> false,
-                () -> false,
-                () -> false));
+                pilotIntakingTrigger,
+                pilotSnakingTrigger));
 
         m_robotState.addPoseEstimateConsumer(estimate -> {
             if (Constants.Vision.ACCEPT_VISION_MEASUREMENTS) {
@@ -117,8 +120,8 @@ public final class RobotContainer {
                 m_robotState);
         m_autos = new Autos(this);
 
-        m_pilot.leftTrigger().onTrue(m_superstructure.applyWantedState(Superstructure.SystemState.INTAKING));
-        m_pilot.leftTrigger().onFalse(m_superstructure.applyWantedState(Superstructure.SystemState.IDLE));
+        pilotIntakingTrigger.onTrue(m_superstructure.applyWantedState(Superstructure.SystemState.INTAKING));
+        pilotIntakingTrigger.onFalse(m_superstructure.applyWantedState(Superstructure.SystemState.IDLE));
 
         m_pilot.a().onTrue(m_superstructure.applyWantedState(Superstructure.SystemState.SPITTING));
         m_pilot.a().onFalse(m_superstructure.applyWantedState(Superstructure.SystemState.IDLE));

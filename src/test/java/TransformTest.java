@@ -75,4 +75,16 @@ public class TransformTest {
         System.out.println("limited velocity intake speed = " + GeometryUtil.transformVelocity(limitedSpeeds, intakeCornerPose, Rotation2d.kZero));
         System.out.println("limited velocity intake speed magnitude = " + magnitude(GeometryUtil.transformVelocity(limitedSpeeds, intakeCornerPose, Rotation2d.kZero)));
     }
+
+    @Test
+    public void testMaxRotationSpeed() {
+        final ChassisSpeeds desiredVelocity = new ChassisSpeeds(0.0, 0.0, Math.PI);
+        final Transform2d intakeCornerPose = Constants.INTAKE_CORNER_NE;
+        final double m = GeometryUtil.magnitude(GeometryUtil.transformVelocity(desiredVelocity, intakeCornerPose, Rotation2d.kZero));
+        final double maxSpeed = 2.75;
+        final double k = maxSpeed / m;
+        final ChassisSpeeds newV = new ChassisSpeeds(0.0, 0.0, k * Math.PI);
+        System.out.println(GeometryUtil.magnitude(GeometryUtil.transformVelocity(newV, intakeCornerPose, Rotation2d.kZero)));
+        System.out.println(k);
+    }
 }

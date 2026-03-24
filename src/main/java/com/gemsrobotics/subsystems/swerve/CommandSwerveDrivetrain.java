@@ -18,14 +18,17 @@ import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
 import com.ctre.phoenix6.swerve.SwerveRequest.FieldCentricFacingAngle;
+import com.gemsrobotics.Constants;
 import com.gemsrobotics.RobotState;
 import com.gemsrobotics.lib.StatusSignalManager;
+import com.gemsrobotics.lib.math.GeometryUtil;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.networktables.DoubleArrayPublisher;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructPublisher;
@@ -65,6 +68,7 @@ public final class CommandSwerveDrivetrain extends SwerveConstants.TunerSwerveDr
     /* Keep track if we've ever applied the operator perspective before or not */
     private boolean m_hasAppliedOperatorPerspective = false;
 
+    private final DoubleArrayPublisher m_intakeCornersSpeedsPublisher;
     private final StructPublisher<Pose2d> m_goalPosePublisher;
 
     //region SysId
@@ -194,6 +198,7 @@ public final class CommandSwerveDrivetrain extends SwerveConstants.TunerSwerveDr
                     fusedChassisSpeeds);
         });
 
+        m_intakeCornersSpeedsPublisher = stateTable.getDoubleArrayTopic("intake_corner_speeds").publish();
         m_goalPosePublisher = stateTable.getStructTopic("tracking_pose", Pose2d.struct).publish();
         m_goalPosePublisher.setDefault(new Pose2d());
 
@@ -284,6 +289,12 @@ public final class CommandSwerveDrivetrain extends SwerveConstants.TunerSwerveDr
 
     @Override
     public void periodic() {
+        final SwerveDriveState myState = getState();
+        m_intakeCornersSpeedsPublisher.set(new double[] {
+                GeometryUtil.magnitude(GeometryUtil.transformVelocity(myState.Speeds, Constants.INTAKE_CORNER_NW, myState.Pose.getRotation())),
+                GeometryUtil.magnitude(GeometryUtil.transformVelocity(myState.Speeds, Constants.INTAKE_CORNER_NW, myState.Pose.getRotation()))
+        });
+
         /*
          * Periodically try to apply the operator perspective.
          * If we haven't applied the operator perspective before, then we should apply it regardless of DS state.
@@ -376,12 +387,12 @@ public final class CommandSwerveDrivetrain extends SwerveConstants.TunerSwerveDr
         return super.samplePoseAt(Utils.fpgaToCurrentTime(timestampSeconds));
     }
 
-    public static SwerveRequest.FieldCentricFacingAngle makeAimingRequest() {
-        final SwerveRequest.FieldCentricFacingAngle aimingRequest = new FieldCentricFacingAngle();
+    public static FieldCentricFacingAngleWithIntakeLimiting makeAimingRequest() {
+        final FieldCentricFacingAngleWithIntakeLimiting aimingRequest = new FieldCentricFacingAngleWithIntakeLimiting();
         aimingRequest.ForwardPerspective = SwerveRequest.ForwardPerspectiveValue.BlueAlliance;
         aimingRequest.SteerRequestType = SwerveModule.SteerRequestType.MotionMagicExpo;
 //        aimingRequest.HeadingController.setPID(12.0, 0.0, 0.7);
-        aimingRequest.HeadingController.setPID(6.0, 0.0, 0.0);
+        aimingRequest.HeadingController.setPID(7.0, 0.0, 0.0);
         return aimingRequest;
     }
 }

@@ -5,6 +5,7 @@ import com.ctre.phoenix6.swerve.SwerveDrivetrain;
 import com.ctre.phoenix6.swerve.SwerveModule;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
+import com.gemsrobotics.commands.PilotedDrive;
 import com.gemsrobotics.lib.math.Translation2dPlus;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -15,6 +16,12 @@ import static edu.wpi.first.units.Units.Meters;
 
 public class FieldCentricEvasion implements SwerveRequest {
     public boolean Evading = false;
+    public boolean DoIntakeLimiting = false;
+
+    public FieldCentricEvasion withIntakeLimiting(final boolean doIntakeLimiting) {
+        DoIntakeLimiting = doIntakeLimiting;
+        return this;
+    }
 
     /**
      * The velocity in the X direction, in m/s.
@@ -211,7 +218,22 @@ public class FieldCentricEvasion implements SwerveRequest {
             toApplyOmega = 0;
         }
 
-        ChassisSpeeds speeds = ChassisSpeeds.discretize(ChassisSpeeds.fromFieldRelativeSpeeds(toApplyX, toApplyY, toApplyOmega,
+        final double CorrectVelocityX;
+        final double CorrectVelocityY;
+        final double CorrectVelocityOmega;
+        if (DoIntakeLimiting) {
+            final ChassisSpeeds desiredSpeeds = new ChassisSpeeds(VelocityX, VelocityY, toApplyOmega);
+            final ChassisSpeeds limitedSpeeds = PilotedDrive.limitSpeedsForIntaking(desiredSpeeds, parameters.currentPose.getRotation());
+            CorrectVelocityX = limitedSpeeds.vxMetersPerSecond;
+            CorrectVelocityY = limitedSpeeds.vyMetersPerSecond;
+            CorrectVelocityOmega = limitedSpeeds.omegaRadiansPerSecond;
+        } else {
+            CorrectVelocityX = VelocityX;
+            CorrectVelocityY = VelocityY;
+            CorrectVelocityOmega = toApplyOmega;
+        }
+
+        ChassisSpeeds speeds = ChassisSpeeds.discretize(ChassisSpeeds.fromFieldRelativeSpeeds(CorrectVelocityX, CorrectVelocityY, CorrectVelocityOmega,
                 parameters.currentPose.getRotation()), parameters.updatePeriod);
 
         final Translation2d centerOfRotation;

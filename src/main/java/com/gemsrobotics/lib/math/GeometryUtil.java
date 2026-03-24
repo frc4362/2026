@@ -32,4 +32,8 @@ public class GeometryUtil {
 				velocity.vyMetersPerSecond + velocity.omegaRadiansPerSecond * (transform.getX() * currentRotation.getCos() - transform.getY() * currentRotation.getSin()),
 				velocity.omegaRadiansPerSecond);
 	}
+
+	public static double magnitude(final ChassisSpeeds speeds) {
+		return Math.hypot(speeds.vxMetersPerSecond, speeds.vyMetersPerSecond);
+	}
 }
