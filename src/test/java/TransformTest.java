@@ -87,4 +87,9 @@ public class TransformTest {
         System.out.println(GeometryUtil.magnitude(GeometryUtil.transformVelocity(newV, intakeCornerPose, Rotation2d.kZero)));
         System.out.println(k);
     }
+
+    @Test
+    public void testRotationError() {
+        System.out.println(Rotation2d.fromDegrees(60).minus(Rotation2d.fromDegrees(-300)).getDegrees());
+    }
 }

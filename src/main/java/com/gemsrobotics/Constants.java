@@ -81,7 +81,7 @@ public final class Constants {
 //    public static final Transform3d LIMELIGHT_LAUNCHER_TRANSFORM = new Transform3d(
 //            new Translation3d(Inches.of(-11.14), Inches.of(0.0), Inches.of(28.97)),
 //            new Rotation3d(Degrees.of(0.0), Degrees.of(10.0), Degrees.of(0.0)));
-    // we flipped the shooter lol
+    // we flipped the launcher lol
     public static final Transform3d LIMELIGHT_LAUNCHER_TRANSFORM = new Transform3d(
             new Translation3d(Inches.of(-2.96), Inches.of(0.25), Inches.of(28.151)),
             new Rotation3d(Degrees.of(0.0), Degrees.of(10), Degrees.of(-180.0)));

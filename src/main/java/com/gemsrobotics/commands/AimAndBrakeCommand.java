@@ -37,6 +37,7 @@ public final class AimAndBrakeCommand extends Command {
         m_velocityY = velocityY;
 
         m_turnRequest = CommandSwerveDrivetrain.makeAimingRequest();
+        m_turnRequest.HeadingController.setTolerance(Math.toRadians(1.0));
         m_idleRequest = new SwerveRequest.Idle();
         m_brakeRequest = new  SwerveRequest.SwerveDriveBrake();
         m_brakeRequest.SteerRequestType = SwerveModule.SteerRequestType.MotionMagicExpo;
@@ -70,15 +71,10 @@ public final class AimAndBrakeCommand extends Command {
         final Optional<Rotation2d> maybeAngleToGoal = getAngleToGoal();
         if (maybeAngleToGoal.isPresent()) {
             final Rotation2d angleToHub = maybeAngleToGoal.get();
-            // TODO
-//            if (m_toleranceDegrees == 0.0 || abs(angleToHub.getDegrees()) > m_toleranceDegrees) {
-                m_swerve.setControl(m_turnRequest
-                        .withVelocityX(m_velocityX.getAsDouble())
-                        .withVelocityY(m_velocityY.getAsDouble())
-                        .withTargetDirection(angleToHub));
-//            } else {
-//                m_swerve.setControl(m_brakeRequest);
-//            }
+            m_swerve.setControl(m_turnRequest
+                    .withVelocityX(m_velocityX.getAsDouble())
+                    .withVelocityY(m_velocityY.getAsDouble())
+                    .withTargetDirection(angleToHub));
         } else {
             m_swerve.setControl(m_idleRequest);
         }

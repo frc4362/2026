@@ -110,7 +110,7 @@ public final class RobotContainer {
         m_superstructure = new Superstructure(
                 m_swerve,
                 new Launcher(makeLowerWheel(LAUNCHER_LOWER_EAST, InvertedValue.Clockwise_Positive, "launcher_east"),
-                        makeUpperWheel(LAUNCHER_UPPER_EAST, InvertedValue.Clockwise_Positive, "launcher_east")),
+                        makeUpperWheelLoose(LAUNCHER_UPPER_EAST, InvertedValue.Clockwise_Positive, "launcher_east")),
                 new Launcher(makeLowerWheel(LAUNCHER_LOWER_WEST, InvertedValue.CounterClockwise_Positive, "launcher_west"),
                         makeUpperWheel(LAUNCHER_UPPER_WEST, InvertedValue.CounterClockwise_Positive, "launcher_west")),
                 new Hopper(m_signalManager, new TalonFX(SINGULATOR_WEST, kAUX_BUS), new TalonFX(SINGULATOR_EAST, kAUX_BUS)),
@@ -209,6 +209,26 @@ public final class RobotContainer {
         cfg.Feedback.SensorToMechanismRatio = 1.0 / 2.5;
         cfg.Slot0.kP = 6.0;
         cfg.Slot0.kS = 23.0;
+        cfg.Slot0.kA = 1.0;
+        cfg.MotionMagic.MotionMagicAcceleration = 1000;
+        cfg.MotorOutput.Inverted = invert;
+        motor.getConfigurator().apply(cfg);
+        return new Flywheel(
+                NetworkTableInstance.getDefault().getTable(ntTable).getSubTable("upper_wheel"),
+                m_signalManager,
+                Inches.of(1.0),
+                motor
+        );
+    }
+
+    private Flywheel makeUpperWheelLoose(int talonId, InvertedValue invert, String ntTable) {
+        final TalonFX motor = new TalonFX(talonId, kAUX_BUS);
+        final TalonFXConfiguration cfg = new TalonFXConfiguration();
+        cfg.CurrentLimits.StatorCurrentLimitEnable = true;
+        cfg.CurrentLimits.StatorCurrentLimit = 100;
+        cfg.Feedback.SensorToMechanismRatio = 1.0 / 2.5;
+        cfg.Slot0.kP = 6.0;
+        cfg.Slot0.kS = 0.0;
         cfg.Slot0.kA = 1.0;
         cfg.MotionMagic.MotionMagicAcceleration = 1000;
         cfg.MotorOutput.Inverted = invert;

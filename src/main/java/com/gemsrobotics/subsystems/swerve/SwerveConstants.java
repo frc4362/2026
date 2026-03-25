@@ -39,7 +39,7 @@ public final class SwerveConstants {
     // When using closed-loop control, the drive motor uses the control
     // output type specified by SwerveModuleConstants.DriveMotorClosedLoopOutput
     private static final Slot0Configs driveGains = new Slot0Configs()
-        .withKP(15.0)
+        .withKP(10.0)
         .withKI(0)
         .withKD(0)
         .withKS(2.0)
@@ -86,12 +86,14 @@ public final class SwerveConstants {
 
     private static final double kDriveGearRatio = 5.67;
     private static final double kSteerGearRatio = 12.1;
+    private static final Distance kIdealWheelRadius = Inches.of(2.0);
     private static final Distance kWheelRadius = Inches.of(1.897);
+    private static final double kActualWheelRatio = kWheelRadius.in(Inches) / kIdealWheelRadius.in(Inches);
 
     // Theoretical free speed (m/s) at 12 V applied output;
     // This needs to be tuned to your individual robot
     public static final double WHEEL_MAX_RPS = RadiansPerSecond.of(DCMotor.getKrakenX60Foc(1).freeSpeedRadPerSec).in(RotationsPerSecond) / kDriveGearRatio;
-    public static final LinearVelocity kSpeedAt12Volts = MetersPerSecond.of(WHEEL_MAX_RPS * kWheelRadius.in(Meters) * 2 * Math.PI);
+    public static final LinearVelocity kSpeedAt12Volts = MetersPerSecond.of(WHEEL_MAX_RPS * kWheelRadius.in(Meters) * 2 * Math.PI * kActualWheelRatio);
 
     private static final boolean kInvertLeftSide = false;
     private static final boolean kInvertRightSide = true;

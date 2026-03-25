@@ -76,7 +76,7 @@ public final class PilotedDrive extends Command {
                 .withDriveRequestType(SwerveModule.DriveRequestType.OpenLoopVoltage)
                 .withEvading(false);
         m_maintainHeadingRequest = CommandSwerveDrivetrain.makeAimingRequest();
-        m_maintainHeadingRequest.MaxAbsRotationalRate = 1.25 * PI;
+//        m_maintainHeadingRequest.MaxAbsRotationalRate = 1.25 * PI;
         m_idleRequest = new SwerveRequest.Idle();
 
         m_maintainHeadingGoal = Optional.empty();
@@ -118,7 +118,6 @@ public final class PilotedDrive extends Command {
                 translationDirection = nearestPole;
             }
 
-            // TODO insert our calculated max speed here if we're intaking
             final Translation2dPlus targetVelocity = new Translation2dPlus(translationMagnitude * MAX_SPEED, translationDirection);
 
             if (m_isSnaking.getAsBoolean()) {
@@ -208,32 +207,32 @@ public final class PilotedDrive extends Command {
         // this is the final speeds experienced by the faster corner of the intake
         final ChassisSpeeds intakeCornerSpeeds = new ChassisSpeeds(vxIntake, vyIntake, desiredSpeeds.omegaRadiansPerSecond);
         // check if the velocity is outright allowed
-        if (spinInducedSpeed < MAX_ALLOWED_VELOCITY_INTAKING && desiredIntakeSpeed < MAX_ALLOWED_VELOCITY_INTAKING){
-            return desiredSpeeds;
-        // if a solution exists without compromising angular velocity, and is necessary
-        } else if (spinInducedSpeed <= MAX_ALLOWED_VELOCITY_INTAKING && desiredIntakeSpeed > MAX_ALLOWED_VELOCITY_INTAKING) {
-            // we need to find a scaled translation speed (vx', vy') = k * (vx, vy) such that:
-            // (k*vx + vxSpin)**2 + (k*vy + vySpin)**2 ≤ maxSpeed**2
-            // if we expand this, we are solving the following equation
-            // (vx**2 + vy**2)k**2 + 2(vx*vxSpin + vy*vySpin)k + (vxSpin**2 + vySpin**2 - maxSpeed**2) <= 0
-            final double a = vxIntake * vxIntake + vyIntake * vyIntake;
-            final double b = 2 * (vxIntake * vxSpin + vyIntake * vySpin);
-            final double c = vxSpin * vxSpin + vySpin * vySpin - MAX_ALLOWED_VELOCITY_INTAKING * MAX_ALLOWED_VELOCITY_INTAKING;
-            final double discriminant = b * b - 4 * a * c;
-            // if it is solvable, preserve our angular momentum and return with a slowed X and Y only
-            if (discriminant >= 0) {
-                final double k1 = (-b - sqrt(discriminant)) / (2 * a);
-                final double k2 = (-b + sqrt(discriminant)) / (2 * a);
-                final double k = max(k1, k2);
-                return new ChassisSpeeds(
-                        desiredSpeeds.vxMetersPerSecond * k,
-                        desiredSpeeds.vyMetersPerSecond * k,
-                        desiredSpeeds.omegaRadiansPerSecond);
-            }
-        }
-
-        SmartDashboard.putNumber("spin induced speed", spinInducedSpeed);
-        SmartDashboard.putNumber("desired intake speed", desiredIntakeSpeed);
+//        if (spinInducedSpeed < MAX_ALLOWED_VELOCITY_INTAKING && desiredIntakeSpeed < MAX_ALLOWED_VELOCITY_INTAKING){
+//            return desiredSpeeds;
+//        // if a solution exists without compromising angular velocity, and is necessary
+//        } else if (spinInducedSpeed <= MAX_ALLOWED_VELOCITY_INTAKING && desiredIntakeSpeed > MAX_ALLOWED_VELOCITY_INTAKING) {
+//            // we need to find a scaled translation speed (vx', vy') = k * (vx, vy) such that:
+//            // (k*vx + vxSpin)**2 + (k*vy + vySpin)**2 ≤ maxSpeed**2
+//            // if we expand this, we are solving the following equation
+//            // (vx**2 + vy**2)k**2 + 2(vx*vxSpin + vy*vySpin)k + (vxSpin**2 + vySpin**2 - maxSpeed**2) <= 0
+//            final double a = vxIntake * vxIntake + vyIntake * vyIntake;
+//            final double b = 2 * (vxIntake * vxSpin + vyIntake * vySpin);
+//            final double c = vxSpin * vxSpin + vySpin * vySpin - MAX_ALLOWED_VELOCITY_INTAKING * MAX_ALLOWED_VELOCITY_INTAKING;
+//            final double discriminant = b * b - 4 * a * c;
+//            // if it is solvable, preserve our angular momentum and return with a slowed X and Y only
+//            if (discriminant >= 0) {
+//                final double k1 = (-b - sqrt(discriminant)) / (2 * a);
+//                final double k2 = (-b + sqrt(discriminant)) / (2 * a);
+//                final double k = max(k1, k2);
+//                return new ChassisSpeeds(
+//                        desiredSpeeds.vxMetersPerSecond * k,
+//                        desiredSpeeds.vyMetersPerSecond * k,
+//                        desiredSpeeds.omegaRadiansPerSecond);
+//            }
+//        }
+//
+//        SmartDashboard.putNumber("spin induced speed", spinInducedSpeed);
+//        SmartDashboard.putNumber("desired intake speed", desiredIntakeSpeed);
 
         if (spinInducedSpeed > MAX_ALLOWED_VELOCITY_INTAKING || desiredIntakeSpeed > MAX_ALLOWED_VELOCITY_INTAKING) {
             SmartDashboard.putBoolean("do limiting", true);

@@ -389,10 +389,11 @@ public final class CommandSwerveDrivetrain extends SwerveConstants.TunerSwerveDr
 
     public static FieldCentricFacingAngleWithIntakeLimiting makeAimingRequest() {
         final FieldCentricFacingAngleWithIntakeLimiting aimingRequest = new FieldCentricFacingAngleWithIntakeLimiting();
+        aimingRequest.DriveRequestType = SwerveModule.DriveRequestType.Velocity;
         aimingRequest.ForwardPerspective = SwerveRequest.ForwardPerspectiveValue.BlueAlliance;
         aimingRequest.SteerRequestType = SwerveModule.SteerRequestType.MotionMagicExpo;
 //        aimingRequest.HeadingController.setPID(12.0, 0.0, 0.7);
-        aimingRequest.HeadingController.setPID(7.0, 0.0, 0.0);
+        aimingRequest.HeadingController.setPID(9.0, 0.0, 0.0);
         return aimingRequest;
     }
 }
