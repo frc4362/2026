@@ -71,7 +71,9 @@ public final class Robot extends TimedRobot {
     }
 
     @Override
-    public void autonomousInit() {}
+    public void autonomousInit() {
+        FieldConstants.publishPoints();
+    }
 
     @Override
     public void autonomousPeriodic() {}

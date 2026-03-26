@@ -3,6 +3,8 @@ package com.gemsrobotics.lib;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.controls.CoastOut;
 import com.ctre.phoenix6.controls.MotionMagicVelocityTorqueCurrentFOC;
+import com.ctre.phoenix6.controls.TorqueCurrentFOC;
+import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
@@ -54,6 +56,7 @@ public class Flywheel {
 
     public void setAngularVelocity(double rps) {
         m_motorLeader.setControl(m_velocityRequest.withVelocity(rps));
+//        m_motorLeader.setControl(new VoltageOut(8.0).withEnableFOC(true));
     }
 
     public void setLinearVelocity(double mps) {

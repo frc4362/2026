@@ -32,8 +32,8 @@ public final class LaunchingCalculator {
 	private static final boolean DO_LINEAR_DRAG_COMPENSATION = true;
 	private static final double DRAG_CONSTANT_INVERSE_SECONDS = 0.1;
 	private static final double TOF_EPSILON = 0.001;
-	private static final double MIN_RANGE_METERS = 1.6;
-	private static final double MAX_RANGE_METERS = 5.5;
+	private static final double MIN_RANGE_METERS = 1.66;
+	private static final double MAX_RANGE_METERS = 4.05;
 
 	public record Parameters(
 			double timestamp,
@@ -73,27 +73,19 @@ public final class LaunchingCalculator {
 		RANGE_TO_TOF_MAP = new InterpolatingDoubleTreeMap();
 		RANGE_TO_TOF_MAP_FEEDING = new InterpolatingDoubleTreeMap();
 
-		RANGE_TO_HOOD_ANGLE.put(1.6, Rotation2d.fromDegrees(6));
-		RANGE_TO_HOOD_ANGLE.put(2.1, Rotation2d.fromDegrees(13));
-		RANGE_TO_HOOD_ANGLE.put(2.63, Rotation2d.fromDegrees(19.7));
-		RANGE_TO_HOOD_ANGLE.put(3.28, Rotation2d.fromDegrees(21.25));
-		RANGE_TO_HOOD_ANGLE.put(3.88, Rotation2d.fromDegrees(24.25));
-		RANGE_TO_HOOD_ANGLE.put(4.4, Rotation2d.fromDegrees(27));
-		RANGE_TO_HOOD_ANGLE.put(5.0, Rotation2d.fromDegrees(29));
-		RANGE_TO_HOOD_ANGLE.put(5.5, Rotation2d.fromDegrees(30));
+		RANGE_TO_HOOD_ANGLE.put(1.66, Rotation2d.fromDegrees(7.1));
+		RANGE_TO_HOOD_ANGLE.put(2.38, Rotation2d.fromDegrees(15.6));
+		RANGE_TO_HOOD_ANGLE.put(3.36, Rotation2d.fromDegrees(20.1));
+		RANGE_TO_HOOD_ANGLE.put(4.03, Rotation2d.fromDegrees(21.8));
 		RANGE_TO_HOOD_ANGLE_FEEDING.put(5.0, Rotation2d.fromDegrees(30.0));
 		RANGE_TO_HOOD_ANGLE_FEEDING.put(6.5, Rotation2d.fromDegrees(30.0));
 		RANGE_TO_HOOD_ANGLE_FEEDING.put(8.0, Rotation2d.fromDegrees(30.0));
 		RANGE_TO_HOOD_ANGLE_FEEDING.put(17.0, Rotation2d.fromDegrees(30.0));
 
-		RANGE_TO_WHEEL_RPS.put(1.6, 24.5);
-		RANGE_TO_WHEEL_RPS.put(2.1, 27.5);
-		RANGE_TO_WHEEL_RPS.put(2.63, 29.75);
-		RANGE_TO_WHEEL_RPS.put(3.28, 31.75);
-		RANGE_TO_WHEEL_RPS.put(3.88, 33.7);
-		RANGE_TO_WHEEL_RPS.put(4.4, 35.0);
-		RANGE_TO_WHEEL_RPS.put(5.0, 39.3);
-		RANGE_TO_WHEEL_RPS.put(5.5, 43.62);
+		RANGE_TO_WHEEL_RPS.put(1.66, 28.0);
+		RANGE_TO_WHEEL_RPS.put(2.38, 30.0);
+		RANGE_TO_WHEEL_RPS.put(3.13, 34.3);
+		RANGE_TO_WHEEL_RPS.put(4.03, 37.5);
 		RANGE_TO_WHEEL_RPS_FEEDING.put(5.0, 32.0);
 		RANGE_TO_WHEEL_RPS_FEEDING.put(6.5, 35.0);
 		RANGE_TO_WHEEL_RPS_FEEDING.put(8.0, 39.0);

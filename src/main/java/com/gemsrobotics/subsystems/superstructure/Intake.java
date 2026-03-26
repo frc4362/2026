@@ -27,7 +27,7 @@ import java.util.List;
 
 public final class Intake {
 //    private static final double INTAKE_STARTING_ROTATIONS = -0.43;
-    private static final double INTAKE_STARTING_ROTATIONS = -0.44;
+    private static final double INTAKE_STARTING_ROTATIONS = -0.4395;
     // Assumes the intake is retracted at 0 rotations and deploys in the positive direction
     private static final double INTAKE_STOWED_ROTATIONS = -0.31;
     private static final double INTAKE_FEEDING_ROTATIONS = -0.295;

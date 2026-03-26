@@ -28,6 +28,7 @@ import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import com.gemsrobotics.subsystems.swerve.CommandSwerveDrivetrain;
 import com.gemsrobotics.subsystems.swerve.SwerveConstants;
@@ -110,7 +111,7 @@ public final class RobotContainer {
         m_superstructure = new Superstructure(
                 m_swerve,
                 new Launcher(makeLowerWheel(LAUNCHER_LOWER_EAST, InvertedValue.Clockwise_Positive, "launcher_east"),
-                        makeUpperWheelLoose(LAUNCHER_UPPER_EAST, InvertedValue.Clockwise_Positive, "launcher_east")),
+                        makeUpperWheelDifferent(LAUNCHER_UPPER_EAST, InvertedValue.Clockwise_Positive, "launcher_east")),
                 new Launcher(makeLowerWheel(LAUNCHER_LOWER_WEST, InvertedValue.CounterClockwise_Positive, "launcher_west"),
                         makeUpperWheel(LAUNCHER_UPPER_WEST, InvertedValue.CounterClockwise_Positive, "launcher_west")),
                 new Hopper(m_signalManager, new TalonFX(SINGULATOR_WEST, kAUX_BUS), new TalonFX(SINGULATOR_EAST, kAUX_BUS)),
@@ -164,6 +165,8 @@ public final class RobotContainer {
         m_vision.update();
         m_launchCalculator.periodic();
 
+        SmartDashboard.putBoolean("bump cross ok?", FieldConstants.isReadyToCrossBump(m_robotState.getLatestFieldToVehicle().getValue()));
+
         m_visualizer.update(
                 m_robotState.getLatestFieldToVehicle().getValue(),
                 m_superstructure.getIntakeAngle(),
@@ -186,11 +189,14 @@ public final class RobotContainer {
         final TalonFXConfiguration cfg = new TalonFXConfiguration();
         cfg.CurrentLimits.StatorCurrentLimitEnable = true;
         cfg.CurrentLimits.StatorCurrentLimit = 100;
+        cfg.CurrentLimits.SupplyCurrentLimit = 70.0;
+        cfg.CurrentLimits.SupplyCurrentLimitEnable = true;
+        cfg.CurrentLimits.SupplyCurrentLowerLimit = 70.0;
         cfg.Feedback.SensorToMechanismRatio = 1.0;
         cfg.Slot0.kP = 10.0;
         cfg.Slot0.kS = 4.0;
         cfg.Slot0.kA = 2.0;
-        cfg.MotionMagic.MotionMagicAcceleration = 700;
+        cfg.MotionMagic.MotionMagicAcceleration = 1000;
         cfg.MotorOutput.Inverted = invert;
         motor.getConfigurator().apply(cfg);
         return new Flywheel(
@@ -209,7 +215,7 @@ public final class RobotContainer {
         cfg.Feedback.SensorToMechanismRatio = 1.0 / 2.5;
         cfg.Slot0.kP = 6.0;
         cfg.Slot0.kS = 23.0;
-        cfg.Slot0.kA = 1.0;
+        cfg.Slot0.kA = 0.0;
         cfg.MotionMagic.MotionMagicAcceleration = 1000;
         cfg.MotorOutput.Inverted = invert;
         motor.getConfigurator().apply(cfg);
@@ -221,15 +227,15 @@ public final class RobotContainer {
         );
     }
 
-    private Flywheel makeUpperWheelLoose(int talonId, InvertedValue invert, String ntTable) {
+    private Flywheel makeUpperWheelDifferent(int talonId, InvertedValue invert, String ntTable) {
         final TalonFX motor = new TalonFX(talonId, kAUX_BUS);
         final TalonFXConfiguration cfg = new TalonFXConfiguration();
         cfg.CurrentLimits.StatorCurrentLimitEnable = true;
         cfg.CurrentLimits.StatorCurrentLimit = 100;
         cfg.Feedback.SensorToMechanismRatio = 1.0 / 2.5;
-        cfg.Slot0.kP = 6.0;
-        cfg.Slot0.kS = 0.0;
-        cfg.Slot0.kA = 1.0;
+        cfg.Slot0.kP = 7.0;
+        cfg.Slot0.kS = 12.5;
+        cfg.Slot0.kA = 0.0;
         cfg.MotionMagic.MotionMagicAcceleration = 1000;
         cfg.MotorOutput.Inverted = invert;
         motor.getConfigurator().apply(cfg);
