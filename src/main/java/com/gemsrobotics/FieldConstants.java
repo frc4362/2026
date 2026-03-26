@@ -15,6 +15,7 @@ import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.units.measure.Distance;
 
 import java.util.List;
+import java.util.stream.Stream;
 
 import static edu.wpi.first.units.Units.Centimeters;
 import static edu.wpi.first.units.Units.Meters;
@@ -55,9 +56,16 @@ public class FieldConstants {
           LeftBump.center.plus(new Translation2d(BUMP_TO_BUMP_DISTANCE_M, 0.0)),
           RightBump.center,
           RightBump.center.plus(new Translation2d(BUMP_TO_BUMP_DISTANCE_M, 0.0)));
+  private static final Translation2d BUMP_TO_PRE_BUMP = new Translation2d((LeftBump.depth + ROBOT_LENGTH_M) / 2.0, 0.0);
+  private static final List<Translation2d> PRE_BUMPS = BUMPS.stream().flatMap(bump ->
+    Stream.of(bump.plus(BUMP_TO_PRE_BUMP), bump.minus(BUMP_TO_PRE_BUMP))).toList();
 
   public static Translation2d getClosestBump(final Translation2d vehicleTranslation) {
     return vehicleTranslation.nearest(BUMPS);
+  }
+
+  public static Translation2d getClosestPreBumpPosition(final Pose2d vehiclePose) {
+    return vehiclePose.getTranslation().nearest(PRE_BUMPS);
   }
 
   public static boolean isReadyToCrossBump(final Pose2d vehiclePose) {
@@ -68,7 +76,9 @@ public class FieldConstants {
       final double distanceOffBumpCenter = abs(bump.getY() - effectiveVehicleCenter.getY());
       // if your distance off center plus half your width is greater than half the size of the bump
       // you will hit a wall while crossing
-      return (distanceOffBumpCenter + effectiveVehicleWidth / 2.0) < (BUMP_WIDTH_M / 2.0);
+      final boolean yOk = (distanceOffBumpCenter + effectiveVehicleWidth / 2.0) < (BUMP_WIDTH_M / 2.0);
+      final boolean xOk = abs(effectiveVehicleCenter.getX() - bump.getX()) < (1.0 + LeftBump.depth);
+      return xOk && yOk;
   }
 
   public static void publishPoints() {
@@ -79,12 +89,7 @@ public class FieldConstants {
     NetworkTableInstance.getDefault().getTable("field_elements").getStructTopic("nearLeftCorner", Pose2d.struct).publish()
             .set(new Pose2d(LeftBump.nearLeftCorner, Rotation2d.kZero));
     NetworkTableInstance.getDefault().getTable("field_elements").getStructArrayTopic("bumps", Pose2d.struct).publish()
-            .set(new Pose2d[] {
-                    new Pose2d(LeftBump.center, Rotation2d.kZero),
-//                    new Pose2d(LeftBump.oppCenter, Rotation2d.kZero),
-                    new Pose2d(RightBump.center, Rotation2d.kZero),
-//                    new Pose2d(RightBump.oppCenter, Rotation2d.kZero)
-            });
+            .set(PRE_BUMPS.stream().map(t -> new Pose2d(t, Rotation2d.kZero)).toArray(Pose2d[]::new));
   }
 
   /**

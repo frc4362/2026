@@ -5,6 +5,9 @@
 package com.gemsrobotics;
 
 import choreo.auto.AutoChooser;
+import com.gemsrobotics.subsystems.swerve.SwerveConstants;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.networktables.*;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.TimedRobot;
@@ -14,6 +17,11 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
+import frc.robot.lib.BLine.Path;
+
+import java.lang.reflect.Field;
+
+import static edu.wpi.first.units.Units.MetersPerSecond;
 
 public final class Robot extends TimedRobot {
     private final RobotContainer m_robotContainer;
@@ -22,6 +30,7 @@ public final class Robot extends TimedRobot {
     private final NetworkTable m_table;
     private final BooleanPublisher m_twoTagsPublisher;
     private final DoublePublisher m_loopFrequencyPublisher;
+    private final StructPublisher<Pose2d> m_testBumpPosePublisher;
 
     private double m_timestamp;
     private Command m_autonomousCommand;
@@ -36,6 +45,7 @@ public final class Robot extends TimedRobot {
         m_table = NetworkTableInstance.getDefault().getTable("robot");
         m_twoTagsPublisher = m_table.getBooleanTopic("two_tags").publish();
         m_loopFrequencyPublisher = m_table.getDoubleTopic("hz").publish();
+        m_testBumpPosePublisher = m_table.getStructTopic("closest pre-bump pose", Pose2d.struct).publish();
 
         SmartDashboard.putData("AutoChooser", m_autoChooser);
         RobotModeTriggers.autonomous().whileTrue(m_autoChooser.selectedCommandScheduler().withName("Auto Scheduler"));
@@ -51,6 +61,8 @@ public final class Robot extends TimedRobot {
         m_robotContainer.periodic();
         CommandScheduler.getInstance().run();
 
+        final var currentPose = m_robotContainer.getRobotState().getLatestFieldToVehicle().getValue();
+        m_testBumpPosePublisher.set(new Pose2d(FieldConstants.getClosestPreBumpPosition(currentPose), currentPose.getRotation()));
         m_twoTagsPublisher.set(m_robotContainer.getRobotState().getLastVisionPoseEstimate().tagCount() > 1);
 
         final double newTimestamp = Timer.getTimestamp();

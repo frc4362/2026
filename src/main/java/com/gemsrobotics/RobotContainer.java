@@ -23,6 +23,7 @@ import com.gemsrobotics.vision.Vision;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.util.Units;
@@ -138,10 +139,10 @@ public final class RobotContainer {
                 () -> -m_pilot.getLeftX()));
         m_pilot.rightTrigger().onFalse(m_superstructure.applyWantedState(Superstructure.SystemState.IDLE));
 
-//        m_pilot.y().onTrue(SuperstructureCommands.driveOverBump(m_swerve).andThen(m_swerve.runOnce(() -> m_swerve.setControl(new SwerveRequest.Idle()))));
-
-        m_pilot.povRight().whileTrue(m_swerve.applyRequest(() -> {
-            return new SwerveRequest.FieldCentric().withVelocityY(-2.75);
+        m_pilot.povRight().whileTrue(m_swerve.defer(() -> {
+            final Pose2d startingPose = m_robotState.getLatestFieldToVehicle().getValue();
+            final Translation2d endingTranslation = FieldConstants.getClosestPreBumpPosition(startingPose);
+            return SuperstructureCommands.blineToPoint(m_swerve, new Pose2d(endingTranslation, startingPose.getRotation()));
         }));
 
         m_doEarlyAgitationTrigger = new Trigger(DriverStation::isAutonomous).or(m_copilot.a());

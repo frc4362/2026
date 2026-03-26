@@ -6,7 +6,7 @@ import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 
-public class GeometryUtil {
+public final class GeometryUtil {
 	public static ChassisSpeeds fieldSpeeds(final SwerveDrivetrain.SwerveDriveState state) {
 		final var newSpeeds = new Translation2d(state.Speeds.vxMetersPerSecond, state.Speeds.vyMetersPerSecond)
 				.rotateBy(state.Pose.getRotation());

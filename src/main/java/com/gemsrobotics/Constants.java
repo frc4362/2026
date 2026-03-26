@@ -13,6 +13,7 @@ import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.Mass;
+import frc.robot.lib.BLine.Path;
 
 import static edu.wpi.first.units.Units.*;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
@@ -41,6 +42,7 @@ public final class Constants {
 
   public static final double MAX_SPEED = SwerveConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
   public static final double MAX_ANGULAR_RATE = RotationsPerSecond.of(1.0).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
+  public static final double MAX_ACCELERATION = MAX_SPEED * 0.75;
   public static final Mass ROBOT_WEIGHT = Pounds.of(115.0 + 20.0 + 13.0);
   public static final Distance BALL_RADIUS = Inches.of(5.91).div(2.0);
   public static final Distance ROBOT_TO_LAUNCHER_WEST_Y = Inches.of(4.77).plus(Inches.of(1.5));

@@ -2,21 +2,24 @@ package com.gemsrobotics.commands;
 
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.gemsrobotics.FieldConstants;
+import com.gemsrobotics.Robot;
+import com.gemsrobotics.RobotState;
 import com.gemsrobotics.launching.LaunchingCalculator;
 import com.gemsrobotics.subsystems.superstructure.Superstructure;
 import com.gemsrobotics.subsystems.swerve.CommandSwerveDrivetrain;
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj2.command.*;
+import frc.robot.lib.BLine.Path;
 
 import java.util.Optional;
-import java.util.Set;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
 import static com.gemsrobotics.Constants.LAUNCH_TIME_BEFORE_ACTIVE;
 import static java.lang.Math.abs;
+import static java.lang.Math.signum;
 
 public class SuperstructureCommands {
 	private static final double DISTANCE_TO_NEUTRAL_ZONE = FieldConstants.LinesVertical.neutralZoneNear;
@@ -55,21 +58,67 @@ public class SuperstructureCommands {
 				));
 	}
 
+	public static Command blineToPoint(final CommandSwerveDrivetrain swerve, final Pose2d endingPose) {
+		final Path pathToPoint = new Path(new Path.Waypoint(endingPose));
+		return swerve.getTeleopBlineBuilder().build(pathToPoint);
+	}
+
+	public static Command lineUpForBump(final RobotState robotState, final CommandSwerveDrivetrain swerve) {
+		return swerve.defer(() -> {
+			final Pose2d startingPose = robotState.getLatestFieldToVehicle().getValue();
+			final Translation2d endingTranslation = FieldConstants.getClosestPreBumpPosition(startingPose);
+			return blineToPoint(swerve, new Pose2d(endingTranslation, startingPose.getRotation()));
+		});
+	}
+
+	public static Command findAndDriveOverBump(final RobotState robotState, final CommandSwerveDrivetrain swerve) {
+		return Commands.sequence(
+				lineUpForBump(robotState, swerve).onlyIf(() -> !FieldConstants.isReadyToCrossBump(robotState.getLatestFieldToVehicle().getValue())),
+				driveOverBump(robotState, swerve));
+	}
+
+	private static final double BUMP_CROSS_VELOCITY = 3.0;
+
 	// please note this does not stop the drive train
 	// rotation3d is in Roll Pitch Yaw
-	public static Command driveOverBump(final CommandSwerveDrivetrain swerve) {
+	public static Command driveOverBump(final RobotState robotState, final CommandSwerveDrivetrain swerve) {
 		final SwerveRequest.FieldCentricFacingAngle request = CommandSwerveDrivetrain.makeAimingRequest();
-		return Commands.sequence(
-				swerve.runOnce(() -> {
-					final Rotation2d startingHeading = swerve.getState().Pose.getRotation();
-					final double velocity = 3.0 * (DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == DriverStation.Alliance.Red ? -1.0 : 1.0);
-					swerve.setControl(request
-							.withVelocityX(velocity)
-							.withVelocityY(0.0)
-							.withTargetDirection(startingHeading));
-				}),
-				new WaitCommand(1.55)
-		);
+		if (Robot.isReal()) {
+			return Commands.sequence(swerve.runOnce(() -> {
+						final Pose2d startingPose = robotState.getLatestFieldToVehicle().getValue();
+						final Translation2d bumpTarget = FieldConstants.getClosestBump(startingPose.getTranslation());
+						final double direction = signum(bumpTarget.getX() - startingPose.getX());
+						swerve.setControl(request
+								.withVelocityX(BUMP_CROSS_VELOCITY * direction)
+								.withVelocityY(0.0)
+								.withTargetDirection(startingPose.getRotation()));
+					}),
+					new WaitUntilCommand(() -> swerve.getTilt().getDegrees() > 5.0),
+					new WaitUntilCommand(() -> swerve.getTilt().getDegrees() < 2.0));
+		} else {
+			return Commands.sequence(swerve.runOnce(() -> {
+				final Pose2d startingPose = robotState.getLatestFieldToVehicle().getValue();
+				final Translation2d bumpTarget = FieldConstants.getClosestBump(startingPose.getTranslation());
+				final double direction = signum(bumpTarget.getX() - startingPose.getX());
+				swerve.setControl(request
+						.withVelocityX(BUMP_CROSS_VELOCITY * direction)
+						.withVelocityY(0.0)
+						.withTargetDirection(startingPose.getRotation()));
+			}),
+			new WaitCommand(1.0));
+		}
+
+//		return Commands.sequence(
+//				swerve.runOnce(() -> {
+//					final Rotation2d startingHeading = swerve.getState().Pose.getRotation();
+//					final double velocity = 3.0 * (DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == DriverStation.Alliance.Red ? -1.0 : 1.0);
+//					swerve.setControl(request
+//							.withVelocityX(velocity)
+//							.withVelocityY(0.0)
+//							.withTargetDirection(startingHeading));
+//				}),
+//				new WaitCommand(1.55)
+//		);
 
 //		return Commands.sequence(
 //				swerve.runOnce(() -> {
