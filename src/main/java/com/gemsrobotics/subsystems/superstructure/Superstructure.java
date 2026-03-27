@@ -164,9 +164,9 @@ public final class Superstructure extends SubsystemBase {
     }
 
     public SystemState handleIdle() {
-//        if (DriverStation.isDisabled() && m_robotState.getLastVisionPoseEstimate().tagCount() > 1) {
-//            m_orchestra.play();
-//        }
+        if (DriverStation.isDisabled() && m_robotState.getLastVisionPoseEstimate().tagCount() > 1) {
+            m_orchestra.play();
+        }
 
         if (m_retractIntake) {
             m_intake.setRetract();
