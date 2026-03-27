@@ -39,8 +39,8 @@ public final class Autos {
         m_swerve = m_robot.getSwerve();
 
         m_autoChooser = new AutoChooser();
-        m_autoChooser.addRoutine("Bline Right Skip Bump", this::blineAuto_RightSkipBump);
-        m_autoChooser.addRoutine("Bline Right Skip Bump p2 test", this::blineAuto_RightSkipBump2);
+        m_autoChooser.addRoutine("Bline Right Auto", () -> blineAuto_RightSkipBump(false));
+        m_autoChooser.addRoutine("Bline Left Auto", () -> blineAuto_RightSkipBump(true));
 //        m_autoChooser.addRoutine("Left Auto", this::leftShoot);
 //        m_autoChooser.addRoutine("Left Auto Hot", this::leftHotAuto);
 //        m_autoChooser.addRoutine("Left Auto Skip Bump", this::leftSkipBump);
@@ -178,12 +178,17 @@ public final class Autos {
 //        return routine;
 //    }
 
-    public AutoRoutine blineAuto_RightSkipBump() {
-        final AutoRoutine routine = m_autoFactory.newRoutine("Bline Bump Auto");
+    public AutoRoutine blineAuto_RightSkipBump(final boolean isLeft) {
+        final AutoRoutine routine = m_autoFactory.newRoutine("Bline Bump Auto " + (isLeft ? "Left" : "Right"));
 
         final Path skipBumpPath = new Path("right_skip_bump");
-        final Command followCommand = m_swerve.getAutoBlineBuilder().build(skipBumpPath);
         final Path skipBumpPath2 = new Path("right_bump_p2");
+        if (isLeft) {
+            skipBumpPath.mirror();
+            skipBumpPath2.mirror();
+        }
+
+        final Command followCommand = m_swerve.getAutoBlineBuilder().build(skipBumpPath);
         final Command followCommand2 = m_swerve.getAutoBlineBuilder().build(skipBumpPath2);
 
         routine.active().onTrue(Commands.sequence(
@@ -204,27 +209,6 @@ public final class Autos {
                 m_swerve.runOnce(() -> m_swerve.setControl(new SwerveRequest.Idle())),
                 SuperstructureCommands.makeLaunchCommand(m_swerve, m_superstructure, m_robot.getLaunchCalculator()).withTimeout(5.0),
                 m_superstructure.setWantedState(Superstructure.SystemState.IDLE)));
-
-        return routine;
-    }
-
-    public AutoRoutine blineAuto_RightSkipBump2() {
-        final AutoRoutine routine = m_autoFactory.newRoutine("Bline Bump Auto 2 Test");
-
-        final Path skipBumpPath2 = new Path("right_bump_p2");
-        final Command followCommand2 = m_swerve.getAutoBlineBuilder().build(skipBumpPath2);
-
-        routine.active().onTrue(Commands.sequence(
-                SuperstructureCommands.findAndDriveOverBump(m_robotState, m_swerve),
-                m_superstructure.setWantedState(Superstructure.SystemState.INTAKING),
-                new ParallelDeadlineGroup(
-                        new WaitCommand(3.5).andThen(new WaitUntilCommand(() -> FieldConstants.isReadyToCrossBump(m_robotState.getLatestFieldToVehicle().getValue()))),
-                        followCommand2),
-                SuperstructureCommands.findAndDriveOverBump(m_robotState, m_swerve),
-                m_swerve.runOnce(() -> m_swerve.setControl(new SwerveRequest.Idle())),
-                SuperstructureCommands.makeLaunchCommand(m_swerve, m_superstructure, m_robot.getLaunchCalculator()).withTimeout(5.0),
-                m_superstructure.setWantedState(Superstructure.SystemState.IDLE))
-        );
 
         return routine;
     }
