@@ -153,8 +153,8 @@ public final class CommandSwerveDrivetrain extends SwerveConstants.TunerSwerveDr
                 () -> getState().Speeds,
                 this::setRobotSpeeds,
                 makePController(5.0),
-                makePController(3.0),
-                makePController(2.5)
+                makePController(4.0),
+                makePController(3.0)
         ).withDefaultShouldFlip();
         m_teleopPathBuilder = new FollowPath.Builder(
                 this,
@@ -162,8 +162,8 @@ public final class CommandSwerveDrivetrain extends SwerveConstants.TunerSwerveDr
                 () -> getState().Speeds,
                 this::setRobotSpeeds,
                 makePController(5.0),
-                makePController(3.0),
-                makePController(2.5)
+                makePController(4.0),
+                makePController(3.0)
         );
 
         Path.setDefaultGlobalConstraints(new Path.DefaultGlobalConstraints(
