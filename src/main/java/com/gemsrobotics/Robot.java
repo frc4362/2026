@@ -5,6 +5,7 @@
 package com.gemsrobotics;
 
 import choreo.auto.AutoChooser;
+import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.gemsrobotics.subsystems.swerve.SwerveConstants;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -19,10 +20,6 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import frc.robot.lib.BLine.Path;
 
-import java.lang.reflect.Field;
-
-import static edu.wpi.first.units.Units.MetersPerSecond;
-
 public final class Robot extends TimedRobot {
     private final RobotContainer m_robotContainer;
     private final MatchStateScheduler m_matchStateScheduler;
@@ -33,7 +30,6 @@ public final class Robot extends TimedRobot {
     private final StructPublisher<Pose2d> m_testBumpPosePublisher;
 
     private double m_timestamp;
-    private Command m_autonomousCommand;
 
     public Robot() {
         m_matchStateScheduler = new MatchStateScheduler();
@@ -50,7 +46,6 @@ public final class Robot extends TimedRobot {
         SmartDashboard.putData("AutoChooser", m_autoChooser);
         RobotModeTriggers.autonomous().whileTrue(m_autoChooser.selectedCommandScheduler().withName("Auto Scheduler"));
 
-        m_autonomousCommand = Commands.none();
         m_timestamp = Timer.getTimestamp();
     }
 
@@ -92,8 +87,9 @@ public final class Robot extends TimedRobot {
 
     @Override
     public void teleopInit() {
-        if (m_autonomousCommand != null) {
-            m_autonomousCommand.cancel();
+        if (m_autoChooser.selectedCommandScheduler().isScheduled()) {
+            m_autoChooser.selectedCommandScheduler().cancel();
+            m_robotContainer.getSwerve().setControl(new SwerveRequest.Idle());
         }
     }
 

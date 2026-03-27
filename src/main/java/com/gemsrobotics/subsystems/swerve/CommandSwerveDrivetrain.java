@@ -36,6 +36,7 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotController;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
@@ -50,8 +51,6 @@ import frc.robot.lib.BLine.Path;
  * https://v6.docs.ctr-electronics.com/en/stable/docs/tuner/tuner-swerve/index.html
  */
 public final class CommandSwerveDrivetrain extends SwerveConstants.TunerSwerveDrivetrain implements Subsystem {
-    private static final Pose3d ROBOT_NORMAL = new Pose3d(0.0, 0.0, 1.0, new Rotation3d());
-
     private static final double kSimLoopPeriod = 0.004; // 4 ms
     private Notifier m_simNotifier = null;
     private double m_lastSimTime;
@@ -72,6 +71,8 @@ public final class CommandSwerveDrivetrain extends SwerveConstants.TunerSwerveDr
     private final DoubleArrayPublisher m_intakeCornersSpeedsPublisher;
     private final StructPublisher<Pose2d> m_goalPosePublisher;
     private final StructPublisher<Rotation2d> m_tiltPublisher;
+    private final StructPublisher<Rotation3d> m_rotation3dPublisher;
+    private final StructPublisher<Pose3d> m_robotNormal;
 
     //region SysId
     /* Swerve requests to apply during SysId characterization */
@@ -82,6 +83,10 @@ public final class CommandSwerveDrivetrain extends SwerveConstants.TunerSwerveDr
     private final FollowPath.Builder m_autoPathBuilder, m_teleopPathBuilder;
     private final RobotState m_robotState;
     private final StatusSignal<AngularVelocity> m_yawVelocity;
+
+    private PIDController makePController(final double P) {
+        return new PIDController(P, 0.0, 0.0);
+    }
 
     /**
      * Constructs a CTRE SwerveDrivetrain using the specified constants.
@@ -147,18 +152,18 @@ public final class CommandSwerveDrivetrain extends SwerveConstants.TunerSwerveDr
                 () -> getState().Pose,
                 () -> getState().Speeds,
                 this::setRobotSpeeds,
-                new PIDController(3.0, 0.0, 0.0),
-                new PIDController(2.0, 0.0, 0.0),
-                new PIDController(2.0, 0.0, 0.0)
+                makePController(5.0),
+                makePController(3.0),
+                makePController(2.5)
         ).withDefaultShouldFlip();
         m_teleopPathBuilder = new FollowPath.Builder(
                 this,
                 () -> getState().Pose,
                 () -> getState().Speeds,
                 this::setRobotSpeeds,
-                new PIDController(3.0, 0.0, 0.0),
-                new PIDController(2.0, 0.0, 0.0),
-                new PIDController(2.0, 0.0, 0.0)
+                makePController(5.0),
+                makePController(3.0),
+                makePController(2.5)
         );
 
         Path.setDefaultGlobalConstraints(new Path.DefaultGlobalConstraints(
@@ -171,6 +176,8 @@ public final class CommandSwerveDrivetrain extends SwerveConstants.TunerSwerveDr
                 0.3
         ));
 
+        m_rotation3dPublisher = stateTable.getStructTopic("rotation3d", Rotation3d.struct).publish();
+        m_robotNormal = stateTable.getStructTopic("robot_normal", Pose3d.struct).publish();
         m_intakeCornersSpeedsPublisher = stateTable.getDoubleArrayTopic("intake_corner_speeds").publish();
         m_tiltPublisher = stateTable.getStructTopic("tilt", Rotation2d.struct).publish();
         m_goalPosePublisher = stateTable.getStructTopic("tracking_pose", Pose2d.struct).publish();
@@ -254,6 +261,7 @@ public final class CommandSwerveDrivetrain extends SwerveConstants.TunerSwerveDr
                 GeometryUtil.magnitude(GeometryUtil.transformVelocity(myState.Speeds, Constants.INTAKE_CORNER_NW, myState.Pose.getRotation()))
         });
         m_tiltPublisher.set(getTilt());
+        m_rotation3dPublisher.set(getRotation3d());
 
         /*
          * Periodically try to apply the operator perspective.
@@ -293,13 +301,18 @@ public final class CommandSwerveDrivetrain extends SwerveConstants.TunerSwerveDr
         return m_yawVelocity.getValue();
     }
 
+    private static final Translation3d ROBOT_NORMAL = new Translation3d(0.0, 0.0, 1.0);
+
     /**
      * @return the unsigned 3d-tilt of the robot, combining yaw, pitch, and roll
      */
     public Rotation2d getTilt() {
-        final Pose3d currentNormal = ROBOT_NORMAL.transformBy(new Transform3d(new Translation3d(), getRotation3d()));
-        final Pose3d unitNormal = currentNormal.times(1.0 / currentNormal.getTranslation().getNorm());
-        return Rotation2d.fromRadians(acos(unitNormal.getZ()));
+        final Translation3d currentNormal = ROBOT_NORMAL.rotateBy(getRotation3d());
+        return Rotation2d.fromRadians(acos(currentNormal.getZ()));
+    }
+
+    public boolean isFlat() {
+        return abs(getTilt().getDegrees() - 90) < 3.0;
     }
 
     /**

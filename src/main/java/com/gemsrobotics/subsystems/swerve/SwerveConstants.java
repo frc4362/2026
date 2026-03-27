@@ -78,7 +78,11 @@ public final class SwerveConstants {
         );
     private static final CANcoderConfiguration encoderInitialConfigs = new CANcoderConfiguration();
     // Configs for the Pigeon 2; leave this null to skip applying Pigeon 2 configs
-    private static final Pigeon2Configuration pigeonConfigs = null;
+    private static final Pigeon2Configuration pigeonConfigs = new Pigeon2Configuration()
+            .withMountPose(new MountPoseConfigs()
+                    .withMountPoseYaw(-180)
+                    .withMountPosePitch(-88.875)
+                    .withMountPoseRoll(-38.65));
 
     // Every 1 rotation of the azimuth results in kCoupleRatio drive motor turns;
     // This may need to be tuned to your individual robot

@@ -139,11 +139,7 @@ public final class RobotContainer {
                 () -> -m_pilot.getLeftX()));
         m_pilot.rightTrigger().onFalse(m_superstructure.applyWantedState(Superstructure.SystemState.IDLE));
 
-        m_pilot.povRight().whileTrue(m_swerve.defer(() -> {
-            final Pose2d startingPose = m_robotState.getLatestFieldToVehicle().getValue();
-            final Translation2d endingTranslation = FieldConstants.getClosestPreBumpPosition(startingPose);
-            return SuperstructureCommands.blineToPoint(m_swerve, new Pose2d(endingTranslation, startingPose.getRotation()));
-        }));
+        m_pilot.povRight().whileTrue(SuperstructureCommands.driveOverBump(m_robotState, m_swerve).andThen(() -> m_swerve.setControl(new SwerveRequest.Idle())));
 
         m_doEarlyAgitationTrigger = new Trigger(DriverStation::isAutonomous).or(m_copilot.a());
         m_retractIntakeTrigger = m_copilot.y();
