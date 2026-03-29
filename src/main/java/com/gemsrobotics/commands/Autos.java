@@ -11,6 +11,8 @@ import com.gemsrobotics.RobotState;
 import com.gemsrobotics.subsystems.superstructure.Superstructure;
 import com.gemsrobotics.subsystems.swerve.CommandSwerveDrivetrain;
 import com.gemsrobotics.util.AllianceFlipUtil;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj2.command.*;
 import frc.robot.lib.BLine.FlippingUtil;
@@ -19,7 +21,6 @@ import frc.robot.lib.BLine.Path;
 import static java.lang.Math.abs;
 
 public final class Autos {
-
     private final RobotContainer m_robot;
     private final RobotState m_robotState;
     private final Superstructure m_superstructure;
@@ -40,7 +41,7 @@ public final class Autos {
 
         m_autoChooser = new AutoChooser();
         m_autoChooser.addRoutine("Bline Right Auto", () -> blineAuto_RightSkipBump(false));
-        m_autoChooser.addRoutine("Bline Left Auto", () -> blineAuto_RightSkipBump(true));
+        m_autoChooser.addRoutine("Bline Left Auto", this::blineAuto_Left);
 //        m_autoChooser.addRoutine("Left Auto", this::leftShoot);
 //        m_autoChooser.addRoutine("Left Auto Hot", this::leftHotAuto);
 //        m_autoChooser.addRoutine("Left Auto Skip Bump", this::leftSkipBump);
@@ -178,6 +179,43 @@ public final class Autos {
 //        return routine;
 //    }
 
+    private static final Pose2d LEFT_STARTING_POSE = new Pose2d(3.5344300270080566, 5.5548200607299805, Rotation2d.kZero);
+    public AutoRoutine blineAuto_Left() {
+        final AutoRoutine routine = m_autoFactory.newRoutine("Bline Special Bump Auto Left");
+
+        final Path skipBumpPath = new Path("left_bump_path");
+        final Path skipBumpPath2 = new Path("right_bump_p2");
+        skipBumpPath.mirror();
+        skipBumpPath2.mirror();
+        final Command followCommand = m_swerve.getAutoBlineBuilder().build(skipBumpPath);
+        final Command followCommand2 = m_swerve.getAutoBlineBuilder().build(skipBumpPath2);
+
+        routine.active().onTrue(Commands.sequence(
+                Commands.runOnce(() -> {
+                    final Pose2d flippedPose = AllianceFlipUtil.apply(LEFT_STARTING_POSE);
+                    m_swerve.resetPose(flippedPose);
+                }),
+                SuperstructureCommands.findAndDriveOverBump(m_robotState, m_swerve, 3.0, 0.05),
+                m_superstructure.setWantedState(Superstructure.SystemState.INTAKING),
+                new ParallelDeadlineGroup(
+                        new WaitCommand(2.5).andThen(new WaitUntilCommand(() -> FieldConstants.isReadyToCrossBump(m_robotState.getLatestFieldToVehicle().getValue()))),
+                        followCommand),
+                SuperstructureCommands.findAndDriveOverBump(m_robotState, m_swerve, 4.0, 0.1),
+                m_swerve.runOnce(() -> m_swerve.setControl(new SwerveRequest.Idle())),
+                SuperstructureCommands.makeLaunchCommand(m_swerve, m_superstructure, m_robot.getLaunchCalculator()).withTimeout(5.5),
+                m_superstructure.setWantedState(Superstructure.SystemState.INTAKING),
+                SuperstructureCommands.findAndDriveOverBump(m_robotState, m_swerve, 3.0, 0.05),
+                new ParallelDeadlineGroup(
+                        new WaitCommand(2.5).andThen(new WaitUntilCommand(() -> FieldConstants.isReadyToCrossBump(m_robotState.getLatestFieldToVehicle().getValue()))),
+                        followCommand2),
+                SuperstructureCommands.findAndDriveOverBump(m_robotState, m_swerve, 4.0, 0.1),
+                m_swerve.runOnce(() -> m_swerve.setControl(new SwerveRequest.Idle())),
+                SuperstructureCommands.makeLaunchCommand(m_swerve, m_superstructure, m_robot.getLaunchCalculator()).withTimeout(5.5),
+                m_superstructure.setWantedState(Superstructure.SystemState.IDLE)));
+
+        return routine;
+    }
+
     public AutoRoutine blineAuto_RightSkipBump(final boolean isLeft) {
         final AutoRoutine routine = m_autoFactory.newRoutine("Bline Bump Auto " + (isLeft ? "Left" : "Right"));
 
@@ -192,22 +230,26 @@ public final class Autos {
         final Command followCommand2 = m_swerve.getAutoBlineBuilder().build(skipBumpPath2);
 
         routine.active().onTrue(Commands.sequence(
-                SuperstructureCommands.findAndDriveOverBump(m_robotState, m_swerve),
+                // use the old cals, no balls in the robot
+                SuperstructureCommands.findAndDriveOverBump(m_robotState, m_swerve, 3.0, 0.05),
                 m_superstructure.setWantedState(Superstructure.SystemState.INTAKING),
                 new ParallelDeadlineGroup(
-                        new WaitCommand(3.5).andThen(new WaitUntilCommand(() -> FieldConstants.isReadyToCrossBump(m_robotState.getLatestFieldToVehicle().getValue()))),
+                        new WaitCommand(2.0).andThen(new WaitUntilCommand(() -> FieldConstants.isReadyToCrossBump(m_robotState.getLatestFieldToVehicle().getValue()))),
                         followCommand),
-                SuperstructureCommands.findAndDriveOverBump(m_robotState, m_swerve),
+                // drive back with balls
+                SuperstructureCommands.findAndDriveOverBump(m_robotState, m_swerve, 4.0, 0.05),
                 m_swerve.runOnce(() -> m_swerve.setControl(new SwerveRequest.Idle())),
                 SuperstructureCommands.makeLaunchCommand(m_swerve, m_superstructure, m_robot.getLaunchCalculator()).withTimeout(5.0),
                 m_superstructure.setWantedState(Superstructure.SystemState.INTAKING),
-                SuperstructureCommands.findAndDriveOverBump(m_robotState, m_swerve),
+                // use the old cals, no balls in the robot
+                SuperstructureCommands.findAndDriveOverBump(m_robotState, m_swerve, 3.0, 0.05),
                 new ParallelDeadlineGroup(
-                        new WaitCommand(3.5).andThen(new WaitUntilCommand(() -> FieldConstants.isReadyToCrossBump(m_robotState.getLatestFieldToVehicle().getValue()))),
+                        new WaitCommand(2.0).andThen(new WaitUntilCommand(() -> FieldConstants.isReadyToCrossBump(m_robotState.getLatestFieldToVehicle().getValue()))),
                         followCommand2),
-                SuperstructureCommands.findAndDriveOverBump(m_robotState, m_swerve),
+                // drive back with balls again
+                SuperstructureCommands.findAndDriveOverBump(m_robotState, m_swerve, 4.0, 0.05),
                 m_swerve.runOnce(() -> m_swerve.setControl(new SwerveRequest.Idle())),
-                SuperstructureCommands.makeLaunchCommand(m_swerve, m_superstructure, m_robot.getLaunchCalculator()).withTimeout(5.0),
+                SuperstructureCommands.makeLaunchCommand(m_swerve, m_superstructure, m_robot.getLaunchCalculator()).withTimeout(5.5),
                 m_superstructure.setWantedState(Superstructure.SystemState.IDLE)));
 
         return routine;

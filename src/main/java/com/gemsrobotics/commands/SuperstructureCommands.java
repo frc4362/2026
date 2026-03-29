@@ -11,6 +11,7 @@ import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.*;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.lib.BLine.Path;
@@ -42,8 +43,17 @@ public class SuperstructureCommands {
 			final DoubleSupplier velocityX,
 			final DoubleSupplier velocityY
 	) {
+		final DoubleSupplier myVelocityX = () -> velocityX.getAsDouble()
+				* (DriverStation.getAlliance().map(alliance -> alliance == DriverStation.Alliance.Red).orElse(false) ? -1.0 : 1.0);
+		final DoubleSupplier myVelocityY = () -> velocityY.getAsDouble()
+				* (DriverStation.getAlliance().map(alliance -> alliance == DriverStation.Alliance.Red).orElse(false) ? -1.0 : 1.0);
+
 		final Supplier<Optional<LaunchingCalculator.Parameters>> parametersSupplier = calculator::getLatestLaunchParameters;
-		final AimAndBrakeCommand aimingCommand = new AimAndBrakeCommand(swerve, () -> parametersSupplier.get().map(LaunchingCalculator.Parameters::vehicleRotation), velocityX, velocityY);
+		final AimAndBrakeCommand aimingCommand = new AimAndBrakeCommand(
+				swerve,
+				() -> parametersSupplier.get().map(LaunchingCalculator.Parameters::vehicleRotation),
+				myVelocityX,
+				myVelocityY);
 
 		return new SequentialCommandGroup(
 				new InstantCommand(() -> superstructure.setAllowedToLaunch(false)),
@@ -73,23 +83,30 @@ public class SuperstructureCommands {
 		});
 	}
 
-	public static Command findAndDriveOverBump(final RobotState robotState, final CommandSwerveDrivetrain swerve) {
+	public static Command findAndDriveOverBump(final RobotState robotState, final CommandSwerveDrivetrain swerve, final double velocity, final double duration) {
 		return Commands.sequence(
 				lineUpForBump(robotState, swerve).onlyIf(() -> !FieldConstants.isReadyToCrossBump(robotState.getLatestFieldToVehicle().getValue())),
-				driveOverBump(robotState, swerve));
+				driveOverBump(robotState, swerve, velocity, duration));
 	}
+
+//	public static Command findAndDriveOverBump(final RobotState robotState, final CommandSwerveDrivetrain swerve) {
+//		return findAndDriveOverBump(robotState, swerve, BUMP_CROSS_VELOCITY);
+//	}
 
 	private static final double BUMP_CROSS_VELOCITY = 3.0;
 
-	public static Command waitForBumpCross(final CommandSwerveDrivetrain swerve) {
+	public static final double LOW_DURATION = 0.05;
+	public static final double HIGH_DURATION = 0.1;
+
+	public static Command waitForBumpCross(final CommandSwerveDrivetrain swerve, final double duration) {
 		return Commands.sequence(
 				new WaitUntilCommand(() -> !swerve.isFlat()),
-				new WaitUntilCommand(new Trigger(swerve::isFlat).debounce(0.05, Debouncer.DebounceType.kRising)));
+				new WaitUntilCommand(new Trigger(swerve::isFlat).debounce(duration, Debouncer.DebounceType.kRising)));
 	}
 
 	// please note this does not stop the drive train
 	// rotation3d is in Roll Pitch Yaw
-	public static Command driveOverBump(final RobotState robotState, final CommandSwerveDrivetrain swerve) {
+	public static Command driveOverBump(final RobotState robotState, final CommandSwerveDrivetrain swerve, final double velocity, final double duration) {
 		final SwerveRequest.FieldCentricFacingAngle request = CommandSwerveDrivetrain.makeAimingRequest();
 		if (Robot.isReal()) {
 			return Commands.sequence(
@@ -98,24 +115,28 @@ public class SuperstructureCommands {
 					final Translation2d bumpTarget = FieldConstants.getClosestBump(startingPose.getTranslation());
 					final double direction = signum(bumpTarget.getX() - startingPose.getX());
 					swerve.setControl(request
-							.withVelocityX(BUMP_CROSS_VELOCITY * direction)
+							.withVelocityX(velocity * direction)
 							.withVelocityY(0.0)
 							.withTargetDirection(startingPose.getRotation()));
 				}),
-				waitForBumpCross(swerve));
+				waitForBumpCross(swerve, duration));
 		} else {
 			return Commands.sequence(swerve.runOnce(() -> {
 				final Pose2d startingPose = robotState.getLatestFieldToVehicle().getValue();
 				final Translation2d bumpTarget = FieldConstants.getClosestBump(startingPose.getTranslation());
 				final double direction = signum(bumpTarget.getX() - startingPose.getX());
 				swerve.setControl(request
-						.withVelocityX(BUMP_CROSS_VELOCITY * direction)
+						.withVelocityX(velocity * direction)
 						.withVelocityY(0.0)
 						.withTargetDirection(startingPose.getRotation()));
 			}),
 			new WaitCommand(1.0));
 		}
 	}
+
+//	public static Command driveOverBump(final RobotState robotState, final CommandSwerveDrivetrain swerve) {
+////		return driveOverBump(robotState, swerve, BUMP_CROSS_VELOCITY);
+//	}
 
 	// TODO
 	private Rotation2d calculateHeadingTolerance(final double distance) {

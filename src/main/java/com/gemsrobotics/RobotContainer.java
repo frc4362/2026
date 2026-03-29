@@ -50,7 +50,7 @@ public final class RobotContainer {
     private final LaunchingCalculator m_launchCalculator;
     private final Autos m_autos;
     private final ProjectileManager m_projectileManager;
-    private final Trigger m_doEarlyAgitationTrigger, m_retractIntakeTrigger;
+    private final Trigger m_doEarlyAgitationTrigger, m_retractIntakeTrigger, m_reversedRollingFloorTrigger;
 
     public RobotContainer(MatchStateScheduler matchStateScheduler) {
         m_signalManager = new StatusSignalManager();
@@ -59,6 +59,7 @@ public final class RobotContainer {
 
         final Trigger pilotIntakingTrigger = m_pilot.leftTrigger();
         final Trigger pilotSnakingTrigger = m_pilot.rightBumper();
+        m_reversedRollingFloorTrigger = new Trigger(() -> false);//m_copilot.x();
 
         m_matchStateScheduler = matchStateScheduler;
         m_visualizer = new RobotVisualizer();
@@ -139,7 +140,7 @@ public final class RobotContainer {
                 () -> -m_pilot.getLeftX()));
         m_pilot.rightTrigger().onFalse(m_superstructure.applyWantedState(Superstructure.SystemState.IDLE));
 
-        m_pilot.povRight().whileTrue(SuperstructureCommands.driveOverBump(m_robotState, m_swerve).andThen(() -> m_swerve.setControl(new SwerveRequest.Idle())));
+//        m_pilot.povRight().whileTrue(SuperstructureCommands.driveOverBump(m_robotState, m_swerve).andThen(() -> m_swerve.setControl(new SwerveRequest.Idle())));
 
         m_doEarlyAgitationTrigger = new Trigger(DriverStation::isAutonomous).or(m_copilot.a());
         m_retractIntakeTrigger = m_copilot.y();
@@ -159,6 +160,7 @@ public final class RobotContainer {
         m_signalManager.periodic();
         m_superstructure.setDoEarlyAgitation(m_doEarlyAgitationTrigger.getAsBoolean());
         m_superstructure.setRetractIntake(m_retractIntakeTrigger.getAsBoolean());
+        m_superstructure.setReversedRollingFloor(m_reversedRollingFloorTrigger.getAsBoolean());
         m_vision.update();
         m_launchCalculator.periodic();
 
@@ -195,6 +197,7 @@ public final class RobotContainer {
         cfg.Slot0.kA = 2.0;
         cfg.MotionMagic.MotionMagicAcceleration = 1000;
         cfg.MotorOutput.Inverted = invert;
+        cfg.TorqueCurrent.PeakReverseTorqueCurrent = 0.0;
         motor.getConfigurator().apply(cfg);
         return new Flywheel(
                 NetworkTableInstance.getDefault().getTable(ntTable).getSubTable("lower_wheel"),
@@ -215,6 +218,7 @@ public final class RobotContainer {
         cfg.Slot0.kA = 0.0;
         cfg.MotionMagic.MotionMagicAcceleration = 1000;
         cfg.MotorOutput.Inverted = invert;
+        cfg.TorqueCurrent.PeakReverseTorqueCurrent = 0.0;
         motor.getConfigurator().apply(cfg);
         return new Flywheel(
                 NetworkTableInstance.getDefault().getTable(ntTable).getSubTable("upper_wheel"),
@@ -235,6 +239,7 @@ public final class RobotContainer {
         cfg.Slot0.kA = 0.0;
         cfg.MotionMagic.MotionMagicAcceleration = 1000;
         cfg.MotorOutput.Inverted = invert;
+        cfg.TorqueCurrent.PeakReverseTorqueCurrent = 0.0;
         motor.getConfigurator().apply(cfg);
         return new Flywheel(
                 NetworkTableInstance.getDefault().getTable(ntTable).getSubTable("upper_wheel"),

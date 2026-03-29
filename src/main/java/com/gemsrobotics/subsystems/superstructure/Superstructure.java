@@ -32,7 +32,7 @@ public final class Superstructure extends SubsystemBase {
     }
 
     public static final boolean DO_INTAKE_AGITATION = true;
-    public static final double INTAKE_AGITATION_DELAY = 2.0;
+    public static final double INTAKE_AGITATION_DELAY = 1.5;
     public static final double INTAKE_AGITATION_FREQUENCY = 2;
     public static final double INTAKE_AGITATION_PHASE = 1.0 / INTAKE_AGITATION_FREQUENCY;
 
@@ -62,6 +62,7 @@ public final class Superstructure extends SubsystemBase {
     private boolean m_hasEverDeployedIntake;
     private boolean m_retractIntake;
     private boolean m_doEarlyAgitation;
+    private boolean m_doReversedRollingFloor;
 
     private TunedLaunchStrategy m_tunedLaunchStrategy;
 
@@ -76,7 +77,7 @@ public final class Superstructure extends SubsystemBase {
             final Hood hood,
             final Intake intake,
             final RobotState robotState
-            ) {
+    ) {
         m_swerve = swerve;
         m_launcherEast = launcherEast;
         m_launcherWest = launcherWest;
@@ -117,6 +118,7 @@ public final class Superstructure extends SubsystemBase {
 
         m_hasEverDeployedIntake = false;
         m_doEarlyAgitation = false;
+        m_doReversedRollingFloor = false;
     }
 
     @Override
@@ -225,8 +227,18 @@ public final class Superstructure extends SubsystemBase {
 
             m_intake.setFeedingHopper();
             m_uptake.setVoltage(11);
-            m_hopper.setVelocity(90);
+
+            if (m_doReversedRollingFloor) {
+                m_hopper.setVelocity(-45);
+            } else {
+                m_hopper.setVelocity(90);
+            }
+
             m_isSpunUp = true;
+        } else if (m_doReversedRollingFloor) {
+            m_hopper.setVelocity(-45);
+        } else {
+            m_hopper.setIdle();
         }
 
         return conformToWantedState();
@@ -353,5 +365,9 @@ public final class Superstructure extends SubsystemBase {
 
     public void setDoEarlyAgitation(final boolean doAgitation) {
         m_doEarlyAgitation = doAgitation;
+    }
+
+    public void setReversedRollingFloor(final boolean doReversedRollingFloor) {
+        m_doReversedRollingFloor = doReversedRollingFloor;
     }
 }

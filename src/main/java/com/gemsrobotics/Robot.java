@@ -6,6 +6,7 @@ package com.gemsrobotics;
 
 import choreo.auto.AutoChooser;
 import com.ctre.phoenix6.swerve.SwerveRequest;
+import com.gemsrobotics.subsystems.superstructure.Superstructure;
 import com.gemsrobotics.subsystems.swerve.SwerveConstants;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -90,6 +91,7 @@ public final class Robot extends TimedRobot {
         if (m_autoChooser.selectedCommandScheduler().isScheduled()) {
             m_autoChooser.selectedCommandScheduler().cancel();
             m_robotContainer.getSwerve().setControl(new SwerveRequest.Idle());
+            CommandScheduler.getInstance().schedule(m_robotContainer.getSuperstructure().setWantedState(Superstructure.SystemState.IDLE));
         }
     }
 

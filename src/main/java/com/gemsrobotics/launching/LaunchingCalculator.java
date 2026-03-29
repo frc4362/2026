@@ -84,11 +84,12 @@ public final class LaunchingCalculator {
 
 		RANGE_TO_WHEEL_RPS.put(1.66, 28.0);
 		RANGE_TO_WHEEL_RPS.put(2.38, 30.0);
-		RANGE_TO_WHEEL_RPS.put(3.13, 34.3);
+		RANGE_TO_WHEEL_RPS.put(3.13, 32.9);
+		RANGE_TO_WHEEL_RPS.put(3.8, 36.0);
 		RANGE_TO_WHEEL_RPS.put(4.03, 37.5);
-		RANGE_TO_WHEEL_RPS_FEEDING.put(5.0, 32.0);
-		RANGE_TO_WHEEL_RPS_FEEDING.put(6.5, 35.0);
-		RANGE_TO_WHEEL_RPS_FEEDING.put(8.0, 39.0);
+		RANGE_TO_WHEEL_RPS_FEEDING.put(5.0, 35.0);
+		RANGE_TO_WHEEL_RPS_FEEDING.put(6.5, 38.0);
+		RANGE_TO_WHEEL_RPS_FEEDING.put(8.0, 42.0);
 		RANGE_TO_WHEEL_RPS_FEEDING.put(17.0, 70.0);
 
 		RANGE_TO_TOF_MAP.put(1.6, 0.9);
@@ -198,7 +199,7 @@ public final class LaunchingCalculator {
 				target,
 				desiredRobotRotation,
 				getHoodAngle(lookaheadLauncherToTargetDistance, isFeeding),
-				getFlywheelVelocity(lookaheadLauncherToTargetDistance, isFeeding),
+				getFlywheelVelocity(lookaheadLauncherToTargetDistance, isFeeding) + 0.45,
 				lookaheadLauncherToTargetDistance,
 				startingLauncherToTargetDistance,
 				isFeeding);
