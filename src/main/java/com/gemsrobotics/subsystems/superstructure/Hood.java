@@ -57,10 +57,10 @@ public final class Hood {
         cfg.Audio.BeepOnConfig = false;
         cfg.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
         cfg.Feedback.SensorToMechanismRatio = GEARING;
-        cfg.Slot0.kP = 4000.0;
+        cfg.Slot0.kP = 5000.0;
         cfg.Slot0.kV = 0.0;
         cfg.Slot0.kD = 100.0;
-        cfg.Slot0.kS = 20.0;
+        cfg.Slot0.kS = 22.0;
         cfg.ClosedLoopRamps.TorqueClosedLoopRampPeriod = 0.02;
         cfg.TorqueCurrent.PeakForwardTorqueCurrent = 60.0;
         cfg.TorqueCurrent.PeakReverseTorqueCurrent = -60.0;

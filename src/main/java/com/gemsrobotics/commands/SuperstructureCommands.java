@@ -62,7 +62,9 @@ public class SuperstructureCommands {
 							parametersSupplier.get().ifPresent(parameters -> {
 								superstructure.setLauncherParameters(parameters);
 //								SmartDashboard.putNumber("turning error", aimingCommand.getErrorToGoal().isPresent() ? abs(aimingCommand.getErrorToGoal().get().getDegrees()) : 999.0);
-								final var headingOk = aimingCommand.getErrorToGoal().isPresent() && abs(aimingCommand.getErrorToGoal().get().getDegrees()) < LAUNCH_TOLERANCE.getDegrees();
+								final Rotation2d selectedLaunchTolerance = parameters.isFeeding() ? LAUNCH_TOLERANCE.times(3) : LAUNCH_TOLERANCE;
+								final boolean headingOk = aimingCommand.getErrorToGoal().isPresent()
+										&& abs(aimingCommand.getErrorToGoal().get().getDegrees()) < selectedLaunchTolerance.getDegrees();
 								final boolean activeOk = parameters.isFeeding() || (timeUntilActiveSupplier.getAsDouble() < LAUNCH_TIME_BEFORE_ACTIVE);
 								superstructure.setAllowedToLaunch(parameters.isValid() && superstructure.isReadyToLaunch() && headingOk && activeOk);
 							});

@@ -179,6 +179,10 @@ public final class Intake {
                 .withVelocity(15));
     }
 
+    public void setPushing() {
+        m_deployer.setControl(m_deployRequest.withPosition(-0.17).withVelocity(15));
+    }
+
     public void setFeedingHopper() {
         m_translationLeader.setControl(m_request.withVelocity(INTAKE_VELOCITY));
         m_translationFollower.setControl(m_request.withVelocity(INTAKE_VELOCITY));

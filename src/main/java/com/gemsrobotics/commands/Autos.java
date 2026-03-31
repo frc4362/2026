@@ -231,18 +231,19 @@ public final class Autos {
 
         routine.active().onTrue(Commands.sequence(
                 // use the old cals, no balls in the robot
-                SuperstructureCommands.findAndDriveOverBump(m_robotState, m_swerve, 3.0, 0.05),
-                m_superstructure.setWantedState(Superstructure.SystemState.INTAKING),
+                SuperstructureCommands.findAndDriveOverBump(m_robotState, m_swerve, 3.0, 0.05)
+                        .alongWith(new WaitCommand(0.5).andThen(m_superstructure.setWantedState(Superstructure.SystemState.INTAKING))),
+//                m_superstructure.setWantedState(Superstructure.SystemState.INTAKING),
                 new ParallelDeadlineGroup(
                         new WaitCommand(2.0).andThen(new WaitUntilCommand(() -> FieldConstants.isReadyToCrossBump(m_robotState.getLatestFieldToVehicle().getValue()))),
                         followCommand),
                 // drive back with balls
-                SuperstructureCommands.findAndDriveOverBump(m_robotState, m_swerve, 4.0, 0.05),
+                SuperstructureCommands.findAndDriveOverBump(m_robotState, m_swerve, 4.0, 0.06),
                 m_swerve.runOnce(() -> m_swerve.setControl(new SwerveRequest.Idle())),
-                SuperstructureCommands.makeLaunchCommand(m_swerve, m_superstructure, m_robot.getLaunchCalculator()).withTimeout(5.0),
+                SuperstructureCommands.makeLaunchCommand(m_swerve, m_superstructure, m_robot.getLaunchCalculator()).withTimeout(8.0),
                 m_superstructure.setWantedState(Superstructure.SystemState.INTAKING),
                 // use the old cals, no balls in the robot
-                SuperstructureCommands.findAndDriveOverBump(m_robotState, m_swerve, 3.0, 0.05),
+                SuperstructureCommands.findAndDriveOverBump(m_robotState, m_swerve, 4.0, 0.05),
                 new ParallelDeadlineGroup(
                         new WaitCommand(2.0).andThen(new WaitUntilCommand(() -> FieldConstants.isReadyToCrossBump(m_robotState.getLatestFieldToVehicle().getValue()))),
                         followCommand2),
