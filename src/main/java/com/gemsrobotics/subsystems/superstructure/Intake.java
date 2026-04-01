@@ -83,7 +83,7 @@ public final class Intake {
         cfgDep.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
         cfgDep.CurrentLimits.StatorCurrentLimit = 80;
         cfgDep.CurrentLimits.StatorCurrentLimitEnable = true;
-        cfgDep.CurrentLimits.SupplyCurrentLimit = 30;
+        cfgDep.CurrentLimits.SupplyCurrentLimit = 40;
         cfgDep.CurrentLimits.SupplyCurrentLimitEnable = true;
         cfgDep.Voltage.PeakForwardVoltage = 12;
         cfgDep.Voltage.PeakReverseVoltage = -12;
@@ -184,8 +184,8 @@ public final class Intake {
     }
 
     public void setFeedingHopper() {
-        m_translationLeader.setControl(m_request.withVelocity(INTAKE_VELOCITY));
-        m_translationFollower.setControl(m_request.withVelocity(INTAKE_VELOCITY));
+        m_translationLeader.setControl(m_request.withVelocity(INTAKE_VELOCITY / 2.0));
+        m_translationFollower.setControl(m_request.withVelocity(INTAKE_VELOCITY / 2.0));
     }
 
     public void setIntaking() {

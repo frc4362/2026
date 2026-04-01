@@ -26,9 +26,7 @@ public final class Superstructure extends SubsystemBase {
         IDLE,
         LAUNCHING,
         INTAKING,
-        SPITTING,
-        CLIMBING,
-        CLIMBED
+        SPITTING
     }
 
     public static final boolean DO_INTAKE_AGITATION = true;
@@ -134,7 +132,6 @@ public final class Superstructure extends SubsystemBase {
         });
 
         // update subsystems periodically
-        m_hopper.periodic();
         m_hood.periodic();
 
         final SystemState newState = switch (m_state) {
@@ -142,8 +139,6 @@ public final class Superstructure extends SubsystemBase {
             case LAUNCHING -> handleLaunching();
             case INTAKING -> handleIntaking();
             case SPITTING -> handleSpitting();
-            case CLIMBING -> handleClimbing();
-            case CLIMBED -> handleClimbed();
             default -> SystemState.IDLE;
         };
 
@@ -237,17 +232,10 @@ public final class Superstructure extends SubsystemBase {
             }
 
             m_intake.setFeedingHopper();
-            m_uptake.setVoltage(11);
-
-            if (m_doReversedRollingFloor) {
-                m_hopper.setVelocity(-45);
-            } else {
-                m_hopper.setVelocity(90);
-            }
+            m_uptake.setFeeding();
+            m_hopper.setFeeding();
 
             m_isSpunUp = true;
-        } else if (m_doReversedRollingFloor) {
-            m_hopper.setVelocity(-45);
         } else {
             m_hopper.setIdle();
         }
@@ -266,8 +254,8 @@ public final class Superstructure extends SubsystemBase {
         m_intake.setIntaking();
         m_launcherEast.setOff();
         m_launcherWest.setOff();
-        m_uptake.setIdle();
-        m_hopper.setIdle();
+        m_uptake.setIntaking();
+        m_hopper.setIntaking();
 
         m_hasEverDeployedIntake = true;
 
@@ -280,28 +268,10 @@ public final class Superstructure extends SubsystemBase {
         m_launcherEast.setOff();
         m_launcherWest.setOff();
         m_uptake.setIdle();
-        m_hopper.setVelocity(-90);
+//        m_hopper.setVelocity(-90);
 
         m_hasEverDeployedIntake = true;
 
-        return conformToWantedState();
-    }
-
-    public SystemState handleClimbing() {
-        m_intake.setStop();
-        m_launcherEast.setOff();
-        m_launcherWest.setOff();
-        m_uptake.setIdle();
-        m_hopper.setIdle();
-        return conformToWantedState();
-    }
-
-    public SystemState handleClimbed() {
-        m_intake.setStop();
-        m_launcherEast.setOff();
-        m_launcherWest.setOff();
-        m_uptake.setIdle();
-        m_hopper.setIdle();
         return conformToWantedState();
     }
 

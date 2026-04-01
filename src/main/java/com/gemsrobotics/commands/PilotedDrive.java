@@ -3,8 +3,8 @@ package com.gemsrobotics.commands;
 import com.ctre.phoenix6.swerve.SwerveModule;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.gemsrobotics.Constants;
+import com.gemsrobotics.FieldConstants;
 import com.gemsrobotics.RobotState;
-import com.gemsrobotics.launching.SinMapStrategy;
 import com.gemsrobotics.lib.math.GeometryUtil;
 import com.gemsrobotics.lib.math.Rotation2dPlus;
 import com.gemsrobotics.lib.math.Translation2dPlus;
@@ -18,7 +18,6 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.units.measure.Velocity;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -29,7 +28,6 @@ import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 
 import static com.gemsrobotics.Constants.*;
-import static edu.wpi.first.units.Units.MetersPerSecond;
 import static java.lang.Math.*;
 
 public final class PilotedDrive extends Command {
@@ -69,13 +67,17 @@ public final class PilotedDrive extends Command {
         m_velocityYSupplier = velocityY;
         m_rotation = rotation;
 
+        final Translation2d rotationalCenter = new Pose2d().transformBy(FieldConstants.VEHICLE_TO_CENTER).getTranslation();
+
         m_evasionRequest = new FieldCentricEvasion(SwerveConstants.moduleTranslations, Constants.BUMPER_DEPTH)
                 .withDeadband(0.05)
                 .withRotationalDeadband(0.025)
                 .withSteerRequestType(SwerveModule.SteerRequestType.MotionMagicExpo)
                 .withDriveRequestType(SwerveModule.DriveRequestType.OpenLoopVoltage)
+                .withDefaultCenterOfRotation(rotationalCenter)
                 .withEvading(false);
         m_maintainHeadingRequest = CommandSwerveDrivetrain.makeAimingRequest();
+        m_maintainHeadingRequest.CenterOfRotation = rotationalCenter;
 //        m_maintainHeadingRequest.MaxAbsRotationalRate = 1.25 * PI;
         m_idleRequest = new SwerveRequest.Idle();
 

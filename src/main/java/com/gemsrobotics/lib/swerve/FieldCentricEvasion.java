@@ -17,6 +17,7 @@ import static edu.wpi.first.units.Units.Meters;
 public class FieldCentricEvasion implements SwerveRequest {
     public boolean Evading = false;
     public boolean DoIntakeLimiting = false;
+    public Translation2d DefaultCenterOfRotation = ORIGIN;
 
     public FieldCentricEvasion withIntakeLimiting(final boolean doIntakeLimiting) {
         DoIntakeLimiting = doIntakeLimiting;
@@ -152,6 +153,11 @@ public class FieldCentricEvasion implements SwerveRequest {
         return this;
     }
 
+    public FieldCentricEvasion withDefaultCenterOfRotation(final Translation2d centerOfRotation) {
+        this.DefaultCenterOfRotation = centerOfRotation;
+        return this;
+    }
+
     private static final Translation2d ORIGIN = new Translation2d();
 
     private final Translation2d[] m_wheelPositions;
@@ -240,7 +246,7 @@ public class FieldCentricEvasion implements SwerveRequest {
         if (Evading) {
             centerOfRotation = getEvadingCenter(new Rotation2d(toApplyX, toApplyY), parameters.currentPose.getRotation(), toApplyOmega);
         } else {
-            centerOfRotation = ORIGIN;
+            centerOfRotation = DefaultCenterOfRotation;
         }
 
         var states = parameters.kinematics.toSwerveModuleStates(speeds, centerOfRotation);

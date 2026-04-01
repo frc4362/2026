@@ -32,7 +32,6 @@ public class Uptake {
     private static final double SIM_UPDATE_SECONDS = 0.001;
 
     private final TalonFX m_motorLeader, m_motorFollower;
-    private final MotionMagicVelocityTorqueCurrentFOC m_request;
     private final VoltageOut m_volts;
 
     private final StatusSignal<AngularVelocity> m_leaderVelocitySignal;
@@ -51,21 +50,15 @@ public class Uptake {
         final var cfg = new TalonFXConfiguration();
         cfg.Audio.AllowMusicDurDisable = true;
         cfg.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
-        cfg.CurrentLimits.StatorCurrentLimitEnable = true;
-        cfg.CurrentLimits.StatorCurrentLimit = 80.0;
         cfg.Feedback.SensorToMechanismRatio = GEARING;
-        cfg.Slot0.kP = 2.0;
-        cfg.Slot0.kV = 0.0;
-        cfg.Slot0.kA = 0.0;
-        cfg.MotionMagic.MotionMagicAcceleration = 500.0;
+        cfg.CurrentLimits.SupplyCurrentLimitEnable = true;
+        cfg.CurrentLimits.SupplyCurrentLimit = 50.0;
+        cfg.CurrentLimits.SupplyCurrentLowerLimit = 50.0;
         m_motorLeader.getConfigurator().apply(cfg);
         m_motorFollower.getConfigurator().apply(cfg);
 
         m_volts = new VoltageOut(0.0);
         m_volts.EnableFOC = true;
-
-        m_request = new MotionMagicVelocityTorqueCurrentFOC(0.0);
-        m_request.Slot = 0;
         //endregion
 
         //region sim code
@@ -113,8 +106,16 @@ public class Uptake {
         m_leaderSimState.setRotorVelocity(m_rollerSim.getAngularVelocity().times(GEARING));
     }
 
-    public void setVoltage(final double volts) {
+    public void setFeeding() {
+        setVoltage(11.0);
+    }
+
+    private void setVoltage(final double volts) {
         m_motorLeader.setControl(m_volts.withOutput(volts));
+    }
+
+    public void setIntaking() {
+        m_motorLeader.setControl(new VoltageOut(-1.0));
     }
 
     public void setIdle() {

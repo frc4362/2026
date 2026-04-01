@@ -2,9 +2,7 @@ package com.gemsrobotics.subsystems.superstructure;
 
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
-import com.ctre.phoenix6.controls.CoastOut;
-import com.ctre.phoenix6.controls.Follower;
-import com.ctre.phoenix6.controls.MotionMagicVelocityTorqueCurrentFOC;
+import com.ctre.phoenix6.controls.*;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
@@ -34,6 +32,7 @@ public class Hopper {
 
     private final TalonFX m_motorLeader, m_motorFollower;
     private final MotionMagicVelocityTorqueCurrentFOC m_request;
+    private final DutyCycleOut m_feedingRequest;
     private final CoastOut m_coastRequest;
     private final Follower m_followerRequest;
 
@@ -68,6 +67,9 @@ public class Hopper {
         m_motorFollower.getConfigurator().apply(cfg);
 
         m_on = false;
+
+        m_feedingRequest = new DutyCycleOut(1.0);
+        m_feedingRequest.EnableFOC = true;
 
         m_coastRequest = new CoastOut();
 
@@ -116,16 +118,6 @@ public class Hopper {
         //endregion
     }
 
-    public void periodic() {
-        if (m_on) {
-            m_motorLeader.setControl(m_request);
-            m_motorFollower.setControl(m_request);
-        } else {
-            m_motorLeader.setControl(m_coastRequest);
-            m_motorFollower.setControl(m_coastRequest);
-        }
-    }
-
     private void simulationPeriodic() { // Called by the Notifier earlier in this class
         m_leaderSimState.setSupplyVoltage(RobotController.getBatteryVoltage());
         m_followerSimState.setSupplyVoltage(RobotController.getBatteryVoltage());
@@ -137,19 +129,24 @@ public class Hopper {
         m_leaderSimState.setRotorVelocity(m_rollerSim.getAngularVelocity().times(GEARING));
         m_followerSimState.setRotorVelocity(m_rollerSim.getAngularVelocity().times(GEARING));
     }
-
-//    public void setVelocity(final double velocity) {
-//        setVelocity(() -> velocity);
-//    }
-
-    public void setVelocity(final double velocity) {
+    private void setVelocity(final double velocity) {
         m_request.Velocity = velocity;
         m_on = true;
     }
 
+    public void setFeeding() {
+        m_motorLeader.setControl(m_feedingRequest);
+        m_motorFollower.setControl(m_feedingRequest);
+    }
+
     public void setIdle() {
-        m_request.Velocity = 0.0;
-        m_on = false;
+        m_motorLeader.setControl(m_coastRequest);
+        m_motorFollower.setControl(m_coastRequest);
+    }
+
+    public void setIntaking() {
+        m_motorLeader.setControl(new VoltageOut(2.0));
+        m_motorFollower.setControl(new VoltageOut(2.0));
     }
 
     public double getVelocity() {

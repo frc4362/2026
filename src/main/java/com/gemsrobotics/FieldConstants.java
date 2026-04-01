@@ -17,6 +17,7 @@ import edu.wpi.first.units.measure.Distance;
 import java.util.List;
 import java.util.stream.Stream;
 
+import static com.gemsrobotics.Constants.*;
 import static edu.wpi.first.units.Units.Centimeters;
 import static edu.wpi.first.units.Units.Meters;
 import static java.lang.Math.abs;
@@ -36,16 +37,17 @@ public class FieldConstants {
   // Field dimensions
   public static final double fieldLength = AprilTagLayoutType.OFFICIAL.getLayout().getFieldLength();
   public static final double fieldWidth = AprilTagLayoutType.OFFICIAL.getLayout().getFieldWidth();
-  private static final Distance SAFETY_MARGIN = Centimeters.of(5);
-  private static final double ROBOT_WIDTH_M = Constants.ROBOT_WIDTH
+
+  public static final Distance SAFETY_MARGIN = Centimeters.of(5);
+  public static final double ROBOT_WIDTH_M = Constants.ROBOT_WIDTH
           .plus(Constants.BUMPER_DEPTH.times(2))
           .plus(SAFETY_MARGIN.times(2)).in(Meters);
-  private static final double ROBOT_LENGTH_M = Constants.ROBOT_WIDTH
+  public static final double ROBOT_LENGTH_M = Constants.ROBOT_WIDTH
           .plus(Constants.INTAKE_REACH)
           .plus(Constants.BUMPER_DEPTH)
           .plus(SAFETY_MARGIN.times(2)).in(Meters);
-  private static final double BUMP_WIDTH_M = LeftBump.width;
-  private static final Transform2d VEHICLE_TO_CENTER = new Transform2d(
+  public static final double BUMP_WIDTH_M = FieldConstants.LeftBump.width;
+  public static final Transform2d VEHICLE_TO_CENTER = new Transform2d(
           Constants.BUMPER_DEPTH.plus(Constants.INTAKE_REACH).div(2.0),
           Meters.of(0.0),
           Rotation2d.kZero);

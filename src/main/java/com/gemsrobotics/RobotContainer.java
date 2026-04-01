@@ -186,7 +186,7 @@ public final class RobotContainer {
     private Flywheel makeLowerWheel(int talonId, InvertedValue invert, String ntTable) {
         final TalonFX motor = new TalonFX(talonId, kAUX_BUS);
         final TalonFXConfiguration cfg = new TalonFXConfiguration();
-        cfg.CurrentLimits.StatorCurrentLimitEnable = true;
+        cfg.CurrentLimits.StatorCurrentLimitEnable = false;
         cfg.CurrentLimits.StatorCurrentLimit = 100;
         cfg.CurrentLimits.SupplyCurrentLimit = 70.0;
         cfg.CurrentLimits.SupplyCurrentLimitEnable = true;
@@ -210,7 +210,7 @@ public final class RobotContainer {
     private Flywheel makeUpperWheel(int talonId, InvertedValue invert, String ntTable) {
         final TalonFX motor = new TalonFX(talonId, kAUX_BUS);
         final TalonFXConfiguration cfg = new TalonFXConfiguration();
-        cfg.CurrentLimits.StatorCurrentLimitEnable = true;
+        cfg.CurrentLimits.StatorCurrentLimitEnable = false;
         cfg.CurrentLimits.StatorCurrentLimit = 100;
         cfg.Feedback.SensorToMechanismRatio = 1.0 / 2.5;
         cfg.Slot0.kP = 6.0;
@@ -231,7 +231,7 @@ public final class RobotContainer {
     private Flywheel makeUpperWheelDifferent(int talonId, InvertedValue invert, String ntTable) {
         final TalonFX motor = new TalonFX(talonId, kAUX_BUS);
         final TalonFXConfiguration cfg = new TalonFXConfiguration();
-        cfg.CurrentLimits.StatorCurrentLimitEnable = true;
+        cfg.CurrentLimits.StatorCurrentLimitEnable = false;
         cfg.CurrentLimits.StatorCurrentLimit = 100;
         cfg.Feedback.SensorToMechanismRatio = 1.0 / 2.5;
         cfg.Slot0.kP = 7.0;
