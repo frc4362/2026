@@ -37,9 +37,9 @@ public final class AimAndBrakeCommand extends Command {
         m_velocityY = velocityY;
 
         m_turnRequest = CommandSwerveDrivetrain.makeAimingRequest();
-        m_turnRequest.HeadingController.setTolerance(Math.toRadians(1.0));
+        m_turnRequest.HeadingController.setTolerance(Math.toRadians(1.5));
         m_idleRequest = new SwerveRequest.Idle();
-        m_brakeRequest = new  SwerveRequest.SwerveDriveBrake();
+        m_brakeRequest = new SwerveRequest.SwerveDriveBrake();
         m_brakeRequest.SteerRequestType = SwerveModule.SteerRequestType.MotionMagicExpo;
 
         // default tolerance
@@ -58,8 +58,6 @@ public final class AimAndBrakeCommand extends Command {
 
     public Optional<Rotation2d> getAngleToGoal() {
         return m_goalSupplier.get();
-//        return m_goalSupplier.get().map(goal ->
-//            goal.minus(m_swerve.getState().Pose.getTranslation()).getAngle());
     }
 
     public Optional<Rotation2d> getErrorToGoal() {

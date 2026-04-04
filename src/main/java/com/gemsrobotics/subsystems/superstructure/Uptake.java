@@ -51,6 +51,8 @@ public class Uptake {
         cfg.Audio.AllowMusicDurDisable = true;
         cfg.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
         cfg.Feedback.SensorToMechanismRatio = GEARING;
+        cfg.CurrentLimits.StatorCurrentLimitEnable = true;
+        cfg.CurrentLimits.StatorCurrentLimit = 90.0;
         cfg.CurrentLimits.SupplyCurrentLimitEnable = true;
         cfg.CurrentLimits.SupplyCurrentLimit = 50.0;
         cfg.CurrentLimits.SupplyCurrentLowerLimit = 50.0;

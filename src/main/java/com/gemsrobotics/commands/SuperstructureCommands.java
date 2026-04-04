@@ -61,10 +61,8 @@ public class SuperstructureCommands {
 				aimingCommand.alongWith(new RunCommand(() -> {
 							parametersSupplier.get().ifPresent(parameters -> {
 								superstructure.setLauncherParameters(parameters);
-//								SmartDashboard.putNumber("turning error", aimingCommand.getErrorToGoal().isPresent() ? abs(aimingCommand.getErrorToGoal().get().getDegrees()) : 999.0);
-								final Rotation2d selectedLaunchTolerance = parameters.isFeeding() ? LAUNCH_TOLERANCE.times(3) : LAUNCH_TOLERANCE;
 								final boolean headingOk = aimingCommand.getErrorToGoal().isPresent()
-										&& abs(aimingCommand.getErrorToGoal().get().getDegrees()) < selectedLaunchTolerance.getDegrees();
+										&& abs(aimingCommand.getErrorToGoal().get().getDegrees()) < parameters.vehicleRotationTolerance().getDegrees();
 								final boolean activeOk = parameters.isFeeding() || (timeUntilActiveSupplier.getAsDouble() < LAUNCH_TIME_BEFORE_ACTIVE);
 								superstructure.setAllowedToLaunch(parameters.isValid() && superstructure.isReadyToLaunch() && headingOk && activeOk);
 							});
@@ -90,15 +88,6 @@ public class SuperstructureCommands {
 				lineUpForBump(robotState, swerve).onlyIf(() -> !FieldConstants.isReadyToCrossBump(robotState.getLatestFieldToVehicle().getValue())),
 				driveOverBump(robotState, swerve, velocity, duration));
 	}
-
-//	public static Command findAndDriveOverBump(final RobotState robotState, final CommandSwerveDrivetrain swerve) {
-//		return findAndDriveOverBump(robotState, swerve, BUMP_CROSS_VELOCITY);
-//	}
-
-	private static final double BUMP_CROSS_VELOCITY = 3.0;
-
-	public static final double LOW_DURATION = 0.05;
-	public static final double HIGH_DURATION = 0.1;
 
 	public static Command waitForBumpCross(final CommandSwerveDrivetrain swerve, final double duration) {
 		return Commands.sequence(
@@ -134,14 +123,5 @@ public class SuperstructureCommands {
 			}),
 			new WaitCommand(1.0));
 		}
-	}
-
-//	public static Command driveOverBump(final RobotState robotState, final CommandSwerveDrivetrain swerve) {
-////		return driveOverBump(robotState, swerve, BUMP_CROSS_VELOCITY);
-//	}
-
-	// TODO
-	private Rotation2d calculateHeadingTolerance(final double distance) {
-		return Rotation2d.kZero;
 	}
 }

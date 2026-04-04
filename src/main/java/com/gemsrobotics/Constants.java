@@ -60,7 +60,7 @@ public final class Constants {
             robotToLauncher3d.getY(),
             Rotation2d.fromDegrees(180));
   }
-  public static final Distance BALL_STREAM_WIDTH = ROBOT_TO_LAUNCHER_EAST_Y.times(2.0).plus(BALL_RADIUS.times(2.0));
+  public static final Distance BALL_STREAM_WIDTH = ROBOT_TO_LAUNCHER_WEST_Y.times(2.0).plus(BALL_RADIUS.times(2.0));
 
   public static final String SIM_VIZ_TABLE_KEY = "viz";
 

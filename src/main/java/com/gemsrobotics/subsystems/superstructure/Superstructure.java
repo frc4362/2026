@@ -199,36 +199,28 @@ public final class Superstructure extends SubsystemBase {
                 m_intakeLiftTimer.start();
             }
 
-            if (DO_INTAKE_AGITATION) {
-                final boolean doPush;
-                final double s;
-                if (m_doEarlyAgitation || (m_intakeLiftTimer.get() > INTAKE_AGITATION_DELAY)) {
-                    if (m_startAgitationTimestamp == -1) {
-                        m_startAgitationTimestamp = m_intakeLiftTimer.get();
-                    }
-
-                    doPush = true;
-                    s = m_intakeLiftTimer.get() - m_startAgitationTimestamp;
-                } else {
-                    doPush = false;
-                    s = m_stateChangedTimer.get();
+            final boolean doPush;
+            final double s;
+            if (m_doEarlyAgitation || (m_intakeLiftTimer.get() > INTAKE_AGITATION_DELAY)) {
+                if (m_startAgitationTimestamp == -1) {
+                    m_startAgitationTimestamp = m_intakeLiftTimer.get();
                 }
 
-                if ((s % INTAKE_AGITATION_PHASE) < (INTAKE_AGITATION_PHASE / 2.0)) {
-                    if (doPush) {
-                        m_intake.setPushing();
-                    } else {
-                        m_intake.setAgitating();
-                    }
+                doPush = true;
+                s = m_intakeLiftTimer.get() - m_startAgitationTimestamp;
+            } else {
+                doPush = false;
+                s = m_stateChangedTimer.get();
+            }
+
+            if ((s % INTAKE_AGITATION_PHASE) < (INTAKE_AGITATION_PHASE / 2.0)) {
+                if (doPush) {
+                    m_intake.setPushing();
                 } else {
-                    m_intake.setDeploy();
+                    m_intake.setAgitating();
                 }
             } else {
-                if (m_intakeLiftTimer.get() > 3) {
-                    m_intake.setRetractSlowly();
-                } else {
-                    m_intake.setDeploy();
-                }
+                m_intake.setDeploy();
             }
 
             m_intake.setFeedingHopper();

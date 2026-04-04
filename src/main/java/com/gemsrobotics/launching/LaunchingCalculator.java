@@ -5,6 +5,7 @@ import com.gemsrobotics.FieldConstants;
 import com.gemsrobotics.RobotState;
 import com.gemsrobotics.lib.math.GeometryUtil;
 import com.gemsrobotics.util.AllianceFlipUtil;
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -23,23 +24,25 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import static java.lang.Math.abs;
-import static java.lang.Math.exp;
+import static edu.wpi.first.units.Units.Meters;
+import static java.lang.Math.*;
 
 public final class LaunchingCalculator {
 	private static final boolean DO_MOVE_AND_SHOOT = true;
-	private static final double FEED_DISTANCE_FROM_WALL = 0.5;
+	private static final double FEED_DISTANCE_FROM_ALLIANCE_WALL = 0.5;
 	private static final boolean DO_LINEAR_DRAG_COMPENSATION = true;
-	private static final double DRAG_CONSTANT_INVERSE_SECONDS = 0.1;
+	private static final double DRAG_CONSTANT_INVERSE_SECONDS = 0.25;
 	private static final double TOF_EPSILON = 0.001;
 	private static final double MIN_RANGE_METERS = 1.66;
 	private static final double MAX_RANGE_METERS = 4.05;
+	public static final double LAUNCH_VELOCITY_OFFSET = 0.45;
 
 	public record Parameters(
 			double timestamp,
 			boolean isValid,
 			Translation2d target,
 			Rotation2d vehicleRotation,
+			Rotation2d vehicleRotationTolerance,
 			Rotation2d hoodAngle,
 			double flywheelSpeed,
 			double distance,
@@ -198,14 +201,38 @@ public final class LaunchingCalculator {
 				isValidLaunchRange(lookaheadLauncherToTargetDistance, isFeeding) && isValidLaunchVelocity(launcherVelocity, isFeeding),
 				target,
 				desiredRobotRotation,
+				getSwerveHeadingTolerance(lookaheadLauncherToTargetDistance, isFeeding),
 				getHoodAngle(lookaheadLauncherToTargetDistance, isFeeding),
-				getFlywheelVelocity(lookaheadLauncherToTargetDistance, isFeeding) + 0.45,
+				getFlywheelVelocity(lookaheadLauncherToTargetDistance, isFeeding) + LAUNCH_VELOCITY_OFFSET,
 				lookaheadLauncherToTargetDistance,
 				startingLauncherToTargetDistance,
 				isFeeding);
 
 		m_launchingParametersPublisher.set(ret);
 		m_latestParameters = ret;
+	}
+
+	private static final boolean DO_SIMPLE_TOLERANCE = false;
+	private static final double FEED_DISTANCE_FROM_SIDE_WALLS = 4.0 / 3.0; // meters
+	private static final double SIDEWAYS_ERROR_ALLOWED_HUB = (FieldConstants.Hub.width / 2.0) - Constants.BALL_STREAM_WIDTH.div(2).in(Meters);
+	private static final double SIDEWAYS_ERROR_ALLOWED_FEEDING = FEED_DISTANCE_FROM_SIDE_WALLS - Constants.BALL_STREAM_WIDTH.div(2).in(Meters);
+
+	private Rotation2d getSwerveHeadingTolerance(final double virtualDistance, final boolean isFeeding) {
+		if (DO_SIMPLE_TOLERANCE) {
+			if (isFeeding) {
+				return Rotation2d.fromDegrees(6.0);
+			} else {
+				return Rotation2d.fromDegrees(2.0);
+			}
+		} else {
+			final double sidewaysErrorDistance = isFeeding ? SIDEWAYS_ERROR_ALLOWED_FEEDING : SIDEWAYS_ERROR_ALLOWED_HUB;
+			final Translation2d targetA = new Translation2d(virtualDistance, sidewaysErrorDistance);
+			final Translation2d targetB = new Translation2d(virtualDistance, -sidewaysErrorDistance);
+			final double a = targetA.getSquaredNorm();
+			final double b = targetB.getSquaredNorm();
+			final double c = sidewaysErrorDistance * 2.0;
+			return Rotation2d.fromRadians(acos((a + b - c * c) / (2 * sqrt(a) * sqrt(b)))).div(2.0);
+		}
 	}
 
 //	private Rotation2d getDriveAngleWithLauncherOffset(final Pose2d vehiclePose, final Translation2d target) {
@@ -254,9 +281,13 @@ public final class LaunchingCalculator {
 	}
 
 	private static Translation2d getFeedingTarget(final Pose2d vehiclePose) {
-		final double feedingX = AllianceFlipUtil.applyX(FEED_DISTANCE_FROM_WALL);
+		final double feedingX = AllianceFlipUtil.applyX(FEED_DISTANCE_FROM_ALLIANCE_WALL);
 		final double feedingY = vehiclePose.getTranslation().getY();
-		return new Translation2d(feedingX, feedingY);
+		final double clampedFeedingY = MathUtil.clamp(
+				feedingY,
+				0.0 + FEED_DISTANCE_FROM_SIDE_WALLS,
+				FieldConstants.fieldWidth - FEED_DISTANCE_FROM_SIDE_WALLS);
+		return new Translation2d(feedingX, clampedFeedingY);
 	}
 
 	private static Translation2d getHubTarget() {

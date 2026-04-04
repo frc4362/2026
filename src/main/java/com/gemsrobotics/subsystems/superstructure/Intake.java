@@ -43,7 +43,8 @@ public final class Intake {
     private static final double DEPLOYER_ARM_LENGTH = 0.37;
 
     private final StatusSignal<AngularVelocity> m_intakeVelocitySignal;
-    private final StatusSignal<Current> m_intakeStatorCurrentSignal, m_deployerStatorCurrentSignal, m_intakeSupplyCurrentSignal, m_deployerSupplyCurrentSignal;
+    private final StatusSignal<Current> m_intakeStatorCurrentSignal, m_deployerStatorCurrentSignal,
+            m_intakeSupplyCurrentSignal, m_deployerSupplyCurrentSignal;
     private final StatusSignal<Angle> m_deployerPosition;
 
     private final TalonFXSimState m_intakeSimState;
@@ -54,7 +55,7 @@ public final class Intake {
     private final SingleJointedArmSim m_deployerSim;
     private final Notifier m_simNotifier;
 
-    private final VelocityTorqueCurrentFOC m_request;
+    private final VelocityTorqueCurrentFOC m_translationRequest;
     private final DutyCycleOut m_intakingRequest;
     private final DynamicMotionMagicTorqueCurrentFOC m_deployRequest;
     private final TalonFX m_translationLeader, m_translationFollower;
@@ -99,7 +100,7 @@ public final class Intake {
         m_intakingRequest = new DutyCycleOut(1.0);
         m_intakingRequest.EnableFOC = true;
 
-        m_request = new VelocityTorqueCurrentFOC(0);
+        m_translationRequest = new VelocityTorqueCurrentFOC(0);
         m_deployRequest = new DynamicMotionMagicTorqueCurrentFOC(0, 0, 0);
         m_deployRequest.Acceleration = 7.0; // lol
 
@@ -184,8 +185,8 @@ public final class Intake {
     }
 
     public void setFeedingHopper() {
-        m_translationLeader.setControl(m_request.withVelocity(INTAKE_VELOCITY / 2.0));
-        m_translationFollower.setControl(m_request.withVelocity(INTAKE_VELOCITY / 2.0));
+        m_translationLeader.setControl(m_translationRequest.withVelocity(INTAKE_VELOCITY / 3.0));
+        m_translationFollower.setControl(m_translationRequest.withVelocity(INTAKE_VELOCITY / 3.0));
     }
 
     public void setIntaking() {
@@ -194,8 +195,8 @@ public final class Intake {
     }
 
     public void setSpitting() {
-        m_translationLeader.setControl(m_request.withVelocity(-INTAKE_VELOCITY));
-        m_translationFollower.setControl(m_request.withVelocity(-INTAKE_VELOCITY));
+        m_translationLeader.setControl(m_translationRequest.withVelocity(-INTAKE_VELOCITY));
+        m_translationFollower.setControl(m_translationRequest.withVelocity(-INTAKE_VELOCITY));
     }
 
     public void setStop() {
@@ -213,27 +214,13 @@ public final class Intake {
 
         m_intakeSim.setInputVoltage(m_intakeSimState.getMotorVoltage());
         m_intakeSim.update(SIM_UPDATE_SECONDS);
+
         m_deployerSim.setInputVoltage(m_deployerSimState.getMotorVoltage());
         m_deployerSim.update(SIM_UPDATE_SECONDS);
 
         m_intakeSimState.setRotorVelocity(m_intakeSim.getAngularVelocity().times(TRANSLATION_GEARING));
+        m_intakeSimState.setRawRotorPosition(m_intakeSim.getAngularPosition().times(TRANSLATION_GEARING));
         m_deployerSimState.setRawRotorPosition(m_deployerSim.getAngleRads() / 2 * Math.PI * DEPLOYER_GEARING);
+        m_deployerSimState.setRotorVelocity(m_deployerSim.getAngleRads() / 2 * Math.PI * DEPLOYER_GEARING);
     }
-
-//    private boolean hasAssertedThisIntake = false;
-//    public void assertDeployed(Timer timer) {
-//        if (timer.hasElapsed(.5)) {
-//            if (!hasAssertedThisIntake) {
-//                m_intakeDeployer.setPosition(INTAKE_DEPLOYED_ROTATIONS);
-//                hasAssertedThisIntake = true;
-//            }
-//            setDeploy();
-//        } else {
-//            m_intakeDeployer.setControl(m_deployRequest
-//                    .withPosition(INTAKE_ASSERT_ROTATIONS)
-//                    .withVelocity(10));
-//            hasAssertedThisIntake = false;
-//        }
-//    }
 }
-
