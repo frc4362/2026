@@ -191,10 +191,6 @@ public final class PilotedDrive extends Command {
                 desiredVelocity.omegaRadiansPerSecond * scalar);
     }
 
-    private static ChassisSpeeds turnInPlace(final ChassisSpeeds desiredVelocity) {
-        return new ChassisSpeeds(0.0, 0.0, desiredVelocity.omegaRadiansPerSecond);
-    }
-
     public static ChassisSpeeds limitSpeedsForIntaking(final ChassisSpeeds desiredSpeeds, final Rotation2d currentRotation) {
         // we only ever have to worry about slowing down based on the intake corners, as those will be the fastest parts of the robot
         final Transform2d fasterIntakeCorner = desiredSpeeds.omegaRadiansPerSecond >= 0.0 ? INTAKE_CORNER_NE : INTAKE_CORNER_NW;
@@ -208,43 +204,13 @@ public final class PilotedDrive extends Command {
         final double desiredIntakeSpeed = hypot(vxIntake, vyIntake);
         // this is the final speeds experienced by the faster corner of the intake
         final ChassisSpeeds intakeCornerSpeeds = new ChassisSpeeds(vxIntake, vyIntake, desiredSpeeds.omegaRadiansPerSecond);
-        // check if the velocity is outright allowed
-//        if (spinInducedSpeed < MAX_ALLOWED_VELOCITY_INTAKING && desiredIntakeSpeed < MAX_ALLOWED_VELOCITY_INTAKING){
-//            return desiredSpeeds;
-//        // if a solution exists without compromising angular velocity, and is necessary
-//        } else if (spinInducedSpeed <= MAX_ALLOWED_VELOCITY_INTAKING && desiredIntakeSpeed > MAX_ALLOWED_VELOCITY_INTAKING) {
-//            // we need to find a scaled translation speed (vx', vy') = k * (vx, vy) such that:
-//            // (k*vx + vxSpin)**2 + (k*vy + vySpin)**2 ≤ maxSpeed**2
-//            // if we expand this, we are solving the following equation
-//            // (vx**2 + vy**2)k**2 + 2(vx*vxSpin + vy*vySpin)k + (vxSpin**2 + vySpin**2 - maxSpeed**2) <= 0
-//            final double a = vxIntake * vxIntake + vyIntake * vyIntake;
-//            final double b = 2 * (vxIntake * vxSpin + vyIntake * vySpin);
-//            final double c = vxSpin * vxSpin + vySpin * vySpin - MAX_ALLOWED_VELOCITY_INTAKING * MAX_ALLOWED_VELOCITY_INTAKING;
-//            final double discriminant = b * b - 4 * a * c;
-//            // if it is solvable, preserve our angular momentum and return with a slowed X and Y only
-//            if (discriminant >= 0) {
-//                final double k1 = (-b - sqrt(discriminant)) / (2 * a);
-//                final double k2 = (-b + sqrt(discriminant)) / (2 * a);
-//                final double k = max(k1, k2);
-//                return new ChassisSpeeds(
-//                        desiredSpeeds.vxMetersPerSecond * k,
-//                        desiredSpeeds.vyMetersPerSecond * k,
-//                        desiredSpeeds.omegaRadiansPerSecond);
-//            }
-//        }
-//
-//        SmartDashboard.putNumber("spin induced speed", spinInducedSpeed);
-//        SmartDashboard.putNumber("desired intake speed", desiredIntakeSpeed);
-
         if (spinInducedSpeed > MAX_ALLOWED_VELOCITY_INTAKING || desiredIntakeSpeed > MAX_ALLOWED_VELOCITY_INTAKING) {
-            SmartDashboard.putBoolean("do limiting", true);
             // calculate what we need to lower the intake corner speed to
             // this ONLY works in cases where it is acceptable to change the omega velocity of the robot
             final ChassisSpeeds loweredIntakeSpeeds = scaleChassisSpeeds(intakeCornerSpeeds, MAX_ALLOWED_VELOCITY_INTAKING);
             // and then invert the geometry transformation to the center of the robot to determine what we need to drive the vehicle at
             return GeometryUtil.transformVelocity(loweredIntakeSpeeds, fasterIntakeCorner.inverse(), currentRotation);
         } else {
-            SmartDashboard.putBoolean("do limiting", false);
             return desiredSpeeds;
         }
     }
