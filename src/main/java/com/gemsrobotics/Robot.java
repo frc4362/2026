@@ -7,19 +7,14 @@ package com.gemsrobotics;
 import choreo.auto.AutoChooser;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.gemsrobotics.subsystems.superstructure.Superstructure;
-import com.gemsrobotics.subsystems.swerve.SwerveConstants;
 import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.networktables.*;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
-import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
-import frc.robot.lib.BLine.Path;
 
 public final class Robot extends TimedRobot {
     private final RobotContainer m_robotContainer;

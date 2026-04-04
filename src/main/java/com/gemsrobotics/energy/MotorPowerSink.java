@@ -1,7 +1,6 @@
-package com.gemsrobotics.lib;
+package com.gemsrobotics.energy;
 
 import com.ctre.phoenix6.StatusSignal;
-import com.gemsrobotics.energy.PowerSink;
 import edu.wpi.first.math.Pair;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Voltage;
@@ -11,7 +10,7 @@ import java.util.List;
 
 import static java.lang.Math.abs;
 
-class MotorPowerSink implements PowerSink {
+public class MotorPowerSink implements PowerSink {
     private final String m_name;
     private final List<StatusSignal<Current>> m_supplyCurrentSignals;
     private final List<StatusSignal<Voltage>> m_supplyVoltageSignals;

@@ -149,9 +149,10 @@ public final class RobotContainer {
                 m_robotState,
                 () -> m_launchCalculator.getLatestLaunchParameters()
                         .map(LaunchingCalculator.Parameters::flywheelSpeed)
-                        .map(speed -> MetersPerSecond.of(speed * 2 * Math.PI * Units.inchesToMeters(2)))
+                        .map(speed -> MetersPerSecond.of(speed * 2 * Math.PI * Units.inchesToMeters(2) * 0.75))
                         .orElse(MetersPerSecond.of(0)),
-                () -> m_launchCalculator.getLatestLaunchParameters().map(LaunchingCalculator.Parameters::hoodAngle).orElse(Rotation2d.kZero));
+                () -> m_launchCalculator.getLatestLaunchParameters().map(parameters ->
+                        Rotation2d.fromDegrees(90).plus(parameters.hoodAngle())).orElse(Rotation2d.kZero));
     }
 
     public void periodic() {
@@ -163,8 +164,6 @@ public final class RobotContainer {
         m_superstructure.setReversedRollingFloor(m_reversedRollingFloorTrigger.getAsBoolean());
         m_vision.update();
         m_launchCalculator.periodic();
-
-        SmartDashboard.putBoolean("bump cross ok?", FieldConstants.isReadyToCrossBump(m_robotState.getLatestFieldToVehicle().getValue()));
 
         m_visualizer.update(
                 m_robotState.getLatestFieldToVehicle().getValue(),

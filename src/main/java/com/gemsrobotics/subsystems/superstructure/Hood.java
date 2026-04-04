@@ -22,6 +22,7 @@ import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotController;
+import edu.wpi.first.wpilibj.simulation.BatterySim;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 
 import java.util.Map;
@@ -98,6 +99,7 @@ public final class Hood {
                 DCMotor.getKrakenX44Foc(1));
 
         m_simState = m_motor.getSimState();
+        m_simState.setMotorType(TalonFXSimState.MotorType.KrakenX44);
         m_simNotifier = new Notifier(this::simulationPeriodic);
         if (Robot.isSimulation()) {
             m_simNotifier.startPeriodic(SIM_PERIOD);
@@ -143,7 +145,7 @@ public final class Hood {
     private void simulationPeriodic() {
         m_simState.setSupplyVoltage(RobotController.getBatteryVoltage());
 
-        var voltage = m_simState.getMotorVoltage();
+        final var voltage = m_simState.getMotorVoltage();
         m_motorModel.setInputVoltage(voltage);
         m_motorModel.update(SIM_PERIOD);
 

@@ -18,11 +18,8 @@ public class ProjectileManager {
     private static final boolean DO_SHOT_VARIANCE = true;
     private static final double SHOT_VARIANCE_DEGREES = 1.0;
     private static final double SHOT_COOLDOWN = 0.25;
-    private static final Transform3d ROBOT_TO_LAUNCHER = new Transform3d(
-            Units.Inches.of(-9).in(Units.Meters),
-            0.0,
-            Units.Inches.of(22).in(Units.Meters),
-            new Rotation3d());
+    private static final Transform3d ROBOT_TO_LAUNCHER = new Transform3d(Constants.ROBOT_TO_LAUNCHER)
+            .plus(new Transform3d(new Translation3d(), new Rotation3d(0.0, 0.0, Math.PI)));
 
     private final RobotState m_robotState;
     private final List<Projectile> m_projectiles;

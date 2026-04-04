@@ -6,16 +6,25 @@ import com.ctre.phoenix6.controls.MotionMagicVelocityTorqueCurrentFOC;
 import com.ctre.phoenix6.controls.TorqueCurrentFOC;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.sim.TalonFXSimState;
+import com.gemsrobotics.Robot;
+import edu.wpi.first.math.system.plant.DCMotor;
+import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.Temperature;
+import edu.wpi.first.wpilibj.Notifier;
+import edu.wpi.first.wpilibj.RobotController;
+import edu.wpi.first.wpilibj.simulation.FlywheelSim;
 
 import static edu.wpi.first.units.Units.Meters;
 
 public class Flywheel {
+    private static final double SIM_UPDATE_SECONDS = 0.001;
+
     protected final double m_wheelRadiusMeters;
     protected final TalonFX m_motorLeader;
     //private final TalonFX[] m_motorFollowers;
@@ -27,6 +36,10 @@ public class Flywheel {
     protected final StatusSignal<Double> m_leaderVelocityReferenceSignal;
     protected final StatusSignal<Current> m_leaderSupplyCurrentSignal, m_leaderStatorCurrentSignal;
     protected final StatusSignal<Temperature> m_leaderTemperatureSignal;
+
+    private final TalonFXSimState m_simState;
+    private final FlywheelSim m_flywheelSim;
+    private final Notifier m_simNotifier;
 
     public Flywheel(final NetworkTable nt,
                     final StatusSignalManager signalManager,
@@ -52,6 +65,18 @@ public class Flywheel {
         signalManager.registerPublished(m_leaderVelocityReferenceSignal, myTable, "velocity_reference_rps");
         signalManager.registerPublished(m_leaderStatorCurrentSignal, myTable, "stator_current_amps");
         signalManager.registerPublished(m_leaderTemperatureSignal, myTable, "temp_c");
+
+        // sim code
+        m_simState = m_motorLeader.getSimState();
+        final DCMotor m_motorModel = DCMotor.getKrakenX60Foc(1 + motorFollowers.length);
+        m_flywheelSim = new FlywheelSim(
+                LinearSystemId.createFlywheelSystem(m_motorModel, .007, 1),
+                m_motorModel,
+                SIM_UPDATE_SECONDS);
+        m_simNotifier = new Notifier(this::simulationPeriodic);
+        if (Robot.isSimulation()) {
+            m_simNotifier.startPeriodic(SIM_UPDATE_SECONDS);
+        }
     }
 
     public void setAngularVelocity(double rps) {
@@ -75,5 +100,16 @@ public class Flywheel {
     public boolean isAtReference() {
         // angular difference <= 5
         return m_leaderVelocityReferenceSignal.isNear(m_leaderVelocitySignal.getValueAsDouble(), 5.0);
+    }
+
+    private void simulationPeriodic() { // Called by the Notifier earlier in this class
+        m_simState.setSupplyVoltage(RobotController.getBatteryVoltage());
+
+        var voltage = m_simState.getMotorVoltage();
+        m_flywheelSim.setInputVoltage(voltage);
+        m_flywheelSim.update(SIM_UPDATE_SECONDS);
+
+        m_simState.setRotorVelocity(m_flywheelSim.getAngularVelocity());
+        m_simState.setRotorVelocity(m_flywheelSim.getAngularVelocity());
     }
 }

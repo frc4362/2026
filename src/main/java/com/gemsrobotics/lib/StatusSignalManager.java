@@ -4,6 +4,7 @@ import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.StatusSignalCollection;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.gemsrobotics.energy.EnergyLogger;
+import com.gemsrobotics.energy.MotorPowerSink;
 import edu.wpi.first.math.Pair;
 import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.NetworkTable;
