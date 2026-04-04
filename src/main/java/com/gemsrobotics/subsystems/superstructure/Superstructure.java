@@ -325,7 +325,7 @@ public final class Superstructure extends SubsystemBase {
     }
 
     public Rotation2d getHoodAngle() {
-        return Rotation2d.kZero;// m_hood.getLaunchAngle();
+        return m_hood.getLaunchAngle();
     }
 
     public SystemState getState() {

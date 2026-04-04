@@ -127,7 +127,7 @@ public final class Hood {
     }
 
     public Rotation2d getLaunchAngle() {
-        return Rotation2d.fromDegrees(90).minus(rotor2WorldAngle(m_motorRotations.getValueAsDouble()));
+        return Rotation2d.fromDegrees(90).plus(rotor2WorldAngle(m_motorRotations.getValueAsDouble()));
     }
 
     private Rotation2d rotor2WorldAngle(final double rotorValue) {
