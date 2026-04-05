@@ -3,8 +3,10 @@ package com.gemsrobotics.subsystems.swerve;
 import static edu.wpi.first.units.Units.*;
 import static java.lang.Math.*;
 
+import java.util.Arrays;
 import java.util.Optional;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 import choreo.Choreo;
 import choreo.auto.AutoFactory;
@@ -12,6 +14,7 @@ import choreo.trajectory.SwerveSample;
 import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.Utils;
+import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.swerve.SwerveDrivetrainConstants;
 import com.ctre.phoenix6.swerve.SwerveModule;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
@@ -76,9 +79,6 @@ public final class CommandSwerveDrivetrain extends SwerveConstants.TunerSwerveDr
 
     //region SysId
     /* Swerve requests to apply during SysId characterization */
-    private final SwerveRequest.SysIdSwerveTranslation m_translationCharacterization = new SwerveRequest.SysIdSwerveTranslation();
-    private final SwerveRequest.SysIdSwerveSteerGains m_steerCharacterization = new SwerveRequest.SysIdSwerveSteerGains();
-    private final SwerveRequest.SysIdSwerveRotation m_rotationCharacterization = new SwerveRequest.SysIdSwerveRotation();
     private final SwerveRequest.ApplyRobotSpeeds m_robotSpeedsRequest;
     private final FollowPath.Builder m_autoPathBuilder, m_teleopPathBuilder;
     private final RobotState m_robotState;
@@ -183,21 +183,29 @@ public final class CommandSwerveDrivetrain extends SwerveConstants.TunerSwerveDr
         m_goalPosePublisher = stateTable.getStructTopic("tracking_pose", Pose2d.struct).publish();
         m_goalPosePublisher.setDefault(new Pose2d());
 
+        // TODO add NT4 logging hooks
         // use this for logging hooks
         final NetworkTable bLineTable = stateTable.getSubTable("bline");
+        FollowPath.setBooleanLoggingConsumer(pair -> {
+        });
+        FollowPath.setDoubleLoggingConsumer(pair -> {
+        });
+        FollowPath.setPoseLoggingConsumer(pair -> {
+        });
+        FollowPath.setTranslationListLoggingConsumer(pair -> {
+        });
 
         // power tracking
-//        final NetworkTable motorsTable = NetworkTableInstance.getDefault().getTable("swerve_motors");
-//        final TalonFX[] moduleMotors = Arrays.stream(getModules()).flatMap(module ->
-//            Stream.of(module.getDriveMotor(), module.getSteerMotor())).toArray(TalonFX[]::new);
-//        signalManager.registerPowerTracking(motorsTable, moduleMotors);
+        final NetworkTable motorsTable = NetworkTableInstance.getDefault().getTable("swerve_motors");
+        final TalonFX[] moduleMotors = Arrays.stream(getModules()).flatMap(module ->
+            Stream.of(module.getDriveMotor(), module.getSteerMotor())).toArray(TalonFX[]::new);
+        signalManager.registerPowerTracking(Constants.CAN.kMAIN_BUS, motorsTable, moduleMotors);
 
         // sim
         if (Utils.isSimulation()) {
             startSimThread();
         }
     }
-
 
     /**
      * Creates a new auto factory for this drivetrain.

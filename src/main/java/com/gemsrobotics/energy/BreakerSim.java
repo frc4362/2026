@@ -11,31 +11,39 @@ public final class BreakerSim {
 	private double m_lastTimestamp;
 	private double m_temperature;
 
+	// estimated breaker resistance in ohms
+	private static final double BREAKER_RESISTANCE = 0.00075;
 	// degrees per watt
-	private static final double THERMAL_RESISTANCE = 1.49;
+	private static final double THERMAL_RESISTANCE = 5.0;
 	// joules per degree
-	private static final double THERMAL_CAPACITANCE = 10.503;
+	private static final double THERMAL_CAPACITANCE = 12.0;
+	// units are inverse-seconds
+	private static final double TIME_CONSTANT = THERMAL_CAPACITANCE * THERMAL_RESISTANCE;
 
 	public BreakerSim(final Temperature ambientTemperature) {
 		m_lastTimestamp = Double.NaN;
 		m_ambientTemperature = ambientTemperature.in(Celsius);
-		m_temperature = 0.0;
+		m_temperature = m_ambientTemperature;
 	}
 
 	public BreakerSim() {
 		this(Celsius.of(25.0));
 	}
 
-	public void update(final double powerInWatts) {
+	public void update(final double totalCurrentAmps) {
 		if (Double.isNaN(m_lastTimestamp)) {
 			m_lastTimestamp = Timer.getTimestamp();
+			return;
 		}
 
 		final double timestamp = Timer.getTimestamp();
 		final double dt = timestamp - m_lastTimestamp;
-		final double cooling = (m_temperature - m_ambientTemperature) / THERMAL_RESISTANCE;
-		final double dTdt = (powerInWatts - cooling) / THERMAL_CAPACITANCE;
-		m_temperature += dTdt * dt;
+		m_lastTimestamp = timestamp;
+
+		final double internalPower = totalCurrentAmps * totalCurrentAmps * BREAKER_RESISTANCE;
+		final double steadyStateTemperature = m_ambientTemperature + internalPower * THERMAL_RESISTANCE;
+		// represent the exponential convergence towards the steady state temperature for this amount of current
+		m_temperature = steadyStateTemperature + (m_temperature - steadyStateTemperature) * Math.exp(-dt / TIME_CONSTANT);
 	}
 
 	public double getTemperature() {

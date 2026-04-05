@@ -94,7 +94,7 @@ public final class EnergyLogger {
             m_sinkLoggers.get(sink.getName()).log(current, power, joulesToWattHours(totalSinkEnergy));
         }
 
-        m_breakerSim.update(m_totalPowerWatts);
+        m_breakerSim.update(m_totalCurrentAmps);
 
         m_estimatedBreakerTemperaturePublisher.set(m_breakerSim.getTemperature());
         m_batteryVoltagePublisher.set(RobotController.getBatteryVoltage());

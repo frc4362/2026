@@ -4,12 +4,12 @@ import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.CoastOut;
 import com.ctre.phoenix6.controls.Follower;
-import com.ctre.phoenix6.controls.MotionMagicVelocityTorqueCurrentFOC;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.sim.TalonFXSimState;
+import com.gemsrobotics.Constants;
 import com.gemsrobotics.Robot;
 import com.gemsrobotics.lib.StatusSignalManager;
 import edu.wpi.first.math.system.plant.DCMotor;
@@ -19,13 +19,11 @@ import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Voltage;
-import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.FlywheelSim;
 
 import java.util.List;
-import java.util.function.DoubleSupplier;
 
 public class Uptake {
     private static final double GEARING = 1.0;
@@ -86,13 +84,14 @@ public class Uptake {
 
         final NetworkTable nt = NetworkTableInstance.getDefault().getTable("uptake").getSubTable(ntName);
         final var powerSignals = signalManager.registerPowerTracking(
+                Constants.CAN.kAUX_BUS,
                 nt,
                 List.of("leader", "follower"),
                 List.of(m_motorLeader, m_motorFollower));
 
-        signalManager.registerPublished(m_leaderVelocitySignal, nt, "velocity_rps");
-        signalManager.registerPublished(m_leaderVoltsAppliedSignal, nt, "volts");
-        signalManager.registerPublished(m_leaderStatorCurrentSignal, nt, "stator_amps");
+        signalManager.registerPublished(Constants.CAN.kAUX_BUS, m_leaderVelocitySignal, nt, "velocity_rps");
+        signalManager.registerPublished(Constants.CAN.kAUX_BUS, m_leaderVoltsAppliedSignal, nt, "volts");
+        signalManager.registerPublished(Constants.CAN.kAUX_BUS, m_leaderStatorCurrentSignal, nt, "stator_amps");
         //endregion
 
         m_motorFollower.setControl(new Follower(m_motorLeader.getDeviceID(), MotorAlignmentValue.Opposed));

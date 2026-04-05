@@ -8,6 +8,7 @@ import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.sim.TalonFXSimState;
 
+import com.gemsrobotics.Constants;
 import com.gemsrobotics.Robot;
 import com.gemsrobotics.lib.StatusSignalManager;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -106,6 +107,7 @@ public final class Intake {
 
         final NetworkTable nt = NetworkTableInstance.getDefault().getTable("intake");
         final var powerStatusSignals = signalManager.registerPowerTracking(
+                Constants.CAN.kAUX_BUS,
                 nt,
                 List.of("deployer", "roller_top", "roller_bot"),
                 List.of(m_deployer, m_translationLeader, m_translationFollower));
@@ -120,12 +122,12 @@ public final class Intake {
         // do this so the follower stays tapped in
         m_translationLeader.getTorqueCurrent(false).setUpdateFrequency(250.0);
 
-        signalManager.registerPublished(m_intakeVelocitySignal, nt, "intake_velocity_rps");
-        signalManager.registerPublished(m_intakeStatorCurrentSignal, nt, "intake_stator_current");
-        signalManager.registerPublished(m_deployerStatorCurrentSignal, nt, "deployer_stator_current");
+        signalManager.registerPublished(Constants.CAN.kAUX_BUS, m_intakeVelocitySignal, nt, "intake_velocity_rps");
+        signalManager.registerPublished(Constants.CAN.kAUX_BUS, m_intakeStatorCurrentSignal, nt, "intake_stator_current");
+        signalManager.registerPublished(Constants.CAN.kAUX_BUS, m_deployerStatorCurrentSignal, nt, "deployer_stator_current");
 //        signalManager.registerPublished(m_intakeSupplyCurrentSignal, nt, "intake_supply_current");
 //        signalManager.registerPublished(m_deployerSupplyCurrentSignal, nt, "deployer_supply_current");
-        signalManager.registerPublished(m_deployerPosition, nt, "deployer_position");
+        signalManager.registerPublished(Constants.CAN.kAUX_BUS, m_deployerPosition, nt, "deployer_position");
 
         // sim code
         m_intakeModel = DCMotor.getKrakenX60Foc(1);

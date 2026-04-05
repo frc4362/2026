@@ -1,5 +1,6 @@
 package com.gemsrobotics.lib;
 
+import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.controls.CoastOut;
 import com.ctre.phoenix6.controls.MotionMagicVelocityTorqueCurrentFOC;
@@ -41,11 +42,14 @@ public class Flywheel {
     private final FlywheelSim m_flywheelSim;
     private final Notifier m_simNotifier;
 
-    public Flywheel(final NetworkTable nt,
-                    final StatusSignalManager signalManager,
-                    final Distance wheelRadius,
-                    final TalonFX motorLeader,
-                    final TalonFX... motorFollowers) {
+    public Flywheel(
+            final CANBus bus,
+            final NetworkTable nt,
+            final StatusSignalManager signalManager,
+            final Distance wheelRadius,
+            final TalonFX motorLeader,
+            final TalonFX... motorFollowers
+    ) {
         m_wheelRadiusMeters = wheelRadius.in(Meters);
         m_motorLeader = motorLeader;
         //m_motorFollowers = motorFollowers;
@@ -59,12 +63,12 @@ public class Flywheel {
         m_leaderTemperatureSignal = m_motorLeader.getDeviceTemp(false);
 
         final NetworkTable myTable = nt;
-        final var powerSignals = signalManager.registerPowerTracking(myTable, m_motorLeader);
+        final var powerSignals = signalManager.registerPowerTracking(bus, myTable, m_motorLeader);
         m_leaderSupplyCurrentSignal = powerSignals.get(m_motorLeader.getDeviceID()).supplyCurrentSignal();
-        signalManager.registerPublished(m_leaderVelocitySignal, myTable, "velocity_rps");
-        signalManager.registerPublished(m_leaderVelocityReferenceSignal, myTable, "velocity_reference_rps");
-        signalManager.registerPublished(m_leaderStatorCurrentSignal, myTable, "stator_current_amps");
-        signalManager.registerPublished(m_leaderTemperatureSignal, myTable, "temp_c");
+        signalManager.registerPublished(bus, m_leaderVelocitySignal, myTable, "velocity_rps");
+        signalManager.registerPublished(bus, m_leaderVelocityReferenceSignal, myTable, "velocity_reference_rps");
+        signalManager.registerPublished(bus, m_leaderStatorCurrentSignal, myTable, "stator_current_amps");
+        signalManager.registerPublished(bus, m_leaderTemperatureSignal, myTable, "temp_c");
 
         // sim code
         m_simState = m_motorLeader.getSimState();

@@ -62,7 +62,7 @@ T_TRIP_RANGE = (100, 240)
 # Internal resistance of the breaker (Ohms).
 # Used to convert I^2*R -> heat power into the strip.
 # Typical CB285-series value: ~1–2 mΩ. Adjust or measure with a milliohmmeter.
-R_BREAKER = 0.003  # 1 mΩ — measure this
+R_BREAKER = 0.00075  # 1 mΩ — measure this
 
 # ---------------------------------------------------------------
 # Trip curve data points (read from CB285 datasheet graph).

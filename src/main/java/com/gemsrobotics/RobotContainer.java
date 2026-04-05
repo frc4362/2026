@@ -199,6 +199,7 @@ public final class RobotContainer {
         cfg.TorqueCurrent.PeakReverseTorqueCurrent = 0.0;
         motor.getConfigurator().apply(cfg);
         return new Flywheel(
+                kAUX_BUS,
                 NetworkTableInstance.getDefault().getTable(ntTable).getSubTable("lower_wheel"),
                 m_signalManager,
                 Inches.of(2.0),
@@ -220,6 +221,7 @@ public final class RobotContainer {
         cfg.TorqueCurrent.PeakReverseTorqueCurrent = 0.0;
         motor.getConfigurator().apply(cfg);
         return new Flywheel(
+                kAUX_BUS,
                 NetworkTableInstance.getDefault().getTable(ntTable).getSubTable("upper_wheel"),
                 m_signalManager,
                 Inches.of(1.0),
@@ -241,6 +243,7 @@ public final class RobotContainer {
         cfg.TorqueCurrent.PeakReverseTorqueCurrent = 0.0;
         motor.getConfigurator().apply(cfg);
         return new Flywheel(
+                kAUX_BUS,
                 NetworkTableInstance.getDefault().getTable(ntTable).getSubTable("upper_wheel"),
                 m_signalManager,
                 Inches.of(1.0),

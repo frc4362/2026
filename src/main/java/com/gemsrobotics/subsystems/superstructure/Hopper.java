@@ -7,6 +7,7 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.sim.TalonFXSimState;
+import com.gemsrobotics.Constants;
 import com.gemsrobotics.Robot;
 import com.gemsrobotics.lib.StatusSignalManager;
 import edu.wpi.first.math.system.plant.DCMotor;
@@ -96,7 +97,7 @@ public class Hopper {
 
         //region logging code
         final NetworkTable nt = NetworkTableInstance.getDefault().getTable("hopper");
-        final var powerStatusSignals = signalManager.registerPowerTracking(nt, m_motorLeader, m_motorFollower);
+        final var powerStatusSignals = signalManager.registerPowerTracking(Constants.CAN.kAUX_BUS, nt, m_motorLeader, m_motorFollower);
 
         m_leaderVelocitySignal = m_motorLeader.getVelocity(false);
         m_leaderVoltsAppliedSignal = m_motorLeader.getMotorVoltage(false);
@@ -109,12 +110,12 @@ public class Hopper {
         m_followerSupplyAmpsSignal = powerStatusSignals.get(m_motorFollower.getDeviceID()).supplyCurrentSignal();
         m_followerSupplyVoltageSignal = powerStatusSignals.get(m_motorFollower.getDeviceID()).supplyVoltageSignal();
 
-        signalManager.registerPublished(m_leaderVelocitySignal, nt, "leader_velocity_rps");
-        signalManager.registerPublished(m_leaderVoltsAppliedSignal, nt, "leader_volts");
-        signalManager.registerPublished(m_leaderStatorAmpsSignal, nt, "leader_stator_amps");
-        signalManager.registerPublished(m_followerVelocitySignal, nt, "follower_velocity_rps");
-        signalManager.registerPublished(m_followerVoltsAppliedSignal, nt, "follower_volts");
-        signalManager.registerPublished(m_followerStatorAmpsSignal, nt, "follower_stator_amps");
+        signalManager.registerPublished(Constants.CAN.kAUX_BUS, m_leaderVelocitySignal, nt, "leader_velocity_rps");
+        signalManager.registerPublished(Constants.CAN.kAUX_BUS, m_leaderVoltsAppliedSignal, nt, "leader_volts");
+        signalManager.registerPublished(Constants.CAN.kAUX_BUS, m_leaderStatorAmpsSignal, nt, "leader_stator_amps");
+        signalManager.registerPublished(Constants.CAN.kAUX_BUS, m_followerVelocitySignal, nt, "follower_velocity_rps");
+        signalManager.registerPublished(Constants.CAN.kAUX_BUS, m_followerVoltsAppliedSignal, nt, "follower_volts");
+        signalManager.registerPublished(Constants.CAN.kAUX_BUS, m_followerStatorAmpsSignal, nt, "follower_stator_amps");
         //endregion
     }
 

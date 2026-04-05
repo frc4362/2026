@@ -7,6 +7,7 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.sim.TalonFXSimState;
+import com.gemsrobotics.Constants;
 import com.gemsrobotics.Robot;
 import com.gemsrobotics.lib.StatusSignalManager;
 import edu.wpi.first.math.MathUtil;
@@ -81,15 +82,15 @@ public final class Hood {
         m_motorTorqueCurrent = m_motor.getTorqueCurrent(false);
 
         final NetworkTable nt = NetworkTableInstance.getDefault().getTable("hood");
-        final var powerSignals = signalManager.registerPowerTracking(nt, m_motor);
+        final var powerSignals = signalManager.registerPowerTracking(Constants.CAN.kAUX_BUS, nt, m_motor);
         m_motorSupplyCurrent = powerSignals.get(motor.getDeviceID()).supplyCurrentSignal();
         m_motorSupplyVoltage = powerSignals.get(motor.getDeviceID()).supplyVoltageSignal();
 
         m_worldAnglePublisher = nt.getStructTopic("rotations_world", Rotation2d.struct).publish();
         m_referencePublisher = nt.getDoubleTopic("reference_motor").publish();
         m_referenceWorldPublisher = nt.getStructTopic("reference_world", Rotation2d.struct).publish();
-        signalManager.registerPublished(m_motorRotations, nt, "rotations_motor");
-        signalManager.registerPublished(m_motorTorqueCurrent, nt, "amps");
+        signalManager.registerPublished(Constants.CAN.kAUX_BUS, m_motorRotations, nt, "rotations_motor");
+        signalManager.registerPublished(Constants.CAN.kAUX_BUS, m_motorTorqueCurrent, nt, "amps");
 
         // need to give signals to power management
 
