@@ -14,13 +14,8 @@ import com.gemsrobotics.sim.RobotVisualizer;
 import com.gemsrobotics.subsystems.superstructure.*;
 import com.gemsrobotics.commands.PilotedDrive;
 import com.gemsrobotics.vision.Limelight4;
-import com.gemsrobotics.vision.PoseEstimate;
 import com.gemsrobotics.vision.Vision;
-import edu.wpi.first.math.Matrix;
-import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.numbers.N1;
-import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -119,7 +114,6 @@ public final class RobotContainer {
         m_signalManager.periodic();
         m_superstructure.setDoEarlyAgitation(m_doEarlyAgitationTrigger.getAsBoolean());
         m_superstructure.setRetractIntake(m_retractIntakeTrigger.getAsBoolean());
-        m_superstructure.setReversedRollingFloor(m_reversedRollingFloorTrigger.getAsBoolean());
         m_vision.update();
         m_launchCalculator.periodic();
 

@@ -20,12 +20,6 @@ import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.FlywheelSim;
-import edu.wpi.first.wpilibj2.command.Command;
-
-import java.util.function.DoubleSupplier;
-
-import static edu.wpi.first.wpilibj2.command.Commands.run;
-import static edu.wpi.first.wpilibj2.command.Commands.runOnce;
 
 public class Hopper {
     private static final double GEARING = 1.0;
@@ -130,9 +124,14 @@ public class Hopper {
         m_leaderSimState.setRotorVelocity(m_rollerSim.getAngularVelocity().times(GEARING));
         m_followerSimState.setRotorVelocity(m_rollerSim.getAngularVelocity().times(GEARING));
     }
+
     private void setVelocity(final double velocity) {
         m_request.Velocity = velocity;
         m_on = true;
+    }
+
+    public void setSpitting() {
+        setVelocity(-30);
     }
 
     public void setFeeding() {

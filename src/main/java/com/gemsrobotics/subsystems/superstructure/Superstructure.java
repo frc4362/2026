@@ -60,7 +60,6 @@ public final class Superstructure extends SubsystemBase {
     private boolean m_hasEverDeployedIntake;
     private boolean m_retractIntake;
     private boolean m_doEarlyAgitation;
-    private boolean m_doReversedRollingFloor;
 
     private TunedLaunchStrategy m_tunedLaunchStrategy;
 
@@ -116,7 +115,6 @@ public final class Superstructure extends SubsystemBase {
 
         m_hasEverDeployedIntake = false;
         m_doEarlyAgitation = false;
-        m_doReversedRollingFloor = false;
     }
 
     @Override
@@ -179,8 +177,8 @@ public final class Superstructure extends SubsystemBase {
         return conformToWantedState();
     }
 
+    private final Timer m_intakeLiftTimer = new Timer();
     private boolean m_isSpunUp = false;
-    private Timer m_intakeLiftTimer = new Timer();
     private double m_startAgitationTimestamp = -1;
     public SystemState handleLaunching() {
         if (m_stateChanged) {
@@ -235,13 +233,7 @@ public final class Superstructure extends SubsystemBase {
         return conformToWantedState();
     }
 
-//    private final Timer m_assertDeployedTimer = new Timer();
-//    private boolean m_deployAsserted = false;
     public SystemState handleIntaking() {
-//        if (m_stateChanged) {
-//            m_assertDeployedTimer.restart();
-//        }
-//        m_intake.assertDeployed(m_assertDeployedTimer);
         m_intake.setDeploy();
         m_intake.setIntaking();
         m_launcherEast.setOff();
@@ -260,7 +252,7 @@ public final class Superstructure extends SubsystemBase {
         m_launcherEast.setOff();
         m_launcherWest.setOff();
         m_uptake.setIdle();
-//        m_hopper.setVelocity(-90);
+        m_hopper.setSpitting();
 
         m_hasEverDeployedIntake = true;
 
@@ -338,9 +330,5 @@ public final class Superstructure extends SubsystemBase {
 
     public void setDoEarlyAgitation(final boolean doAgitation) {
         m_doEarlyAgitation = doAgitation;
-    }
-
-    public void setReversedRollingFloor(final boolean doReversedRollingFloor) {
-        m_doReversedRollingFloor = doReversedRollingFloor;
     }
 }
