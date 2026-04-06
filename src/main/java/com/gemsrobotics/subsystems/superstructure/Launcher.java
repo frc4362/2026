@@ -22,7 +22,7 @@ public class Launcher {
         final TalonFX motor = new TalonFX(talonId, kAUX_BUS);
         final TalonFXConfiguration cfg = new TalonFXConfiguration();
         cfg.CurrentLimits.StatorCurrentLimitEnable = false;
-        cfg.CurrentLimits.StatorCurrentLimit = 100;
+        cfg.CurrentLimits.StatorCurrentLimit = 150;
         cfg.CurrentLimits.SupplyCurrentLimit = 70.0;
         cfg.CurrentLimits.SupplyCurrentLimitEnable = true;
         cfg.CurrentLimits.SupplyCurrentLowerLimit = 70.0;
@@ -30,7 +30,7 @@ public class Launcher {
         cfg.Slot0.kP = 10.0;
         cfg.Slot0.kS = 4.0;
         cfg.Slot0.kA = 2.0;
-        cfg.MotionMagic.MotionMagicAcceleration = 1000;
+        cfg.MotionMagic.MotionMagicAcceleration = 2000;
         cfg.MotorOutput.Inverted = invert;
         cfg.TorqueCurrent.PeakReverseTorqueCurrent = 0.0;
         motor.getConfigurator().apply(cfg);
@@ -47,12 +47,14 @@ public class Launcher {
         final TalonFX motor = new TalonFX(talonId, kAUX_BUS);
         final TalonFXConfiguration cfg = new TalonFXConfiguration();
         cfg.CurrentLimits.StatorCurrentLimitEnable = false;
-        cfg.CurrentLimits.StatorCurrentLimit = 100;
+        cfg.CurrentLimits.StatorCurrentLimit = 150;
+        cfg.CurrentLimits.SupplyCurrentLimitEnable = true;
+        cfg.CurrentLimits.SupplyCurrentLowerLimit = 70.0;
         cfg.Feedback.SensorToMechanismRatio = 1.0 / 2.5;
         cfg.Slot0.kP = 6.0;
         cfg.Slot0.kS = 23.0;
         cfg.Slot0.kA = 0.0;
-        cfg.MotionMagic.MotionMagicAcceleration = 1000;
+        cfg.MotionMagic.MotionMagicAcceleration = 2000;
         cfg.MotorOutput.Inverted = invert;
         cfg.TorqueCurrent.PeakReverseTorqueCurrent = 0.0;
         motor.getConfigurator().apply(cfg);
