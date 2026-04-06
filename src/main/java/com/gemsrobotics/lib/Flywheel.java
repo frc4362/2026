@@ -21,6 +21,8 @@ import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.FlywheelSim;
 
+import java.util.Map;
+
 import static edu.wpi.first.units.Units.Meters;
 
 public class Flywheel {
@@ -30,6 +32,7 @@ public class Flywheel {
     protected final TalonFX m_motorLeader;
     //private final TalonFX[] m_motorFollowers;
 
+    protected final CANBus m_canBus;
     protected final MotionMagicVelocityTorqueCurrentFOC m_velocityRequest;
     protected final CoastOut m_coastRequest;
 
@@ -50,6 +53,7 @@ public class Flywheel {
             final TalonFX motorLeader,
             final TalonFX... motorFollowers
     ) {
+        m_canBus = bus;
         m_wheelRadiusMeters = wheelRadius.in(Meters);
         m_motorLeader = motorLeader;
         //m_motorFollowers = motorFollowers;
@@ -81,6 +85,10 @@ public class Flywheel {
         if (Robot.isSimulation()) {
             m_simNotifier.startPeriodic(SIM_UPDATE_SECONDS);
         }
+    }
+
+    public Map<Integer, StatusSignalManager.PowerTrackingStatusSignals> attachPowerManagement(final StatusSignalManager signalManager, final NetworkTable table) {
+        return signalManager.registerPowerTracking(m_canBus, table, m_motorLeader);
     }
 
     public void setAngularVelocity(double rps) {
@@ -115,5 +123,9 @@ public class Flywheel {
 
         m_simState.setRotorVelocity(m_flywheelSim.getAngularVelocity());
         m_simState.setRotorVelocity(m_flywheelSim.getAngularVelocity());
+    }
+
+    public TalonFX getMotorLeader() {
+        return m_motorLeader;
     }
 }

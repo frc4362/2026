@@ -24,6 +24,7 @@ import com.gemsrobotics.Constants;
 import com.gemsrobotics.RobotState;
 import com.gemsrobotics.lib.StatusSignalManager;
 import com.gemsrobotics.lib.math.GeometryUtil;
+import com.gemsrobotics.vision.PoseEstimate;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.*;
@@ -366,6 +367,37 @@ public final class CommandSwerveDrivetrain extends SwerveConstants.TunerSwerveDr
     @Override
     public Optional<Pose2d> samplePoseAt(final double timestampSeconds) {
         return super.samplePoseAt(Utils.fpgaToCurrentTime(timestampSeconds));
+    }
+
+    public void acceptPoseMeasurement(final PoseEstimate estimate) {
+        if (Constants.Vision.ACCEPT_VISION_MEASUREMENTS) {
+            final PoseEstimate correctEstimate;
+            if (estimate.variance().get(2, 0) >= Constants.Vision.HIGH_VARIANCE || estimate.tagCount() < 2 || DriverStation.isEnabled()) {
+                // insert the known heading reading
+                // rather than hitting the pose estimator with a heading with a high variance
+                // this prevents spiraling off of the field
+                final var poseSample = samplePoseAt(estimate.timestampSeconds());
+                if (poseSample.isEmpty()) {
+                    return;
+                }
+
+                final Rotation2d newRotation = poseSample.get().getRotation();
+                final Matrix<N3, N1> correctVariance = estimate.variance().copy();
+                correctVariance.set(2, 0, 0.0);
+                correctEstimate = new PoseEstimate(
+                        estimate.timestampSeconds(),
+                        new Pose2d(estimate.fieldToVehicle().getTranslation(), newRotation),
+                        correctVariance,
+                        estimate.tagCount());
+            } else {
+                correctEstimate = estimate;
+            }
+
+            addVisionMeasurement(
+                    correctEstimate.fieldToVehicle(),
+                    correctEstimate.timestampSeconds(),
+                    correctEstimate.variance());
+        }
     }
 
     public static FieldCentricFacingAngleWithIntakeLimiting makeAimingRequest() {

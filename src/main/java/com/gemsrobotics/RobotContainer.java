@@ -4,14 +4,10 @@
 
 package com.gemsrobotics;
 
-import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.hardware.TalonFX;
-import com.ctre.phoenix6.signals.InvertedValue;
-import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.gemsrobotics.commands.Autos;
 import com.gemsrobotics.commands.SuperstructureCommands;
 import com.gemsrobotics.launching.LaunchingCalculator;
-import com.gemsrobotics.lib.Flywheel;
 import com.gemsrobotics.lib.StatusSignalManager;
 import com.gemsrobotics.sim.ProjectileManager;
 import com.gemsrobotics.sim.RobotVisualizer;
@@ -23,13 +19,10 @@ import com.gemsrobotics.vision.Vision;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import com.gemsrobotics.subsystems.swerve.CommandSwerveDrivetrain;
 import com.gemsrobotics.subsystems.swerve.SwerveConstants;
@@ -59,7 +52,7 @@ public final class RobotContainer {
 
         final Trigger pilotIntakingTrigger = m_pilot.leftTrigger();
         final Trigger pilotSnakingTrigger = m_pilot.rightBumper();
-        m_reversedRollingFloorTrigger = new Trigger(() -> false);//m_copilot.x();
+        m_reversedRollingFloorTrigger = new Trigger(() -> false);
 
         m_matchStateScheduler = matchStateScheduler;
         m_visualizer = new RobotVisualizer();
@@ -75,36 +68,7 @@ public final class RobotContainer {
                 pilotIntakingTrigger,
                 pilotSnakingTrigger));
 
-        m_robotState.addPoseEstimateConsumer(estimate -> {
-            if (Constants.Vision.ACCEPT_VISION_MEASUREMENTS) {
-                final PoseEstimate correctEstimate;
-                if (estimate.variance().get(2, 0) >= Constants.Vision.HIGH_VARIANCE || estimate.tagCount() < 2 || DriverStation.isEnabled()) {
-                    // insert the known heading reading
-                    // rather than hitting the pose estimator with a heading with a high variance
-                    // this prevents spiraling off of the field
-                    final var poseSample = m_swerve.samplePoseAt(estimate.timestampSeconds());
-                    if (poseSample.isEmpty()) {
-                        return;
-                    }
-                    
-                    final Rotation2d newRotation = poseSample.get().getRotation();
-                    final Matrix<N3, N1> correctVariance = estimate.variance().copy();
-                    correctVariance.set(2, 0, 0.0);
-                    correctEstimate = new PoseEstimate(
-                            estimate.timestampSeconds(),
-                            new Pose2d(estimate.fieldToVehicle().getTranslation(), newRotation),
-                            correctVariance,
-                            estimate.tagCount());
-                } else {
-                    correctEstimate = estimate;
-                }
-
-                m_swerve.addVisionMeasurement(
-                        correctEstimate.fieldToVehicle(),
-                        correctEstimate.timestampSeconds(),
-                        correctEstimate.variance());
-            }
-        });
+        m_robotState.addPoseEstimateConsumer(m_swerve::acceptPoseMeasurement);
 
         m_vision = new Vision(m_robotState, () ->
             new Limelight4.Inputs(m_swerve.getState().Pose, m_swerve.getYawVelocity()));
@@ -112,10 +76,8 @@ public final class RobotContainer {
         m_launchCalculator = new LaunchingCalculator(m_robotState);
         m_superstructure = new Superstructure(
                 m_swerve,
-                new Launcher(makeLowerWheel(LAUNCHER_LOWER_EAST, InvertedValue.Clockwise_Positive, "launcher_east"),
-                        makeUpperWheelDifferent(LAUNCHER_UPPER_EAST, InvertedValue.Clockwise_Positive, "launcher_east")),
-                new Launcher(makeLowerWheel(LAUNCHER_LOWER_WEST, InvertedValue.CounterClockwise_Positive, "launcher_west"),
-                        makeUpperWheel(LAUNCHER_UPPER_WEST, InvertedValue.CounterClockwise_Positive, "launcher_west")),
+                new Launcher(m_signalManager, "launcher_east", LAUNCHER_LOWER_EAST, LAUNCHER_UPPER_EAST, false),
+                new Launcher(m_signalManager, "launcher_west", LAUNCHER_LOWER_WEST, LAUNCHER_UPPER_WEST, true),
                 new Hopper(m_signalManager, new TalonFX(SINGULATOR_WEST, kAUX_BUS), new TalonFX(SINGULATOR_EAST, kAUX_BUS)),
                 new Uptake(m_signalManager,"uptake", new TalonFX(UPTAKE_EAST, kAUX_BUS), new TalonFX(UPTAKE_WEST, kAUX_BUS)),
                 new Hood(m_signalManager, new TalonFX(HOOD, kAUX_BUS)),
@@ -129,8 +91,6 @@ public final class RobotContainer {
         m_pilot.a().onTrue(m_superstructure.applyWantedState(Superstructure.SystemState.SPITTING));
         m_pilot.a().onFalse(m_superstructure.applyWantedState(Superstructure.SystemState.IDLE));
 
-//        m_joystick.rightBumper().whileTrue(new AimAndBrakeCommand(m_drivetrain, () -> Optional.of(AllianceFlipUtil.apply(FieldConstants.Hub.topCenterPoint.toTranslation2d()))));
-//        m_joystick.rightTrigger().whileTrue(SuperstructureCommands.makeLaunchCommand(m_swerve, m_superstructure, m_launchCalculator));
         m_pilot.rightTrigger().whileTrue(SuperstructureCommands.makeLaunchCommand_MatchState(
                 m_swerve,
                 m_superstructure,
@@ -139,8 +99,6 @@ public final class RobotContainer {
                 () -> -m_pilot.getLeftY(),
                 () -> -m_pilot.getLeftX()));
         m_pilot.rightTrigger().onFalse(m_superstructure.applyWantedState(Superstructure.SystemState.IDLE));
-
-//        m_pilot.povRight().whileTrue(SuperstructureCommands.driveOverBump(m_robotState, m_swerve).andThen(() -> m_swerve.setControl(new SwerveRequest.Idle())));
 
         m_doEarlyAgitationTrigger = new Trigger(DriverStation::isAutonomous).or(m_copilot.a());
         m_retractIntakeTrigger = m_copilot.y();
@@ -180,75 +138,6 @@ public final class RobotContainer {
 
     public void configureDisabled() {
         m_vision.configureDisabled();
-    }
-
-    private Flywheel makeLowerWheel(int talonId, InvertedValue invert, String ntTable) {
-        final TalonFX motor = new TalonFX(talonId, kAUX_BUS);
-        final TalonFXConfiguration cfg = new TalonFXConfiguration();
-        cfg.CurrentLimits.StatorCurrentLimitEnable = false;
-        cfg.CurrentLimits.StatorCurrentLimit = 100;
-        cfg.CurrentLimits.SupplyCurrentLimit = 70.0;
-        cfg.CurrentLimits.SupplyCurrentLimitEnable = true;
-        cfg.CurrentLimits.SupplyCurrentLowerLimit = 70.0;
-        cfg.Feedback.SensorToMechanismRatio = 1.0;
-        cfg.Slot0.kP = 10.0;
-        cfg.Slot0.kS = 4.0;
-        cfg.Slot0.kA = 2.0;
-        cfg.MotionMagic.MotionMagicAcceleration = 1000;
-        cfg.MotorOutput.Inverted = invert;
-        cfg.TorqueCurrent.PeakReverseTorqueCurrent = 0.0;
-        motor.getConfigurator().apply(cfg);
-        return new Flywheel(
-                kAUX_BUS,
-                NetworkTableInstance.getDefault().getTable(ntTable).getSubTable("lower_wheel"),
-                m_signalManager,
-                Inches.of(2.0),
-                motor
-        );
-    }
-
-    private Flywheel makeUpperWheel(int talonId, InvertedValue invert, String ntTable) {
-        final TalonFX motor = new TalonFX(talonId, kAUX_BUS);
-        final TalonFXConfiguration cfg = new TalonFXConfiguration();
-        cfg.CurrentLimits.StatorCurrentLimitEnable = false;
-        cfg.CurrentLimits.StatorCurrentLimit = 100;
-        cfg.Feedback.SensorToMechanismRatio = 1.0 / 2.5;
-        cfg.Slot0.kP = 6.0;
-        cfg.Slot0.kS = 23.0;
-        cfg.Slot0.kA = 0.0;
-        cfg.MotionMagic.MotionMagicAcceleration = 1000;
-        cfg.MotorOutput.Inverted = invert;
-        cfg.TorqueCurrent.PeakReverseTorqueCurrent = 0.0;
-        motor.getConfigurator().apply(cfg);
-        return new Flywheel(
-                kAUX_BUS,
-                NetworkTableInstance.getDefault().getTable(ntTable).getSubTable("upper_wheel"),
-                m_signalManager,
-                Inches.of(1.0),
-                motor
-        );
-    }
-
-    private Flywheel makeUpperWheelDifferent(int talonId, InvertedValue invert, String ntTable) {
-        final TalonFX motor = new TalonFX(talonId, kAUX_BUS);
-        final TalonFXConfiguration cfg = new TalonFXConfiguration();
-        cfg.CurrentLimits.StatorCurrentLimitEnable = false;
-        cfg.CurrentLimits.StatorCurrentLimit = 100;
-        cfg.Feedback.SensorToMechanismRatio = 1.0 / 2.5;
-        cfg.Slot0.kP = 7.0;
-        cfg.Slot0.kS = 12.5;
-        cfg.Slot0.kA = 0.0;
-        cfg.MotionMagic.MotionMagicAcceleration = 1000;
-        cfg.MotorOutput.Inverted = invert;
-        cfg.TorqueCurrent.PeakReverseTorqueCurrent = 0.0;
-        motor.getConfigurator().apply(cfg);
-        return new Flywheel(
-                kAUX_BUS,
-                NetworkTableInstance.getDefault().getTable(ntTable).getSubTable("upper_wheel"),
-                m_signalManager,
-                Inches.of(1.0),
-                motor
-        );
     }
 
     public RobotState getRobotState() {

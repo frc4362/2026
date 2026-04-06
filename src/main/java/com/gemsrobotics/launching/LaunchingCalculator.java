@@ -231,6 +231,7 @@ public final class LaunchingCalculator {
 			final double a = targetA.getSquaredNorm();
 			final double b = targetB.getSquaredNorm();
 			final double c = sidewaysErrorDistance * 2.0;
+			// solve da triangle
 			return Rotation2d.fromRadians(acos((a + b - c * c) / (2 * sqrt(a) * sqrt(b)))).div(2.0);
 		}
 	}
