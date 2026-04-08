@@ -16,7 +16,6 @@ import edu.wpi.first.units.measure.Mass;
 
 import static edu.wpi.first.units.Units.*;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
-import static java.lang.Math.abs;
 import static java.lang.Math.sqrt;
 
 public final class Constants {
@@ -134,8 +133,8 @@ public final class Constants {
 
     //--------------------aux-bus---------------------------
 
-    public static final int INTAKE_TRANSLATION_LEADER = 30;
-    public static final int INTAKE_TRANSLATION_FOLLOWER = 31;
+    public static final int INTAKE_TRANSLATION_LEADER = 31;
+    public static final int INTAKE_TRANSLATION_FOLLOWER = 30;
     public static final int INTAKE_DEPLOYER = 32;
     public static final int LAUNCHER_LOWER_WEST = 33;
     public static final int LAUNCHER_UPPER_WEST = 34;
