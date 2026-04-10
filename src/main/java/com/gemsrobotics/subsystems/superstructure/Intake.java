@@ -32,7 +32,7 @@ public final class Intake {
     // Assumes the intake is retracted at 0 rotations and deploys in the positive direction
     private static final double INTAKE_STOWED_ROTATIONS = 0.31;
     private static final double INTAKE_FEEDING_ROTATIONS = 0.295;
-    private static final double INTAKE_AGITATING_ROTATIONS = 0.1;
+    private static final double INTAKE_AGITATING_ROTATIONS = 0.12;
     private static final double INTAKE_DEPLOYED_ROTATIONS = 0.0;   // (135deg/360deg)
 //    private static final double INTAKE_ASSERT_ROTATIONS = 0.5;
     private static final double IDLE_VElOCITY = 0;

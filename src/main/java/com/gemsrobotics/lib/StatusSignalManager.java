@@ -15,6 +15,7 @@ import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Voltage;
+import edu.wpi.first.wpilibj.DriverStation;
 
 import java.util.*;
 
@@ -44,7 +45,9 @@ public final class StatusSignalManager {
         for (final CANBus bus : m_canBuses) {
             final String busName = bus.getName();
             m_signalCollections.get(busName).refreshAll();
-            m_statusPublishers.get(busName).set(bus.getStatus());
+            if (DriverStation.isDisabled()) {
+                m_statusPublishers.get(busName).set(bus.getStatus());
+            }
         }
 
         // update all the signal publishers at once

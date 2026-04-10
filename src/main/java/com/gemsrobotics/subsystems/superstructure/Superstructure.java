@@ -30,8 +30,8 @@ public final class Superstructure extends SubsystemBase {
     }
 
     public static final boolean DO_INTAKE_AGITATION = true;
-    public static final double INTAKE_AGITATION_DELAY = 3.0;
-    public static final double INTAKE_AGITATION_FREQUENCY = 2.5;
+    public static final double INTAKE_AGITATION_DELAY = 2.25;
+    public static final double INTAKE_AGITATION_FREQUENCY = 2.0;
     public static final double INTAKE_AGITATION_PHASE = 1.0 / INTAKE_AGITATION_FREQUENCY;
 
     private final CommandSwerveDrivetrain m_swerve;
