@@ -28,19 +28,19 @@ import java.util.List;
 
 public final class Intake {
 //    private static final double INTAKE_STARTING_ROTATIONS = -0.43;
-    private static final double INTAKE_STARTING_ROTATIONS = -0.4395;
+    private static final double INTAKE_STARTING_ROTATIONS = 0.369;// - 0.022;
     // Assumes the intake is retracted at 0 rotations and deploys in the positive direction
-    private static final double INTAKE_STOWED_ROTATIONS = -0.31;
-    private static final double INTAKE_FEEDING_ROTATIONS = -0.295;
-    private static final double INTAKE_AGITATING_ROTATIONS = -0.09;
+    private static final double INTAKE_STOWED_ROTATIONS = 0.31;
+    private static final double INTAKE_FEEDING_ROTATIONS = 0.295;
+    private static final double INTAKE_AGITATING_ROTATIONS = 0.12;
     private static final double INTAKE_DEPLOYED_ROTATIONS = 0.0;   // (135deg/360deg)
 //    private static final double INTAKE_ASSERT_ROTATIONS = 0.5;
-    private static final double INTAKE_VELOCITY = 33.0;
     private static final double IDLE_VElOCITY = 0;
     private static final double SIM_UPDATE_SECONDS = 0.001;
 
     public static final double TRANSLATION_GEARING = 2.62;
-    private static final double DEPLOYER_GEARING = 23.0 * (32.0 / 36.0);
+    private static final double TRANSLATION_VELOCITY = 33.0;
+    private static final double DEPLOYER_GEARING = 23.0 * (36.0 / 34.0);
     private static final double DEPLOYER_ARM_LENGTH = 0.37;
 
     private final StatusSignal<AngularVelocity> m_intakeVelocitySignal;
@@ -59,41 +59,42 @@ public final class Intake {
     private final VelocityTorqueCurrentFOC m_translationRequest;
     private final DutyCycleOut m_intakingRequest;
     private final DynamicMotionMagicTorqueCurrentFOC m_deployRequest;
-    private final TalonFX m_translationLeader, m_translationFollower;
+    private final TalonFX m_translationTop, m_translationBottom;
     private final TalonFX m_deployer;
 
     public Intake(final StatusSignalManager signalManager, final TalonFX intakeLeader, final TalonFX intakeFollower, final TalonFX deployerMotor) {
-        m_translationLeader = intakeLeader;
-        m_translationFollower = intakeFollower;
+        m_translationTop = intakeLeader;
+        m_translationBottom = intakeFollower;
         final var cfg = new TalonFXConfiguration();
         cfg.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
         cfg.Feedback.SensorToMechanismRatio = TRANSLATION_GEARING;
-        cfg.CurrentLimits.StatorCurrentLimit = 120;
         cfg.CurrentLimits.StatorCurrentLimitEnable = true;
+        cfg.CurrentLimits.StatorCurrentLimit = 120;
+        cfg.CurrentLimits.SupplyCurrentLimitEnable = true;
+        cfg.CurrentLimits.SupplyCurrentLimit = 40.0;
         cfg.Voltage.PeakForwardVoltage = 12;
         cfg.Voltage.PeakReverseVoltage = -12;
         cfg.MotorOutput.NeutralMode = NeutralModeValue.Coast;
         cfg.Slot0.kP = 8.0;
         cfg.Slot0.kA = 0.0;
-        cfg.CurrentLimits.SupplyCurrentLimit = 50.0;
-        cfg.CurrentLimits.SupplyCurrentLimitEnable = true;
-        m_translationLeader.getConfigurator().apply(cfg);
-        m_translationFollower.getConfigurator().apply(cfg);
+        m_translationTop.getConfigurator().apply(cfg);
+        m_translationBottom.getConfigurator().apply(cfg);
 
         m_deployer = deployerMotor;
         final var cfgDep = new TalonFXConfiguration();
-        cfgDep.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
-        cfgDep.CurrentLimits.StatorCurrentLimit = 80;
+        cfgDep.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
         cfgDep.CurrentLimits.StatorCurrentLimitEnable = true;
-        cfgDep.CurrentLimits.SupplyCurrentLimit = 40;
+        cfgDep.CurrentLimits.StatorCurrentLimit = 80;
         cfgDep.CurrentLimits.SupplyCurrentLimitEnable = true;
+        cfgDep.CurrentLimits.SupplyCurrentLimit = 30;
         cfgDep.Voltage.PeakForwardVoltage = 12;
         cfgDep.Voltage.PeakReverseVoltage = -12;
         cfgDep.MotorOutput.NeutralMode = NeutralModeValue.Brake;
         cfgDep.Slot0.kP = 3000;
         cfgDep.Slot0.kD = 30;
-        cfgDep.MotionMagic.MotionMagicAcceleration = 2.0;
+        cfgDep.MotionMagic.MotionMagicAcceleration = 0.25;
         cfgDep.Feedback.SensorToMechanismRatio = DEPLOYER_GEARING;
+        cfgDep.TorqueCurrent.TorqueNeutralDeadband = 1.5;
         m_deployer.getConfigurator().apply(cfgDep);
 
         m_deployer.setPosition(INTAKE_STARTING_ROTATIONS);
@@ -110,17 +111,17 @@ public final class Intake {
                 Constants.CAN.kAUX_BUS,
                 nt,
                 List.of("deployer", "roller_top", "roller_bot"),
-                List.of(m_deployer, m_translationLeader, m_translationFollower));
+                List.of(m_deployer, m_translationTop, m_translationBottom));
 
-        m_intakeVelocitySignal = m_translationLeader.getVelocity(false);
-        m_intakeStatorCurrentSignal = m_translationLeader.getStatorCurrent(false);
+        m_intakeVelocitySignal = m_translationTop.getVelocity(false);
+        m_intakeStatorCurrentSignal = m_translationTop.getStatorCurrent(false);
         m_deployerStatorCurrentSignal = m_deployer.getStatorCurrent(false);
-        m_intakeSupplyCurrentSignal = powerStatusSignals.get(m_translationLeader.getDeviceID()).supplyCurrentSignal();
+        m_intakeSupplyCurrentSignal = powerStatusSignals.get(m_translationTop.getDeviceID()).supplyCurrentSignal();
         m_deployerSupplyCurrentSignal = powerStatusSignals.get(m_deployer.getDeviceID()).supplyCurrentSignal();
         m_deployerPosition = m_deployer.getPosition(false);
 
         // do this so the follower stays tapped in
-        m_translationLeader.getTorqueCurrent(false).setUpdateFrequency(250.0);
+        m_translationTop.getTorqueCurrent(false).setUpdateFrequency(250.0);
 
         signalManager.registerPublished(Constants.CAN.kAUX_BUS, m_intakeVelocitySignal, nt, "intake_velocity_rps");
         signalManager.registerPublished(Constants.CAN.kAUX_BUS, m_intakeStatorCurrentSignal, nt, "intake_stator_current");
@@ -133,7 +134,7 @@ public final class Intake {
         m_intakeModel = DCMotor.getKrakenX60Foc(1);
         m_deployerModel = DCMotor.getKrakenX44Foc(1);
 
-        m_intakeSimState = m_translationLeader.getSimState();
+        m_intakeSimState = m_translationTop.getSimState();
         m_intakeSim = new DCMotorSim(
                 LinearSystemId.createDCMotorSystem(m_intakeModel, 0.001, TRANSLATION_GEARING),
                 m_intakeModel
@@ -149,7 +150,8 @@ public final class Intake {
                 Math.toRadians(105),
                 true,
                 0.0,
-                0.0, 0.0
+                0.0,
+                0.0
         );
 
         m_simNotifier = new Notifier(this::simulationPeriodic);
@@ -161,49 +163,54 @@ public final class Intake {
     public void setDeploy() {
         m_deployer.setControl(m_deployRequest
                 .withPosition(INTAKE_DEPLOYED_ROTATIONS)
-                .withVelocity(10));
+                .withVelocity(4.0)
+                .withAcceleration(2.5));
     }
 
     public void setRetract() {
         m_deployer.setControl(m_deployRequest
                 .withPosition(INTAKE_STOWED_ROTATIONS)
-                .withVelocity(10));
+                .withVelocity(2.0));
     }
 
     public void setRetractSlowly() {
         m_deployer.setControl(m_deployRequest
                 .withPosition(INTAKE_FEEDING_ROTATIONS)
-                .withVelocity(1.1 / 6.0));
+                .withVelocity(1.1 / 6.0)
+                .withAcceleration(2.0));
     }
 
     public void setAgitating() {
         m_deployer.setControl(m_deployRequest
                 .withPosition(INTAKE_AGITATING_ROTATIONS)
-                .withVelocity(15));
+                .withVelocity(15.0)
+                .withAcceleration(10.0));
     }
 
     public void setPushing() {
-        m_deployer.setControl(m_deployRequest.withPosition(-0.17).withVelocity(15));
+        m_deployer.setControl(m_deployRequest.withPosition(0.185)
+                .withVelocity(15)
+                .withAcceleration(10.0));
     }
 
     public void setFeedingHopper() {
-        m_translationLeader.setControl(m_translationRequest.withVelocity(INTAKE_VELOCITY / 3.0));
-        m_translationFollower.setControl(m_translationRequest.withVelocity(INTAKE_VELOCITY / 3.0));
+        m_translationTop.setControl(m_translationRequest.withVelocity(TRANSLATION_VELOCITY / 2.0));
+        m_translationBottom.setControl(m_translationRequest.withVelocity(TRANSLATION_VELOCITY / 2.0));
     }
 
     public void setIntaking() {
-        m_translationLeader.setControl(m_intakingRequest);
-        m_translationFollower.setControl(m_intakingRequest);
+        m_translationTop.setControl(m_intakingRequest);
+        m_translationBottom.setControl(m_intakingRequest);
     }
 
     public void setSpitting() {
-        m_translationLeader.setControl(m_translationRequest.withVelocity(-INTAKE_VELOCITY));
-        m_translationFollower.setControl(m_translationRequest.withVelocity(-INTAKE_VELOCITY));
+        m_translationTop.setControl(m_translationRequest.withVelocity(-TRANSLATION_VELOCITY));
+        m_translationBottom.setControl(m_translationRequest.withVelocity(-TRANSLATION_VELOCITY));
     }
 
     public void setStop() {
-        m_translationLeader.setControl(new CoastOut());
-        m_translationFollower.setControl(new CoastOut());
+        m_translationTop.setControl(new CoastOut());
+        m_translationBottom.setControl(new CoastOut());
     }
 
     public Rotation2d getAngle() {

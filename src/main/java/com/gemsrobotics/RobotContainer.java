@@ -38,7 +38,7 @@ public final class RobotContainer {
     private final LaunchingCalculator m_launchCalculator;
     private final Autos m_autos;
     private final ProjectileManager m_projectileManager;
-    private final Trigger m_doEarlyAgitationTrigger, m_retractIntakeTrigger, m_reversedRollingFloorTrigger;
+    private final Trigger m_doEarlyAgitationTrigger, m_retractIntakeTrigger, m_wantsIntakingTrigger;
 
     public RobotContainer(MatchStateScheduler matchStateScheduler) {
         m_signalManager = new StatusSignalManager();
@@ -47,7 +47,7 @@ public final class RobotContainer {
 
         final Trigger pilotIntakingTrigger = m_pilot.leftTrigger();
         final Trigger pilotSnakingTrigger = m_pilot.rightBumper();
-        m_reversedRollingFloorTrigger = new Trigger(() -> false);
+        m_wantsIntakingTrigger = pilotIntakingTrigger;
 
         m_matchStateScheduler = matchStateScheduler;
         m_visualizer = new RobotVisualizer();
@@ -114,6 +114,7 @@ public final class RobotContainer {
         m_signalManager.periodic();
         m_superstructure.setDoEarlyAgitation(m_doEarlyAgitationTrigger.getAsBoolean());
         m_superstructure.setRetractIntake(m_retractIntakeTrigger.getAsBoolean());
+        m_superstructure.setWantsIntaking(m_wantsIntakingTrigger.getAsBoolean());
         m_vision.update();
         m_launchCalculator.periodic();
 

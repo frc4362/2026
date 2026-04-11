@@ -30,8 +30,8 @@ public final class Superstructure extends SubsystemBase {
     }
 
     public static final boolean DO_INTAKE_AGITATION = true;
-    public static final double INTAKE_AGITATION_DELAY = 4.0;
-    public static final double INTAKE_AGITATION_FREQUENCY = 2;
+    public static final double INTAKE_AGITATION_DELAY = 2.25;
+    public static final double INTAKE_AGITATION_FREQUENCY = 2.0;
     public static final double INTAKE_AGITATION_PHASE = 1.0 / INTAKE_AGITATION_FREQUENCY;
 
     private final CommandSwerveDrivetrain m_swerve;
@@ -61,6 +61,7 @@ public final class Superstructure extends SubsystemBase {
     private boolean m_hasEverDeployedIntake;
     private boolean m_retractIntake;
     private boolean m_doEarlyAgitation;
+    private boolean m_wantsIntaking;
 
     private TunedLaunchStrategy m_tunedLaunchStrategy;
 
@@ -115,6 +116,7 @@ public final class Superstructure extends SubsystemBase {
 
         m_isAllowedToLaunch = true;
 
+        m_wantsIntaking = false;
         m_hasEverDeployedIntake = false;
         m_doEarlyAgitation = false;
     }
@@ -162,9 +164,9 @@ public final class Superstructure extends SubsystemBase {
     }
 
     public SystemState handleIdle() {
-        if (DriverStation.isDisabled() && m_robotState.getLastVisionPoseEstimate().tagCount() > 1) {
-            m_orchestra.play();
-        }
+//        if (DriverStation.isDisabled() && m_robotState.getLastVisionPoseEstimate().tagCount() > 1) {
+//            m_orchestra.play();
+//        }
 
         if (m_retractIntake) {
             m_intake.setRetract();
@@ -214,11 +216,13 @@ public final class Superstructure extends SubsystemBase {
                 s = m_stateChangedTimer.get();
             }
 
-            if ((s % INTAKE_AGITATION_PHASE) < (INTAKE_AGITATION_PHASE / 2.0)) {
+            if (m_wantsIntaking) {
+                m_intake.setIntaking();
+            } else if ((s % INTAKE_AGITATION_PHASE) < (INTAKE_AGITATION_PHASE / 2.0)) {
                 if (doPush) {
-                    m_intake.setPushing();
-                } else {
                     m_intake.setAgitating();
+                } else {
+                    m_intake.setDeploy();
                 }
             } else {
                 m_intake.setDeploy();
@@ -333,5 +337,9 @@ public final class Superstructure extends SubsystemBase {
 
     public void setDoEarlyAgitation(final boolean doAgitation) {
         m_doEarlyAgitation = doAgitation;
+    }
+
+    public void setWantsIntaking(final boolean wantsIntaking) {
+        m_wantsIntaking = wantsIntaking;
     }
 }

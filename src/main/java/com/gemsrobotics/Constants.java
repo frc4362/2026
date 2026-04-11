@@ -16,12 +16,11 @@ import edu.wpi.first.units.measure.Mass;
 
 import static edu.wpi.first.units.Units.*;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
-import static java.lang.Math.abs;
 import static java.lang.Math.sqrt;
 
 public final class Constants {
   public static final double LOOP_PERIOD_SECONDS = 0.02;
-  public static final double PHASE_LAG_SECONDS = 0.03;
+  public static final double PHASE_LAG_SECONDS = 0.02;
 
   public static final double LAUNCH_TIME_AFTER_ACTIVE = 1.0;
   public static final double LAUNCH_TIME_BEFORE_ACTIVE = 1.5 + LAUNCH_TIME_AFTER_ACTIVE;
@@ -127,15 +126,15 @@ public final class Constants {
     public static final int SWERVE_SW_ENCODER = 10;
     public static final int SWERVE_SE_ENCODER = 11;
 
-    public static final Angle SWERVE_NW_ENCODER_OFFSET = Rotations.of(-0.03857421875);
-    public static final Angle SWERVE_NE_ENCODER_OFFSET = Rotations.of(-0.46533203125);
-    public static final Angle SWERVE_SW_ENCODER_OFFSET = Rotations.of(-0.452880859375);
-    public static final Angle SWERVE_SE_ENCODER_OFFSET = Rotations.of(-0.37548828125);
+    public static final Angle SWERVE_NW_ENCODER_OFFSET = Rotations.of(0.456787109375);
+    public static final Angle SWERVE_NE_ENCODER_OFFSET = Rotations.of(-0.46630859375);
+    public static final Angle SWERVE_SW_ENCODER_OFFSET = Rotations.of(-0.45703125);
+    public static final Angle SWERVE_SE_ENCODER_OFFSET = Rotations.of(-0.374267578125);
 
     //--------------------aux-bus---------------------------
 
-    public static final int INTAKE_TRANSLATION_LEADER = 30;
-    public static final int INTAKE_TRANSLATION_FOLLOWER = 31;
+    public static final int INTAKE_TRANSLATION_LEADER = 31;
+    public static final int INTAKE_TRANSLATION_FOLLOWER = 30;
     public static final int INTAKE_DEPLOYER = 32;
     public static final int LAUNCHER_LOWER_WEST = 33;
     public static final int LAUNCHER_UPPER_WEST = 34;
