@@ -49,6 +49,7 @@ public final class Superstructure extends SubsystemBase {
     private final StringPublisher m_wantedStatePublisher;
     private final DoublePublisher m_hubDistancePublisher, m_launchVelocityPublisher, m_stateChangeTimePublisher;
     private final StructPublisher<Rotation2d> m_launchAnglePublisher;
+    private final BooleanPublisher m_isLaunchingPublisher;
 
     private SystemState m_state;
     private SystemState m_stateWanted;
@@ -98,6 +99,7 @@ public final class Superstructure extends SubsystemBase {
         m_stateChangeTimePublisher = myTable.getDoubleTopic("state_change_time").publish();
         m_launchVelocityPublisher = myTable.getDoubleTopic("launch_velocity_rps").publish();
         m_launchAnglePublisher = myTable.getStructTopic("launch_angle", Rotation2d.struct).publish();
+        m_isLaunchingPublisher = myTable.getBooleanTopic("is_launching").publish();
 
         m_tunedLaunchStrategy = new TunedLaunchStrategy(myTable);
 
@@ -123,6 +125,7 @@ public final class Superstructure extends SubsystemBase {
         m_wantedStatePublisher.set(m_stateWanted.name());
         m_hubDistancePublisher.set(getDistanceToHub());
         m_stateChangeTimePublisher.set(m_stateChangedTimer.get());
+        m_isLaunchingPublisher.set(isLaunching());
 
         getSelectedLaunchParameters().ifPresent(parameters -> {
             m_launchVelocityPublisher.set(parameters.getRps());
@@ -192,7 +195,7 @@ public final class Superstructure extends SubsystemBase {
 
         getSelectedLaunchParameters().ifPresent(this::conformToLaunchParameters);
 
-        if ((m_isSpunUp || isReadyToLaunch()) && (m_isAllowedToLaunch || m_doTuningChooser.getSelected())) {
+        if ((m_isSpunUp || isReadyToStartLaunching()) && (m_isAllowedToLaunch || m_doTuningChooser.getSelected())) {
             if (!m_isSpunUp) {
                 m_intakeLiftTimer.start();
             }
@@ -271,6 +274,10 @@ public final class Superstructure extends SubsystemBase {
         }).until(() -> m_state == newState);
     }
 
+    public boolean isLaunching() {
+        return m_uptake.isLaunching.getAsBoolean() && m_state == SystemState.LAUNCHING && m_isSpunUp;
+    }
+
     private double getDistanceToHub() {
         // get our hub
         final Translation2d target = AllianceFlipUtil.apply(FieldConstants.Hub.topCenterPoint.toTranslation2d());
@@ -286,7 +293,7 @@ public final class Superstructure extends SubsystemBase {
         }
     }
 
-    public boolean isReadyToLaunch() {
+    public boolean isReadyToStartLaunching() {
         return m_launcherWest.atReference() && m_launcherEast.atReference() && m_hood.atReference();
     }
 
@@ -294,10 +301,6 @@ public final class Superstructure extends SubsystemBase {
         m_hood.setReference(parameters.getHoodAngle());
         m_launcherEast.setAngularVelocity(parameters.getRps());
         m_launcherWest.setAngularVelocity(parameters.getRps());
-    }
-
-    public boolean isLaunching() {
-        return m_state == SystemState.LAUNCHING && m_isSpunUp;// m_launcher.getVelocity() > 33 && m_uptake.getVelocity() > 28 && m_hopper.getVelocity() > 28;
     }
 
     public void setRetractIntake(boolean retractIntake) {
