@@ -60,6 +60,7 @@ public final class Superstructure extends SubsystemBase {
     private boolean m_hasEverDeployedIntake;
     private boolean m_retractIntake;
     private boolean m_doEarlyAgitation;
+    private boolean m_wantsIntaking;
 
     private TunedLaunchStrategy m_tunedLaunchStrategy;
 
@@ -113,6 +114,7 @@ public final class Superstructure extends SubsystemBase {
 
         m_isAllowedToLaunch = true;
 
+        m_wantsIntaking = false;
         m_hasEverDeployedIntake = false;
         m_doEarlyAgitation = false;
     }
@@ -211,7 +213,9 @@ public final class Superstructure extends SubsystemBase {
                 s = m_stateChangedTimer.get();
             }
 
-            if ((s % INTAKE_AGITATION_PHASE) < (INTAKE_AGITATION_PHASE / 2.0)) {
+            if (m_wantsIntaking) {
+                m_intake.setIntaking();
+            } else if ((s % INTAKE_AGITATION_PHASE) < (INTAKE_AGITATION_PHASE / 2.0)) {
                 if (doPush) {
                     m_intake.setAgitating();
                 } else {
@@ -330,5 +334,9 @@ public final class Superstructure extends SubsystemBase {
 
     public void setDoEarlyAgitation(final boolean doAgitation) {
         m_doEarlyAgitation = doAgitation;
+    }
+
+    public void setWantsIntaking(final boolean wantsIntaking) {
+        m_wantsIntaking = wantsIntaking;
     }
 }

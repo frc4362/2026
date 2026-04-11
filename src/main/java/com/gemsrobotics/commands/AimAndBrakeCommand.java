@@ -43,8 +43,8 @@ public final class AimAndBrakeCommand extends Command {
         m_timer = new Timer();
 
         m_turnRequest = CommandSwerveDrivetrain.makeAimingRequest();
-        m_turnRequest.HeadingController.setTolerance(Math.toRadians(0.5));
-        m_turnRequest.HeadingController = new com.ctre.phoenix6.swerve.utility.PhoenixPIDController(24.0, 0.0, 0.0);
+        m_turnRequest.HeadingController.setPID(9.0, 0.0, 0.0);
+        m_turnRequest.HeadingController.setTolerance(Math.toRadians(1.0));
         m_idleRequest = new SwerveRequest.Idle();
         m_brakeRequest = new SwerveRequest.SwerveDriveBrake();
         m_brakeRequest.SteerRequestType = SwerveModule.SteerRequestType.MotionMagicExpo;

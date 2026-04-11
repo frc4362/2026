@@ -95,12 +95,11 @@ public final class LaunchingCalculator {
 		RANGE_TO_WHEEL_RPS_FEEDING.put(8.0, 42.0);
 		RANGE_TO_WHEEL_RPS_FEEDING.put(17.0, 70.0);
 
-		RANGE_TO_TOF_MAP.put(1.6, 0.9);
-		RANGE_TO_TOF_MAP.put(2.0, 1.1);
-		RANGE_TO_TOF_MAP.put(3.0, 1.15);
-		RANGE_TO_TOF_MAP.put(4.0, 1.2);
-		RANGE_TO_TOF_MAP.put(5.0, 1.25);
-		RANGE_TO_TOF_MAP.put(5.5, 1.3);
+		RANGE_TO_TOF_MAP.put(1.66, 0.84);
+		RANGE_TO_TOF_MAP.put(2.40, 1.05);
+		RANGE_TO_TOF_MAP.put(3.01, 1.0);
+		RANGE_TO_TOF_MAP.put(3.18, 1.0);
+		RANGE_TO_TOF_MAP.put(4.0, 0.8);
 		RANGE_TO_TOF_MAP_FEEDING.put(1.0, 0.9);
 		RANGE_TO_TOF_MAP_FEEDING.put(2.0, 1.0);
 		RANGE_TO_TOF_MAP_FEEDING.put(3.0, 1.1);

@@ -20,7 +20,7 @@ import static java.lang.Math.sqrt;
 
 public final class Constants {
   public static final double LOOP_PERIOD_SECONDS = 0.02;
-  public static final double PHASE_LAG_SECONDS = 0.03;
+  public static final double PHASE_LAG_SECONDS = 0.02;
 
   public static final double LAUNCH_TIME_AFTER_ACTIVE = 1.0;
   public static final double LAUNCH_TIME_BEFORE_ACTIVE = 1.5 + LAUNCH_TIME_AFTER_ACTIVE;
