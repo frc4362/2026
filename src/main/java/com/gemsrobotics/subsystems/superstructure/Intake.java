@@ -163,8 +163,8 @@ public final class Intake {
     public void setDeploy() {
         m_deployer.setControl(m_deployRequest
                 .withPosition(INTAKE_DEPLOYED_ROTATIONS)
-                .withVelocity(4.0)
-                .withAcceleration(2.5));
+                .withVelocity(5.0)
+                .withAcceleration(4.0));
     }
 
     public void setRetract() {
@@ -175,9 +175,9 @@ public final class Intake {
 
     public void setRetractSlowly() {
         m_deployer.setControl(m_deployRequest
-                .withPosition(INTAKE_FEEDING_ROTATIONS)
-                .withVelocity(1.1 / 6.0)
-                .withAcceleration(2.0));
+                .withPosition(0.16)
+                .withVelocity(0.16 / 2.25)
+                .withAcceleration(3.0));
     }
 
     public void setAgitating() {

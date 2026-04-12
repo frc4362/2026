@@ -49,7 +49,7 @@ public class SuperstructureCommands {
 				* (DriverStation.getAlliance().map(alliance -> alliance == DriverStation.Alliance.Red).orElse(false) ? -1.0 : 1.0);
 
 		final Supplier<Optional<LaunchingCalculator.Parameters>> parametersSupplier = calculator::getLatestLaunchParameters;
-		final AimAndBrakeCommand aimingCommand = new AimAndBrakeCommand(
+		final AimCommand aimingCommand = new AimCommand(
 				swerve,
 				() -> parametersSupplier.get().map(LaunchingCalculator.Parameters::vehicleRotation),
 				myVelocityX,

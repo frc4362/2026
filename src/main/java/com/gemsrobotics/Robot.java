@@ -24,7 +24,7 @@ public final class Robot extends TimedRobot {
     public Robot() {
         m_matchStateScheduler = new MatchStateScheduler();
         m_robotContainer = new RobotContainer(m_matchStateScheduler);
-        RobotController.setBrownoutVoltage(5.0);
+        RobotController.setBrownoutVoltage(4.75);
 
         m_autoChooser = m_robotContainer.getAutos().getAutoChooser();
 

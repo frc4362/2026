@@ -20,6 +20,7 @@ import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.FlywheelSim;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 public class Hopper {
     private static final double GEARING = 1.0;
@@ -131,7 +132,8 @@ public class Hopper {
     }
 
     public void setSpitting() {
-        setVelocity(-30);
+        m_motorLeader.setControl(new VoltageOut(-6.0));
+        m_motorFollower.setControl(new VoltageOut(-6.0));
     }
 
     public void setFeeding() {

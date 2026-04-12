@@ -15,6 +15,7 @@ import edu.wpi.first.math.interpolation.InterpolatingTreeMap;
 import edu.wpi.first.math.interpolation.InverseInterpolator;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.networktables.*;
+import edu.wpi.first.units.Units;
 import edu.wpi.first.util.struct.Struct;
 import edu.wpi.first.util.struct.StructGenerator;
 import edu.wpi.first.util.struct.StructSerializable;
@@ -24,6 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Meters;
 import static java.lang.Math.*;
 
@@ -33,9 +35,12 @@ public final class LaunchingCalculator {
 	private static final boolean DO_LINEAR_DRAG_COMPENSATION = true;
 	private static final double DRAG_CONSTANT_INVERSE_SECONDS = 0.25;
 	private static final double TOF_EPSILON = 0.001;
-	private static final double MIN_RANGE_METERS = 1.66;
-	private static final double MAX_RANGE_METERS = 4.05;
-	public static final double LAUNCH_VELOCITY_OFFSET = 0.45;
+	private static final double MIN_RANGE_METERS_HUB = 1.66;
+	private static final double MAX_RANGE_METERS_HUB = 5.5;//4.05;
+	private static final double MIN_RANGE_METERS_FEED = 4.87;
+	private static final double MAX_RANGE_METERS_FEED = 14.10;
+	public static final double LAUNCH_VELOCITY_OFFSET = -0.75;
+	public static final Translation2d HUB_CORNER_TO_FEED_LOCKOUT = new Translation2d(Units.Meters.of(0.0), Constants.BALL_STREAM_WIDTH.div(2));
 
 	public record Parameters(
 			double timestamp,
@@ -78,8 +83,10 @@ public final class LaunchingCalculator {
 
 		RANGE_TO_HOOD_ANGLE.put(1.66, Rotation2d.fromDegrees(7.1));
 		RANGE_TO_HOOD_ANGLE.put(2.38, Rotation2d.fromDegrees(15.6));
-		RANGE_TO_HOOD_ANGLE.put(3.36, Rotation2d.fromDegrees(20.1));
-		RANGE_TO_HOOD_ANGLE.put(4.03, Rotation2d.fromDegrees(21.8));
+		RANGE_TO_HOOD_ANGLE.put(3.36, Rotation2d.fromDegrees(19.0));
+		RANGE_TO_HOOD_ANGLE.put(4.03, Rotation2d.fromDegrees(20.5));
+		RANGE_TO_HOOD_ANGLE.put(4.71, Rotation2d.fromDegrees(21.83));
+//		RANGE_TO_HOOD_ANGLE.put(5.5, Rotation2d.fromDegrees(23.5));
 		RANGE_TO_HOOD_ANGLE_FEEDING.put(5.0, Rotation2d.fromDegrees(30.0));
 		RANGE_TO_HOOD_ANGLE_FEEDING.put(6.5, Rotation2d.fromDegrees(30.0));
 		RANGE_TO_HOOD_ANGLE_FEEDING.put(8.0, Rotation2d.fromDegrees(30.0));
@@ -87,9 +94,12 @@ public final class LaunchingCalculator {
 
 		RANGE_TO_WHEEL_RPS.put(1.66, 28.0);
 		RANGE_TO_WHEEL_RPS.put(2.38, 30.0);
-		RANGE_TO_WHEEL_RPS.put(3.13, 32.9);
-		RANGE_TO_WHEEL_RPS.put(3.8, 36.0);
-		RANGE_TO_WHEEL_RPS.put(4.03, 37.5);
+		RANGE_TO_WHEEL_RPS.put(2.67, 31.2);
+		RANGE_TO_WHEEL_RPS.put(3.13, 33.76);
+		RANGE_TO_WHEEL_RPS.put(3.8, 34.9);
+		RANGE_TO_WHEEL_RPS.put(4.03, 36.1);
+		RANGE_TO_WHEEL_RPS.put(4.71, 38.1);
+//		RANGE_TO_WHEEL_RPS.put(5.5, 38.1);
 		RANGE_TO_WHEEL_RPS_FEEDING.put(5.0, 35.0);
 		RANGE_TO_WHEEL_RPS_FEEDING.put(6.5, 38.0);
 		RANGE_TO_WHEEL_RPS_FEEDING.put(8.0, 42.0);
@@ -100,11 +110,10 @@ public final class LaunchingCalculator {
 		RANGE_TO_TOF_MAP.put(3.01, 1.0);
 		RANGE_TO_TOF_MAP.put(3.18, 1.0);
 		RANGE_TO_TOF_MAP.put(4.0, 0.8);
-		RANGE_TO_TOF_MAP_FEEDING.put(1.0, 0.9);
-		RANGE_TO_TOF_MAP_FEEDING.put(2.0, 1.0);
-		RANGE_TO_TOF_MAP_FEEDING.put(3.0, 1.1);
-		RANGE_TO_TOF_MAP_FEEDING.put(4.0, 1.115);
-		RANGE_TO_TOF_MAP_FEEDING.put(5.0, 1.2);
+		RANGE_TO_TOF_MAP_FEEDING.put(4.87, 1.07);
+		RANGE_TO_TOF_MAP_FEEDING.put(8.3, 1.14);
+		RANGE_TO_TOF_MAP_FEEDING.put(10.23, 1.7);
+		RANGE_TO_TOF_MAP_FEEDING.put(14.10, 2.47);
 	}
 
 	private final RobotState m_robotState;
@@ -269,7 +278,10 @@ public final class LaunchingCalculator {
 	}
 
 	private static boolean isValidLaunchRange(final double launcherToTargetDistance, final boolean isFeeding) {
-		return isFeeding || (launcherToTargetDistance < MAX_RANGE_METERS && launcherToTargetDistance > MIN_RANGE_METERS);
+		final double minRangeMeters = isFeeding ? MIN_RANGE_METERS_FEED : MIN_RANGE_METERS_HUB;
+		final double maxRangeMeters = isFeeding ? MAX_RANGE_METERS_FEED : MAX_RANGE_METERS_HUB;
+
+		return launcherToTargetDistance < maxRangeMeters && launcherToTargetDistance > minRangeMeters;
 	}
 
 	private static boolean isValidLaunchVelocity(final ChassisSpeeds launcherVelocity, final boolean isFeeding) {
@@ -280,6 +292,11 @@ public final class LaunchingCalculator {
 		}
 	}
 
+	private record FeedingTargetResults(Translation2d target, boolean valid) {
+	}
+
+	private static final double FEED_LOCKOUT_VERTEX_DEPTH = Inches.of(90).in(Meters);
+
 	private static Translation2d getFeedingTarget(final Pose2d vehiclePose) {
 		final double feedingX = AllianceFlipUtil.applyX(FEED_DISTANCE_FROM_ALLIANCE_WALL);
 		final double feedingY = vehiclePose.getTranslation().getY();
@@ -287,6 +304,19 @@ public final class LaunchingCalculator {
 				feedingY,
 				0.0 + FEED_DISTANCE_FROM_SIDE_WALLS,
 				FieldConstants.fieldWidth - FEED_DISTANCE_FROM_SIDE_WALLS);
+
+//		final Translation2d leftPoint = AllianceFlipUtil.apply(FieldConstants.Hub.farLeftCorner
+//				.plus(HUB_CORNER_TO_FEED_LOCKOUT));
+//		final Translation2d rightPoint = AllianceFlipUtil.apply(FieldConstants.Hub.farRightCorner
+//				.minus(HUB_CORNER_TO_FEED_LOCKOUT));
+//		final Translation2d feedLockoutVertex = leftPoint.interpolate(rightPoint, 0.5)
+//				.plus(new Translation2d(AllianceFlipUtil.applyX(FEED_LOCKOUT_VERTEX_DEPTH), 0.0));
+//
+//		final Translation2dPlus vehicleTranslation = new Translation2dPlus(vehiclePose.getTranslation());
+//		if (vehicleTranslation.isWithinAngle(leftPoint, feedLockoutVertex, rightPoint)) {
+//			// recognize that we have NO productive feed angle...
+//		}
+
 		return new Translation2d(feedingX, clampedFeedingY);
 	}
 

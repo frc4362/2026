@@ -30,7 +30,7 @@ public final class Superstructure extends SubsystemBase {
     }
 
     public static final boolean DO_INTAKE_AGITATION = true;
-    public static final double INTAKE_AGITATION_DELAY = 2.25;
+    public static final double INTAKE_AGITATION_DELAY = 1.75;
     public static final double INTAKE_AGITATION_FREQUENCY = 2.0;
     public static final double INTAKE_AGITATION_PHASE = 1.0 / INTAKE_AGITATION_FREQUENCY;
 
@@ -224,6 +224,8 @@ public final class Superstructure extends SubsystemBase {
                 } else {
                     m_intake.setDeploy();
                 }
+//            } else if (m_intakeLiftTimer.get() > INTAKE_AGITATION_DELAY) {
+//                m_intake.setRetractSlowly();
             } else {
                 m_intake.setDeploy();
             }
@@ -258,7 +260,7 @@ public final class Superstructure extends SubsystemBase {
         m_intake.setDeploy();
         m_launcherEast.setOff();
         m_launcherWest.setOff();
-        m_uptake.setIdle();
+        m_uptake.setReversing();
         m_hopper.setSpitting();
 
         m_hasEverDeployedIntake = true;
@@ -298,7 +300,7 @@ public final class Superstructure extends SubsystemBase {
     }
 
     public boolean isReadyToStartLaunching() {
-        return m_launcherWest.atReference() && m_launcherEast.atReference() && m_hood.atReference();
+        return (m_isSpunUp || (m_launcherWest.atReference() && m_launcherEast.atReference())) && m_hood.atReference();
     }
 
     private void conformToLaunchParameters(final HoodAndRps parameters) {

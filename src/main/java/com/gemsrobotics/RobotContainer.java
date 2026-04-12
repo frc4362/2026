@@ -80,20 +80,22 @@ public final class RobotContainer {
                 m_robotState);
         m_autos = new Autos(this);
 
-        pilotIntakingTrigger.onTrue(m_superstructure.applyWantedState(Superstructure.SystemState.INTAKING));
+        pilotIntakingTrigger.onTrue(m_superstructure.applyWantedState(Superstructure.SystemState.INTAKING)
+                .unless(() -> m_superstructure.getState() == Superstructure.SystemState.LAUNCHING));
         pilotIntakingTrigger.onFalse(m_superstructure.applyWantedState(Superstructure.SystemState.IDLE));
 
         m_pilot.a().onTrue(m_superstructure.applyWantedState(Superstructure.SystemState.SPITTING));
         m_pilot.a().onFalse(m_superstructure.applyWantedState(Superstructure.SystemState.IDLE));
 
-        m_pilot.rightTrigger().whileTrue(SuperstructureCommands.makeLaunchCommand_MatchState(
+        final Trigger wantsLaunchTrigger = m_pilot.rightTrigger().or(m_copilot.rightBumper());
+        wantsLaunchTrigger.whileTrue(SuperstructureCommands.makeLaunchCommand_MatchState(
                 m_swerve,
                 m_superstructure,
                 m_launchCalculator,
                 () -> m_matchStateScheduler.getMatchState().getTimeUntilActive(),
                 () -> -m_pilot.getLeftY(),
                 () -> -m_pilot.getLeftX()));
-        m_pilot.rightTrigger().onFalse(m_superstructure.applyWantedState(Superstructure.SystemState.IDLE));
+        wantsLaunchTrigger.onFalse(m_superstructure.applyWantedState(Superstructure.SystemState.IDLE));
 
         m_doEarlyAgitationTrigger = new Trigger(DriverStation::isAutonomous).or(m_copilot.a());
         m_retractIntakeTrigger = m_copilot.y();

@@ -63,19 +63,19 @@ public final class Autos {
                 SuperstructureCommands.findAndDriveOverBump(m_robotState, m_swerve, 3.0, 0.05),
                 m_superstructure.setWantedState(Superstructure.SystemState.INTAKING),
                 new ParallelDeadlineGroup(
-                        new WaitCommand(2.5).andThen(new WaitUntilCommand(() -> FieldConstants.isReadyToCrossBump(m_robotState.getLatestFieldToVehicle().getValue()))),
+                        new WaitCommand(1.75).andThen(new WaitUntilCommand(() -> FieldConstants.isReadyToCrossBump(m_robotState.getLatestFieldToVehicle().getValue()))),
                         followCommand),
-                SuperstructureCommands.findAndDriveOverBump(m_robotState, m_swerve, 4.0, 0.1),
+                SuperstructureCommands.findAndDriveOverBump(m_robotState, m_swerve, 4.0, 0.06),
                 m_swerve.runOnce(() -> m_swerve.setControl(new SwerveRequest.Idle())),
-                SuperstructureCommands.makeLaunchCommand(m_swerve, m_superstructure, m_robot.getLaunchCalculator()).withTimeout(5.5),
+                SuperstructureCommands.makeLaunchCommand(m_swerve, m_superstructure, m_robot.getLaunchCalculator()).withTimeout(4.5),
                 m_superstructure.setWantedState(Superstructure.SystemState.INTAKING),
-                SuperstructureCommands.findAndDriveOverBump(m_robotState, m_swerve, 3.0, 0.05),
+                SuperstructureCommands.findAndDriveOverBump(m_robotState, m_swerve, 4.0, 0.05),
                 new ParallelDeadlineGroup(
-                        new WaitCommand(2.5).andThen(new WaitUntilCommand(() -> FieldConstants.isReadyToCrossBump(m_robotState.getLatestFieldToVehicle().getValue()))),
+                        new WaitCommand(1.75).andThen(new WaitUntilCommand(() -> FieldConstants.isReadyToCrossBump(m_robotState.getLatestFieldToVehicle().getValue()))),
                         followCommand2),
-                SuperstructureCommands.findAndDriveOverBump(m_robotState, m_swerve, 4.0, 0.1),
+                SuperstructureCommands.findAndDriveOverBump(m_robotState, m_swerve, 4.0, 0.05),
                 m_swerve.runOnce(() -> m_swerve.setControl(new SwerveRequest.Idle())),
-                SuperstructureCommands.makeLaunchCommand(m_swerve, m_superstructure, m_robot.getLaunchCalculator()).withTimeout(5.5),
+                SuperstructureCommands.makeLaunchCommand(m_swerve, m_superstructure, m_robot.getLaunchCalculator()).withTimeout(4.5),
                 m_superstructure.setWantedState(Superstructure.SystemState.IDLE)));
 
         return routine;

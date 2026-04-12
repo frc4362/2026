@@ -109,9 +109,9 @@ public class Flywheel {
         return m_leaderVelocitySignal.getValueAsDouble();
     }
 
-    public boolean isAtReference() {
+    public boolean isAtReference(final double tolerance) {
         // angular difference <= 5
-        return m_leaderVelocityReferenceSignal.isNear(m_leaderVelocitySignal.getValueAsDouble(), 5.0);
+        return m_leaderVelocityReferenceSignal.isNear(m_leaderVelocitySignal.getValueAsDouble(), tolerance);
     }
 
     private void simulationPeriodic() { // Called by the Notifier earlier in this class

@@ -95,7 +95,7 @@ public class Uptake {
         m_followerVelocitySignal = m_motorFollower.getVelocity(false);
         m_followerStatorCurrentSignal = m_motorFollower.getStatorCurrent(false);
 
-        final NetworkTable nt = NetworkTableInstance.getDefault().getTable("uptake").getSubTable(ntName);
+        final NetworkTable nt = NetworkTableInstance.getDefault().getTable(ntName);
         final var powerSignals = signalManager.registerPowerTracking(
                 Constants.CAN.kAUX_BUS,
                 nt,
@@ -110,10 +110,12 @@ public class Uptake {
 
         m_isLeaderLaunchingTrigger = new Trigger(
                 () -> isUptakeFeedingBalls(m_leaderVelocitySignal.getValueAsDouble(), m_leaderStatorCurrentSignal.getValueAsDouble()))
-                    .debounce(LAUNCH_COOLDOWN_TIME_SECONDS, Debouncer.DebounceType.kFalling);
+                    .debounce(LAUNCH_COOLDOWN_TIME_SECONDS, Debouncer.DebounceType.kFalling)
+                    .debounce(0.1, Debouncer.DebounceType.kRising);
         m_isFollowerLaunchingTrigger = new Trigger(
                 () -> isUptakeFeedingBalls(m_followerVelocitySignal.getValueAsDouble(), m_followerStatorCurrentSignal.getValueAsDouble()))
-                    .debounce(LAUNCH_COOLDOWN_TIME_SECONDS, Debouncer.DebounceType.kFalling);
+                    .debounce(LAUNCH_COOLDOWN_TIME_SECONDS, Debouncer.DebounceType.kFalling)
+                    .debounce(0.1, Debouncer.DebounceType.kRising);
         isLaunching = m_isFollowerLaunchingTrigger.or(m_isLeaderLaunchingTrigger);
 
         m_motorFollower.setControl(new Follower(m_motorLeader.getDeviceID(), MotorAlignmentValue.Opposed));
@@ -150,6 +152,10 @@ public class Uptake {
 
     public void setIdle() {
         m_motorLeader.setControl(m_coastRequest);
+    }
+
+    public void setReversing() {
+        m_motorLeader.setControl(m_volts.withOutput(-6.0));
     }
 
     public double getVelocity() {

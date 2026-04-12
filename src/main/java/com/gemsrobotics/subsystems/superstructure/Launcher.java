@@ -27,7 +27,7 @@ public class Launcher {
         cfg.CurrentLimits.SupplyCurrentLimitEnable = true;
         cfg.CurrentLimits.SupplyCurrentLowerLimit = 70.0;
         cfg.Feedback.SensorToMechanismRatio = 1.0;
-        cfg.Slot0.kP = 10.0;
+        cfg.Slot0.kP = 12.0;
         cfg.Slot0.kS = 4.0;
         cfg.Slot0.kA = 2.0;
         cfg.MotionMagic.MotionMagicAcceleration = 2000;
@@ -51,7 +51,7 @@ public class Launcher {
         cfg.CurrentLimits.SupplyCurrentLimitEnable = true;
         cfg.CurrentLimits.SupplyCurrentLowerLimit = 70.0;
         cfg.Feedback.SensorToMechanismRatio = 1.0 / 2.5;
-        cfg.Slot0.kP = 6.0;
+        cfg.Slot0.kP = 6.5;
         cfg.Slot0.kS = 23.0;
         cfg.Slot0.kA = 0.0;
         cfg.MotionMagic.MotionMagicAcceleration = 2000;
@@ -106,6 +106,6 @@ public class Launcher {
     }
 
     public boolean atReference() {
-        return m_wheelLower.isAtReference() && m_wheelUpper.isAtReference();
+        return m_wheelLower.isAtReference(5.0) && m_wheelUpper.isAtReference(10.0);
     }
 }

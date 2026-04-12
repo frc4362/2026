@@ -2,12 +2,8 @@ package com.gemsrobotics.commands;
 
 import com.ctre.phoenix6.swerve.SwerveModule;
 import com.ctre.phoenix6.swerve.SwerveRequest;
-import com.gemsrobotics.FieldConstants;
 import com.gemsrobotics.subsystems.swerve.CommandSwerveDrivetrain;
-import com.gemsrobotics.util.AllianceFlipUtil;
-import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 
@@ -17,7 +13,7 @@ import java.util.function.Supplier;
 
 import static java.lang.Math.abs;
 
-public final class AimAndBrakeCommand extends Command {
+public final class AimCommand extends Command {
     private static final boolean DO_AIMING_OSCILLATION = false;
 
     private final CommandSwerveDrivetrain m_swerve;
@@ -30,7 +26,7 @@ public final class AimAndBrakeCommand extends Command {
 
     private double m_toleranceDegrees;
 
-    public AimAndBrakeCommand(
+    public AimCommand(
             final CommandSwerveDrivetrain swerve,
             final Supplier<Optional<Rotation2d>> goalSupplier,
             final DoubleSupplier velocityX,
@@ -43,8 +39,8 @@ public final class AimAndBrakeCommand extends Command {
         m_timer = new Timer();
 
         m_turnRequest = CommandSwerveDrivetrain.makeAimingRequest();
-        m_turnRequest.HeadingController.setPID(9.0, 0.0, 0.0);
-        m_turnRequest.HeadingController.setTolerance(Math.toRadians(1.0));
+        m_turnRequest.HeadingController.setPID(10.0, 0.0, 0.0);
+        m_turnRequest.HeadingController.setTolerance(Math.toRadians(0.0));
         m_idleRequest = new SwerveRequest.Idle();
         m_brakeRequest = new SwerveRequest.SwerveDriveBrake();
         m_brakeRequest.SteerRequestType = SwerveModule.SteerRequestType.MotionMagicExpo;

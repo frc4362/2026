@@ -31,7 +31,7 @@ import static java.lang.Math.*;
 
 public final class PilotedDrive extends Command {
     private static final SwerveRequest.Idle IDLE_REQUEST = new SwerveRequest.Idle();
-    private static final boolean DO_PHASE_COMPENSATED_HEADING_GOAL = true;
+    private static final boolean DO_PHASE_COMPENSATED_HEADING_GOAL = false;
     public static final Translation2d VELOCITY_ZERO = new Translation2d();
 
     private final RobotState m_robotState;
@@ -73,7 +73,7 @@ public final class PilotedDrive extends Command {
                 .withRotationalDeadband(0.025)
                 .withSteerRequestType(SwerveModule.SteerRequestType.MotionMagicExpo)
                 .withDriveRequestType(SwerveModule.DriveRequestType.OpenLoopVoltage)
-                .withDefaultCenterOfRotation(rotationalCenter)
+//                .withDefaultCenterOfRotation(rotationalCenter)
                 .withEvading(false);
         m_maintainHeadingRequest = CommandSwerveDrivetrain.makeAimingRequest();
         m_maintainHeadingRequest.CenterOfRotation = rotationalCenter;
@@ -179,7 +179,7 @@ public final class PilotedDrive extends Command {
     }
 
     // meters per second
-    private static final double MAX_ALLOWED_VELOCITY_INTAKING = 2.75;
+    private static final double MAX_ALLOWED_VELOCITY_INTAKING = 3.5;
 
     private static ChassisSpeeds scaleChassisSpeeds(final ChassisSpeeds desiredVelocity, final double speed) {
         final double currentChassisSpeeds = hypot(desiredVelocity.vxMetersPerSecond, desiredVelocity.vyMetersPerSecond);
