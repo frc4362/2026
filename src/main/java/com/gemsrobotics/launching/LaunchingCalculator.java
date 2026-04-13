@@ -4,7 +4,6 @@ import com.gemsrobotics.Constants;
 import com.gemsrobotics.FieldConstants;
 import com.gemsrobotics.RobotState;
 import com.gemsrobotics.lib.math.GeometryUtil;
-import com.gemsrobotics.lib.math.Translation2dPlus;
 import com.gemsrobotics.util.AllianceFlipUtil;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -34,6 +33,7 @@ public final class LaunchingCalculator {
 	private static final boolean DO_MOVE_AND_SHOOT = true;
 	private static final double FEED_DISTANCE_FROM_ALLIANCE_WALL = 0.5;
 	private static final boolean DO_LINEAR_DRAG_COMPENSATION = true;
+	private static final boolean DO_OLD_FEEDING = true;
 	private static final double DRAG_CONSTANT_INVERSE_SECONDS = 0.25;
 	private static final double TOF_EPSILON = 0.001;
 	private static final double MIN_RANGE_METERS_HUB = 1.66;
@@ -53,6 +53,7 @@ public final class LaunchingCalculator {
 			double flywheelSpeed,
 			double distance,
 			double distanceNoLookahead,
+			double timeOfFlight,
 			boolean isFeeding
 	) implements StructSerializable, HoodAndRps {
 		public static final Struct<Parameters> struct = StructGenerator.genRecord(Parameters.class);
@@ -122,6 +123,7 @@ public final class LaunchingCalculator {
 	private final StructPublisher<Pose2d> m_lookaheadPosePublisher;
 	private final DoubleArrayPublisher m_contractionRatePublisher;
 
+	private boolean m_feedsPreferTower;
 	private Parameters m_latestParameters;
 
 	public LaunchingCalculator(final RobotState robotState) {
@@ -132,6 +134,7 @@ public final class LaunchingCalculator {
 		m_lookaheadPosePublisher = myTable.getStructTopic("lookahead_pose", Pose2d.struct).publish();
 		m_contractionRatePublisher = myTable.getDoubleArrayTopic("contraction_rates").publish();
 
+		m_feedsPreferTower = false;
 		m_latestParameters = null;
 	}
 
@@ -145,7 +148,17 @@ public final class LaunchingCalculator {
 				currentVelocity.omegaRadiansPerSecond * Constants.PHASE_LAG_SECONDS));
 
 		final boolean isFeeding = shouldFeed(currentPose);
-		final Translation2d target = isFeeding ? getFeedingTarget(currentPose) : getHubTarget();
+		final Translation2d target;
+		final boolean targetValid;
+		if (isFeeding) {
+			final FeedingTarget feedingTarget = getFeedingTarget(currentPose);
+			target = feedingTarget.target;
+			targetValid = feedingTarget.valid;
+		} else {
+			target = getHubTarget();
+			targetValid = true;
+		}
+
 		final Pose2d launcherStartingPose = currentPose.transformBy(Constants.ROBOT_TO_LAUNCHER);
 		final double startingLauncherToTargetDistance = target.getDistance(launcherStartingPose.getTranslation());
 
@@ -200,14 +213,16 @@ public final class LaunchingCalculator {
 
 		// when the loop is done, we're stuck with whatever we have converged on after N iterations
 		final Pose2d lookaheadRobotPose = lookaheadLauncherPose.transformBy(Constants.ROBOT_TO_LAUNCHER.inverse());
-		// TODO if we ever move shooter off center, we need to calculate the heading with that in mind
+		// if we ever move shooter off center, we need to calculate the heading with that in mind
 		final Rotation2d desiredRobotRotation = target.minus(lookaheadRobotPose.getTranslation()).getAngle()
 				.rotateBy(Constants.ROBOT_TO_LAUNCHER.getRotation());
 		m_lookaheadPosePublisher.set(new Pose2d(lookaheadRobotPose.getTranslation(), desiredRobotRotation));
 
 		final var ret = new Parameters(
 				Timer.getTimestamp(),
-				isValidLaunchRange(lookaheadLauncherToTargetDistance, isFeeding) && isValidLaunchVelocity(launcherVelocity, isFeeding),
+				isValidLaunchRange(lookaheadLauncherToTargetDistance, isFeeding)
+						&& isValidVehicleVelocity(launcherVelocity, isFeeding)
+						&& targetValid,
 				target,
 				desiredRobotRotation,
 				getSwerveHeadingTolerance(lookaheadLauncherToTargetDistance, isFeeding),
@@ -215,6 +230,7 @@ public final class LaunchingCalculator {
 				getFlywheelVelocity(lookaheadLauncherToTargetDistance, isFeeding) + LAUNCH_VELOCITY_OFFSET,
 				lookaheadLauncherToTargetDistance,
 				startingLauncherToTargetDistance,
+				tof,
 				isFeeding);
 
 		m_launchingParametersPublisher.set(ret);
@@ -285,7 +301,7 @@ public final class LaunchingCalculator {
 		return launcherToTargetDistance < maxRangeMeters && launcherToTargetDistance > minRangeMeters;
 	}
 
-	private static boolean isValidLaunchVelocity(final ChassisSpeeds launcherVelocity, final boolean isFeeding) {
+	private static boolean isValidVehicleVelocity(final ChassisSpeeds launcherVelocity, final boolean isFeeding) {
 		if (DO_MOVE_AND_SHOOT || isFeeding) { // Can feed at any robot velocity
 			return true;
 		} else {
@@ -293,32 +309,40 @@ public final class LaunchingCalculator {
 		}
 	}
 
-	private record FeedingTargetResults(Translation2d target, boolean valid) {
+	private record FeedingTarget(Translation2d target, boolean valid) {
 	}
 
 	private static final double FEED_LOCKOUT_VERTEX_DEPTH = Inches.of(90).in(Meters);
 
-	private static Translation2d getFeedingTarget(final Pose2d vehiclePose) {
-		final double feedingX = AllianceFlipUtil.applyX(FEED_DISTANCE_FROM_ALLIANCE_WALL);
-		final double feedingY = vehiclePose.getTranslation().getY();
-		final double clampedFeedingY = MathUtil.clamp(
-				feedingY,
-				0.0 + FEED_DISTANCE_FROM_SIDE_WALLS,
-				FieldConstants.fieldWidth - FEED_DISTANCE_FROM_SIDE_WALLS);
+	public void setFeedsPreferTower(final boolean preferTower) {
 
-//		final Translation2d leftPoint = AllianceFlipUtil.apply(FieldConstants.Hub.farLeftCorner
-//				.plus(HUB_CORNER_TO_FEED_LOCKOUT));
-//		final Translation2d rightPoint = AllianceFlipUtil.apply(FieldConstants.Hub.farRightCorner
-//				.minus(HUB_CORNER_TO_FEED_LOCKOUT));
-//		final Translation2d feedLockoutVertex = leftPoint.interpolate(rightPoint, 0.5)
-//				.plus(new Translation2d(AllianceFlipUtil.applyX(FEED_LOCKOUT_VERTEX_DEPTH), 0.0));
+	}
 
-//		final Translation2dPlus vehicleTranslation = new Translation2dPlus(vehiclePose.getTranslation());
-//		if (vehicleTranslation.isWithinAngle(leftPoint, feedLockoutVertex, rightPoint)) {
-//			// recognize that we have NO productive feed angle...
-//		}
+	private static FeedingTarget getFeedingTarget(final Pose2d vehiclePose) {
+		if (DO_OLD_FEEDING) {
+			final double feedingX = AllianceFlipUtil.applyX(FEED_DISTANCE_FROM_ALLIANCE_WALL);
+			final double feedingY = vehiclePose.getTranslation().getY();
+			final double clampedFeedingY = MathUtil.clamp(
+					feedingY,
+					0.0 + FEED_DISTANCE_FROM_SIDE_WALLS,
+					FieldConstants.fieldWidth - FEED_DISTANCE_FROM_SIDE_WALLS);
 
-		return new Translation2d(feedingX, clampedFeedingY);
+			return new FeedingTarget(new Translation2d(feedingX, clampedFeedingY), true);
+		} else {
+	//		final Translation2d leftPoint = AllianceFlipUtil.apply(FieldConstants.Hub.farLeftCorner
+	//				.plus(HUB_CORNER_TO_FEED_LOCKOUT));
+	//		final Translation2d rightPoint = AllianceFlipUtil.apply(FieldConstants.Hub.farRightCorner
+	//				.minus(HUB_CORNER_TO_FEED_LOCKOUT));
+	//		final Translation2d feedLockoutVertex = leftPoint.interpolate(rightPoint, 0.5)
+	//				.plus(new Translation2d(AllianceFlipUtil.applyX(FEED_LOCKOUT_VERTEX_DEPTH), 0.0));
+
+	//		final Translation2dPlus vehicleTranslation = new Translation2dPlus(vehiclePose.getTranslation());
+	//		if (vehicleTranslation.isWithinAngle(leftPoint, feedLockoutVertex, rightPoint)) {
+	//			// recognize that we have NO productive feed angle...
+	//		}
+
+			return new FeedingTarget(new Translation2d(), false);
+		}
 	}
 
 	private static Translation2d getHubTarget() {

@@ -99,8 +99,7 @@ public class SuperstructureCommands {
 	// rotation3d is in Roll Pitch Yaw
 	public static Command driveOverBump(final RobotState robotState, final CommandSwerveDrivetrain swerve, final double velocity, final double duration) {
 		final SwerveRequest.FieldCentricFacingAngle request = CommandSwerveDrivetrain.makeAimingRequest();
-		if (Robot.isReal()) {
-			return Commands.sequence(
+		return Commands.sequence(
 				swerve.runOnce(() -> {
 					final Pose2d startingPose = robotState.getLatestFieldToVehicle().getValue();
 					final Translation2d bumpTarget = FieldConstants.getClosestBump(startingPose.getTranslation());
@@ -110,18 +109,6 @@ public class SuperstructureCommands {
 							.withVelocityY(0.0)
 							.withTargetDirection(startingPose.getRotation()));
 				}),
-				waitForBumpCross(swerve, duration));
-		} else {
-			return Commands.sequence(swerve.runOnce(() -> {
-				final Pose2d startingPose = robotState.getLatestFieldToVehicle().getValue();
-				final Translation2d bumpTarget = FieldConstants.getClosestBump(startingPose.getTranslation());
-				final double direction = signum(bumpTarget.getX() - startingPose.getX());
-				swerve.setControl(request
-						.withVelocityX(velocity * direction)
-						.withVelocityY(0.0)
-						.withTargetDirection(startingPose.getRotation()));
-			}),
-			new WaitCommand(1.0));
-		}
+				Robot.isReal() ? waitForBumpCross(swerve, duration) : new WaitCommand(1.0));
 	}
 }
