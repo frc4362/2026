@@ -84,7 +84,7 @@ public final class Autos {
     public AutoRoutine blineAuto_RightSkipBump(final boolean isLeft) {
         final AutoRoutine routine = m_autoFactory.newRoutine("Bline Bump Auto " + (isLeft ? "Left" : "Right"));
 
-        final Path skipBumpPath = new Path("right_skip_bump");
+        final Path skipBumpPath = new Path("right_skip_bump_cw");
         final Path skipBumpPath2 = new Path("right_bump_p2");
         if (isLeft) {
             skipBumpPath.mirror();
@@ -98,9 +98,8 @@ public final class Autos {
                 // use the old cals, no balls in the robot
                 SuperstructureCommands.findAndDriveOverBump(m_robotState, m_swerve, 3.0, 0.05)
                         .alongWith(new WaitCommand(0.5).andThen(m_superstructure.setWantedState(Superstructure.SystemState.INTAKING))),
-//                m_superstructure.setWantedState(Superstructure.SystemState.INTAKING),
                 new ParallelDeadlineGroup(
-                        new WaitCommand(2.0).andThen(new WaitUntilCommand(() -> FieldConstants.isReadyToCrossBump(m_robotState.getLatestFieldToVehicle().getValue()))),
+                        new WaitCommand(1.5).andThen(new WaitUntilCommand(() -> FieldConstants.isReadyToCrossBump(m_robotState.getLatestFieldToVehicle().getValue()))),
                         followCommand),
                 // drive back with balls
                 SuperstructureCommands.findAndDriveOverBump(m_robotState, m_swerve, 4.0, 0.06),
@@ -110,7 +109,7 @@ public final class Autos {
                 // use the old cals, no balls in the robot
                 SuperstructureCommands.findAndDriveOverBump(m_robotState, m_swerve, 4.0, 0.05),
                 new ParallelDeadlineGroup(
-                        new WaitCommand(2.0).andThen(new WaitUntilCommand(() -> FieldConstants.isReadyToCrossBump(m_robotState.getLatestFieldToVehicle().getValue()))),
+                        new WaitCommand(1.5).andThen(new WaitUntilCommand(() -> FieldConstants.isReadyToCrossBump(m_robotState.getLatestFieldToVehicle().getValue()))),
                         followCommand2),
                 // drive back with balls again
                 SuperstructureCommands.findAndDriveOverBump(m_robotState, m_swerve, 4.0, 0.05),

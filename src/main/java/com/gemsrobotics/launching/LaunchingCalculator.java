@@ -298,7 +298,7 @@ public final class LaunchingCalculator {
 
 	private static final double FEED_LOCKOUT_VERTEX_DEPTH = Inches.of(90).in(Meters);
 
-	private static FeedingTargetResults getFeedingTarget(final Pose2d vehiclePose) {
+	private static Translation2d getFeedingTarget(final Pose2d vehiclePose) {
 		final double feedingX = AllianceFlipUtil.applyX(FEED_DISTANCE_FROM_ALLIANCE_WALL);
 		final double feedingY = vehiclePose.getTranslation().getY();
 		final double clampedFeedingY = MathUtil.clamp(
@@ -306,17 +306,17 @@ public final class LaunchingCalculator {
 				0.0 + FEED_DISTANCE_FROM_SIDE_WALLS,
 				FieldConstants.fieldWidth - FEED_DISTANCE_FROM_SIDE_WALLS);
 
-		final Translation2d leftPoint = AllianceFlipUtil.apply(FieldConstants.Hub.farLeftCorner
-				.plus(HUB_CORNER_TO_FEED_LOCKOUT));
-		final Translation2d rightPoint = AllianceFlipUtil.apply(FieldConstants.Hub.farRightCorner
-				.minus(HUB_CORNER_TO_FEED_LOCKOUT));
-		final Translation2d feedLockoutVertex = leftPoint.interpolate(rightPoint, 0.5)
-				.plus(new Translation2d(AllianceFlipUtil.applyX(FEED_LOCKOUT_VERTEX_DEPTH), 0.0));
+//		final Translation2d leftPoint = AllianceFlipUtil.apply(FieldConstants.Hub.farLeftCorner
+//				.plus(HUB_CORNER_TO_FEED_LOCKOUT));
+//		final Translation2d rightPoint = AllianceFlipUtil.apply(FieldConstants.Hub.farRightCorner
+//				.minus(HUB_CORNER_TO_FEED_LOCKOUT));
+//		final Translation2d feedLockoutVertex = leftPoint.interpolate(rightPoint, 0.5)
+//				.plus(new Translation2d(AllianceFlipUtil.applyX(FEED_LOCKOUT_VERTEX_DEPTH), 0.0));
 
-		final Translation2dPlus vehicleTranslation = new Translation2dPlus(vehiclePose.getTranslation());
-		if (vehicleTranslation.isWithinAngle(leftPoint, feedLockoutVertex, rightPoint)) {
-			// recognize that we have NO productive feed angle...
-		}
+//		final Translation2dPlus vehicleTranslation = new Translation2dPlus(vehiclePose.getTranslation());
+//		if (vehicleTranslation.isWithinAngle(leftPoint, feedLockoutVertex, rightPoint)) {
+//			// recognize that we have NO productive feed angle...
+//		}
 
 		return new Translation2d(feedingX, clampedFeedingY);
 	}
