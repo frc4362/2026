@@ -10,6 +10,7 @@ import com.ctre.phoenix6.sim.TalonFXSimState;
 import com.gemsrobotics.Constants;
 import com.gemsrobotics.Robot;
 import com.gemsrobotics.lib.StatusSignalManager;
+import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.networktables.NetworkTable;
@@ -21,6 +22,9 @@ import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.FlywheelSim;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
+
+import static java.lang.Math.abs;
 
 public class Hopper {
     private static final double GEARING = 1.0;
@@ -41,7 +45,7 @@ public class Hopper {
     private final FlywheelSim m_rollerSim;
     private final Notifier m_simNotifier;
 
-    private boolean m_on;
+    public final Trigger isHopping;
 
     public Hopper(final StatusSignalManager signalManager, final TalonFX motorLeader, final TalonFX motorFollower) {
         //region motor config
@@ -61,8 +65,6 @@ public class Hopper {
         cfg.MotionMagic.MotionMagicAcceleration = 500.0;
         m_motorLeader.getConfigurator().apply(cfg);
         m_motorFollower.getConfigurator().apply(cfg);
-
-        m_on = false;
 
         m_feedingRequest = new DutyCycleOut(1.0);
         m_feedingRequest.EnableFOC = true;
@@ -112,6 +114,14 @@ public class Hopper {
         signalManager.registerPublished(Constants.CAN.kAUX_BUS, m_followerVoltsAppliedSignal, nt, "follower_volts");
         signalManager.registerPublished(Constants.CAN.kAUX_BUS, m_followerStatorAmpsSignal, nt, "follower_stator_amps");
         //endregion
+
+        isHopping = new Trigger(() -> {
+            final double currentA = abs(m_leaderSupplyAmpsSignal.getValueAsDouble());
+            final double currentB = abs(m_followerSupplyAmpsSignal.getValueAsDouble());
+            return (currentA + currentB) > 36;
+        })
+                .debounce(0.25, Debouncer.DebounceType.kRising)
+                .debounce(0.5, Debouncer.DebounceType.kFalling);
     }
 
     private void simulationPeriodic() { // Called by the Notifier earlier in this class
@@ -128,7 +138,6 @@ public class Hopper {
 
     private void setVelocity(final double velocity) {
         m_request.Velocity = velocity;
-        m_on = true;
     }
 
     public void setSpitting() {

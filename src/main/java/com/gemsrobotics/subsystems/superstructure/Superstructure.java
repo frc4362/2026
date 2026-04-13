@@ -281,7 +281,7 @@ public final class Superstructure extends SubsystemBase {
     }
 
     public boolean isLaunching() {
-        return m_uptake.isLaunching.getAsBoolean() && m_state == SystemState.LAUNCHING && m_isSpunUp;
+        return m_hopper.isHopping.getAsBoolean() && m_state == SystemState.LAUNCHING && m_isSpunUp;
     }
 
     private double getDistanceToHub() {
