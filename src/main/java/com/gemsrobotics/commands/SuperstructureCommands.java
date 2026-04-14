@@ -63,7 +63,7 @@ public class SuperstructureCommands {
 								superstructure.setLauncherParameters(parameters);
 								final boolean headingOk = aimingCommand.getErrorToGoal().isPresent()
 										&& abs(aimingCommand.getErrorToGoal().get().getDegrees()) < parameters.vehicleRotationTolerance().getDegrees();
-								final boolean activeOk = parameters.isFeeding() || (timeUntilActiveSupplier.getAsDouble() < LAUNCH_TIME_BEFORE_ACTIVE);
+								final boolean activeOk = parameters.isFeeding() || (timeUntilActiveSupplier.getAsDouble() < LAUNCH_TIME_BEFORE_ACTIVE + parameters.timeOfFlight());
 								superstructure.setAllowedToLaunch(parameters.isValid() && superstructure.isReadyToStartLaunching() && headingOk && activeOk);
 							});
 						})

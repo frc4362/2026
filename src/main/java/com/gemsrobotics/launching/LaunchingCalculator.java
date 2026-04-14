@@ -33,14 +33,16 @@ public final class LaunchingCalculator {
 	private static final boolean DO_MOVE_AND_SHOOT = true;
 	private static final double FEED_DISTANCE_FROM_ALLIANCE_WALL = 0.5;
 	private static final boolean DO_LINEAR_DRAG_COMPENSATION = true;
-	private static final boolean DO_OLD_FEEDING = true;
+	private static final boolean DO_TOWER_FEEDING = true;
 	private static final double DRAG_CONSTANT_INVERSE_SECONDS = 0.25;
 	private static final double TOF_EPSILON = 0.001;
 	private static final double MIN_RANGE_METERS_HUB = 1.66;
 	private static final double MAX_RANGE_METERS_HUB = 5.5;//4.05;
 	private static final double MIN_RANGE_METERS_FEED = 4.87;
 	private static final double MAX_RANGE_METERS_FEED = 14.10;
-	public static final double LAUNCH_VELOCITY_OFFSET = -0.75;
+	private static final double LAUNCH_VELOCITY_OFFSET = -0.75;
+	private static final double FEED_LOCKOUT_VERTEX_DEPTH = Inches.of(90).in(Meters);
+
 	public static final Translation2d HUB_CORNER_TO_FEED_LOCKOUT = new Translation2d(Units.Meters.of(0.0), Constants.BALL_STREAM_WIDTH.div(2));
 
 	public record Parameters(
@@ -312,14 +314,19 @@ public final class LaunchingCalculator {
 	private record FeedingTarget(Translation2d target, boolean valid) {
 	}
 
-	private static final double FEED_LOCKOUT_VERTEX_DEPTH = Inches.of(90).in(Meters);
-
-	public void setFeedsPreferTower(final boolean preferTower) {
-
-	}
+	private static final double LAUNCH_SAFETY_MARGIN = Constants.BALL_STREAM_WIDTH.div(2).in(Meters) + 0.05;
+	private static final Translation2d LEFT_FEED_TARGET = new Translation2d(FEED_DISTANCE_FROM_ALLIANCE_WALL, FieldConstants.Hub.nearLeftCorner.getY() + LAUNCH_SAFETY_MARGIN);
+	private static final Translation2d RIGHT_FEED_TARGET = new Translation2d(FEED_DISTANCE_FROM_ALLIANCE_WALL, FieldConstants.Tower.rightUpright.getY() - LAUNCH_SAFETY_MARGIN);
 
 	private static FeedingTarget getFeedingTarget(final Pose2d vehiclePose) {
-		if (DO_OLD_FEEDING) {
+		if (DO_TOWER_FEEDING) {
+			final boolean isOutOfAllianceZone = vehiclePose.getX() > FieldConstants.LeftBump.center.getX();
+			final boolean isBehindHubs = vehiclePose.getY() < (FieldConstants.Hub.leftFace.getY() + LAUNCH_SAFETY_MARGIN)
+					&& vehiclePose.getY() > (FieldConstants.Hub.rightFace.getY() - LAUNCH_SAFETY_MARGIN);
+			final boolean isFeedingAllowed = isOutOfAllianceZone && !isBehindHubs;
+			final Translation2d target = AllianceFlipUtil.applyY(vehiclePose.getY()) > FieldConstants.LinesHorizontal.center ? LEFT_FEED_TARGET : RIGHT_FEED_TARGET;
+			return new FeedingTarget(AllianceFlipUtil.apply(target), isFeedingAllowed);
+		} else {
 			final double feedingX = AllianceFlipUtil.applyX(FEED_DISTANCE_FROM_ALLIANCE_WALL);
 			final double feedingY = vehiclePose.getTranslation().getY();
 			final double clampedFeedingY = MathUtil.clamp(
@@ -328,20 +335,6 @@ public final class LaunchingCalculator {
 					FieldConstants.fieldWidth - FEED_DISTANCE_FROM_SIDE_WALLS);
 
 			return new FeedingTarget(new Translation2d(feedingX, clampedFeedingY), true);
-		} else {
-	//		final Translation2d leftPoint = AllianceFlipUtil.apply(FieldConstants.Hub.farLeftCorner
-	//				.plus(HUB_CORNER_TO_FEED_LOCKOUT));
-	//		final Translation2d rightPoint = AllianceFlipUtil.apply(FieldConstants.Hub.farRightCorner
-	//				.minus(HUB_CORNER_TO_FEED_LOCKOUT));
-	//		final Translation2d feedLockoutVertex = leftPoint.interpolate(rightPoint, 0.5)
-	//				.plus(new Translation2d(AllianceFlipUtil.applyX(FEED_LOCKOUT_VERTEX_DEPTH), 0.0));
-
-	//		final Translation2dPlus vehicleTranslation = new Translation2dPlus(vehiclePose.getTranslation());
-	//		if (vehicleTranslation.isWithinAngle(leftPoint, feedLockoutVertex, rightPoint)) {
-	//			// recognize that we have NO productive feed angle...
-	//		}
-
-			return new FeedingTarget(new Translation2d(), false);
 		}
 	}
 
@@ -350,6 +343,6 @@ public final class LaunchingCalculator {
 	}
 
 	private static boolean shouldFeed(final Pose2d vehiclePose) {
-		return AllianceFlipUtil.applyX(vehiclePose.getTranslation().getX()) > FieldConstants.Hub.farFace.getX();
+		return AllianceFlipUtil.applyX(vehiclePose.getTranslation().getX()) > FieldConstants.LeftBump.center.getX();
 	}
 }
