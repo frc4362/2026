@@ -1,5 +1,6 @@
 package com.gemsrobotics.subsystems.superstructure;
 
+import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
@@ -8,11 +9,14 @@ import com.gemsrobotics.lib.StatusSignalManager;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.units.measure.*;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 
 import java.util.List;
+import java.util.Map;
 
 import static com.gemsrobotics.Constants.CAN.kAUX_BUS;
 import static edu.wpi.first.units.Units.*;
+import static java.lang.Math.abs;
 
 public class Launcher {
     private static final Distance WHEEL_CIRCUMFERENCE = Inches.of(2).times(2 * Math.PI);
@@ -69,17 +73,25 @@ public class Launcher {
 
     private final NetworkTable m_table;
     private final Flywheel m_wheelLower, m_wheelUpper;
+    public final Trigger isLaunching;
 
     public Launcher(final StatusSignalManager signalManager, final String ntName, final int lowerId, final int upperId, final boolean flipMotors) {
         m_table = NetworkTableInstance.getDefault().getTable(ntName);
         final InvertedValue invertedValue = flipMotors ? InvertedValue.CounterClockwise_Positive : InvertedValue.Clockwise_Positive;
         m_wheelLower = makeLowerWheel(signalManager, lowerId, invertedValue, m_table);
         m_wheelUpper = makeUpperWheel(signalManager, upperId, invertedValue, m_table);
-        signalManager.registerPowerTracking(
+        final Map<Integer, StatusSignalManager.PowerTrackingStatusSignals> powerSignals = signalManager.registerPowerTracking(
                 kAUX_BUS,
                 m_table,
                 m_wheelLower.getMotorLeader(),
                 m_wheelUpper.getMotorLeader());
+
+        final StatusSignal<Current> upperSupplyCurrent = powerSignals.get(upperId).supplyCurrentSignal();
+        final StatusSignal<Current> lowerSupplyCurrent = powerSignals.get(lowerId).supplyCurrentSignal();
+
+        isLaunching = new Trigger(() -> {
+            return (abs(upperSupplyCurrent.getValueAsDouble()) + abs(lowerSupplyCurrent.getValueAsDouble())) > 15.0;
+        });
     }
 
     public void setLinearVelocity(final double velocity) {

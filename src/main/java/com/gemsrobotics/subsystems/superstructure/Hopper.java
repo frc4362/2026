@@ -116,11 +116,11 @@ public class Hopper {
         //endregion
 
         isHopping = new Trigger(() -> {
-            final double currentA = abs(m_leaderSupplyAmpsSignal.getValueAsDouble());
-            final double currentB = abs(m_followerSupplyAmpsSignal.getValueAsDouble());
-            return (currentA + currentB) > 36;
+            final double currentA = abs(m_leaderStatorAmpsSignal.getValueAsDouble());
+            final double currentB = abs(m_followerStatorAmpsSignal.getValueAsDouble());
+            return (currentA + currentB) > 35;
         })
-                .debounce(0.25, Debouncer.DebounceType.kRising)
+                .debounce(0.10, Debouncer.DebounceType.kRising)
                 .debounce(0.5, Debouncer.DebounceType.kFalling);
     }
 

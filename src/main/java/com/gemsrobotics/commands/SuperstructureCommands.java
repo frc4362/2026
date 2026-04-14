@@ -70,6 +70,15 @@ public class SuperstructureCommands {
 				));
 	}
 
+	public static Command launchUntilEmpty(
+			final CommandSwerveDrivetrain swerve,
+			final Superstructure superstructure,
+			final LaunchingCalculator launchingCalculator
+	) {
+		return SuperstructureCommands.makeLaunchCommand(swerve, superstructure, launchingCalculator)
+				.withDeadline(new WaitUntilCommand(superstructure.isEitherLaunching).andThen(new WaitUntilCommand(() -> !superstructure.isEitherLaunching.getAsBoolean())));
+	}
+
 	public static Command blineToPoint(final CommandSwerveDrivetrain swerve, final Pose2d endingPose) {
 		final Path pathToPoint = new Path(new Path.Waypoint(endingPose));
 		return swerve.getTeleopBlineBuilder().build(pathToPoint);

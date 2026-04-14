@@ -96,7 +96,8 @@ public final class Vision {
                 megatagEstimate = outputs.getBestPoseEstimate()
 //                        .filter(b -> b.estimate().tagCount > 1)
                         .flatMap(this::processLimelightPoseEstimate);
-            } else if (outputs.mt1().estimate().tagCount > 1) {
+            // TODO
+            } else if (outputs.mt1().estimate().tagCount >= 1) {
                 megatagEstimate = processLimelightPoseEstimate(outputs.mt1());
             } else {
                 megatagEstimate = Optional.empty();

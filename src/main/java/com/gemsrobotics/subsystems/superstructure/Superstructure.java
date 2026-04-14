@@ -7,6 +7,7 @@ import com.gemsrobotics.RobotState;
 import com.gemsrobotics.launching.*;
 import com.gemsrobotics.subsystems.swerve.CommandSwerveDrivetrain;
 import com.gemsrobotics.util.AllianceFlipUtil;
+import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.networktables.*;
@@ -16,6 +17,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 
 import java.util.Optional;
 
@@ -66,6 +68,8 @@ public final class Superstructure extends SubsystemBase {
     private TunedLaunchStrategy m_tunedLaunchStrategy;
 
     private final SendableChooser<Boolean> m_doTuningChooser;
+
+    public final Trigger isEitherLaunching;
 
     public Superstructure(
             final CommandSwerveDrivetrain swerve,
@@ -119,6 +123,9 @@ public final class Superstructure extends SubsystemBase {
         m_wantsIntaking = false;
         m_hasEverDeployedIntake = false;
         m_doEarlyAgitation = false;
+
+        isEitherLaunching = (m_launcherEast.isLaunching.or(m_launcherWest.isLaunching))
+                .debounce(0.5, Debouncer.DebounceType.kFalling);
     }
 
     @Override
@@ -281,7 +288,7 @@ public final class Superstructure extends SubsystemBase {
     }
 
     public boolean isLaunching() {
-        return m_hopper.isHopping.getAsBoolean() && m_state == SystemState.LAUNCHING && m_isSpunUp;
+        return isEitherLaunching.getAsBoolean() && m_state == SystemState.LAUNCHING && m_isSpunUp;
     }
 
     private double getDistanceToHub() {

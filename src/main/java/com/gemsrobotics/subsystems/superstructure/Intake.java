@@ -183,7 +183,7 @@ public final class Intake {
     public void setAgitating() {
         m_deployer.setControl(m_deployRequest
                 .withPosition(INTAKE_AGITATING_ROTATIONS)
-                .withVelocity(15.0)
+                .withVelocity(12.0)
                 .withAcceleration(10.0));
     }
 

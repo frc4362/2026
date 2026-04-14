@@ -372,7 +372,8 @@ public final class CommandSwerveDrivetrain extends SwerveConstants.TunerSwerveDr
     public void acceptPoseMeasurement(final PoseEstimate estimate) {
         if (Constants.Vision.ACCEPT_VISION_MEASUREMENTS) {
             final PoseEstimate correctEstimate;
-            if (estimate.variance().get(2, 0) >= Constants.Vision.HIGH_VARIANCE || estimate.tagCount() < 2 || DriverStation.isEnabled()) {
+//            if (estimate.variance().get(2, 0) >= Constants.Vision.HIGH_VARIANCE || estimate.tagCount() < 2 || DriverStation.isEnabled()) {
+            if (estimate.variance().get(2, 0) >= Constants.Vision.HIGH_VARIANCE || DriverStation.isEnabled()) {
                 // insert the known heading reading
                 // rather than hitting the pose estimator with a heading with a high variance
                 // this prevents spiraling off of the field

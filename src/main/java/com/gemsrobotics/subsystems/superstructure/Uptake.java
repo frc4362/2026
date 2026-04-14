@@ -116,7 +116,8 @@ public class Uptake {
                 () -> isUptakeFeedingBalls(m_followerVelocitySignal.getValueAsDouble(), m_followerStatorCurrentSignal.getValueAsDouble()))
                     .debounce(LAUNCH_COOLDOWN_TIME_SECONDS, Debouncer.DebounceType.kFalling)
                     .debounce(0.1, Debouncer.DebounceType.kRising);
-        isLaunching = m_isFollowerLaunchingTrigger.or(m_isLeaderLaunchingTrigger);
+        isLaunching = m_isFollowerLaunchingTrigger.or(m_isLeaderLaunchingTrigger)
+                .debounce(0.5, Debouncer.DebounceType.kFalling);
 
         m_motorFollower.setControl(new Follower(m_motorLeader.getDeviceID(), MotorAlignmentValue.Opposed));
     }
