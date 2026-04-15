@@ -4,6 +4,7 @@ import com.gemsrobotics.Constants;
 import com.gemsrobotics.FieldConstants;
 import com.gemsrobotics.RobotState;
 import com.gemsrobotics.lib.math.GeometryUtil;
+import com.gemsrobotics.lib.math.Translation2dPlus;
 import com.gemsrobotics.util.AllianceFlipUtil;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -323,9 +324,30 @@ public final class LaunchingCalculator {
 			final boolean isOutOfAllianceZone = vehiclePose.getX() > FieldConstants.LeftBump.center.getX();
 			final boolean isBehindHubs = vehiclePose.getY() < (FieldConstants.Hub.leftFace.getY() + LAUNCH_SAFETY_MARGIN)
 					&& vehiclePose.getY() > (FieldConstants.Hub.rightFace.getY() - LAUNCH_SAFETY_MARGIN);
-			final boolean isFeedingAllowed = isOutOfAllianceZone && !isBehindHubs;
+			final boolean isTowerFeedAllowed = isOutOfAllianceZone && !isBehindHubs;
+
+			// if a simple tower feed is allowed, do it
+//			if (isTowerFeedAllowed) {
+//				final Translation2d target = AllianceFlipUtil.applyY(vehiclePose.getY()) > FieldConstants.LinesHorizontal.center ? LEFT_FEED_TARGET : RIGHT_FEED_TARGET;
+//				return new FeedingTarget(AllianceFlipUtil.apply(target), true);
+//			}
 			final Translation2d target = AllianceFlipUtil.applyY(vehiclePose.getY()) > FieldConstants.LinesHorizontal.center ? LEFT_FEED_TARGET : RIGHT_FEED_TARGET;
-			return new FeedingTarget(AllianceFlipUtil.apply(target), isFeedingAllowed);
+			return new FeedingTarget(AllianceFlipUtil.apply(target), isTowerFeedAllowed);
+
+//			// otherwise, check if you can do a corner feed...
+//			final Translation2d leftPoint = AllianceFlipUtil.apply(FieldConstants.Hub.farLeftCorner
+//					.plus(HUB_CORNER_TO_FEED_LOCKOUT));
+//			final Translation2d rightPoint = AllianceFlipUtil.apply(FieldConstants.Hub.farRightCorner
+//					.minus(HUB_CORNER_TO_FEED_LOCKOUT));
+//			final Translation2d feedLockoutVertex = leftPoint.interpolate(rightPoint, 0.5)
+//					.plus(new Translation2d(AllianceFlipUtil.applyX(FEED_LOCKOUT_VERTEX_DEPTH), 0.0));
+//
+//			final Translation2dPlus vehicleTranslation = new Translation2dPlus(vehiclePose.getTranslation());
+//			if (vehicleTranslation.isWithinAngle(leftPoint, feedLockoutVertex, rightPoint)) {
+//				// recognize that we have NO productive feed angle...
+//			}
+//
+
 		} else {
 			final double feedingX = AllianceFlipUtil.applyX(FEED_DISTANCE_FROM_ALLIANCE_WALL);
 			final double feedingY = vehiclePose.getTranslation().getY();
