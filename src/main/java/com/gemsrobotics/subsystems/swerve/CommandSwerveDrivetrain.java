@@ -320,8 +320,9 @@ public final class CommandSwerveDrivetrain extends SwerveConstants.TunerSwerveDr
         return Rotation2d.fromRadians(acos(currentNormal.getZ()));
     }
 
+    private static final Rotation2d UPRIGHT_DEGREES = Rotation2d.fromRadians(1.552);
     public boolean isFlat() {
-        return abs(getTilt().getDegrees() - 90) < 3.0;
+        return abs(getTilt().minus(UPRIGHT_DEGREES).getDegrees()) < 3.0;
     }
 
     /**
