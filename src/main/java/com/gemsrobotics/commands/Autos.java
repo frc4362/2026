@@ -5,6 +5,7 @@ import choreo.auto.AutoFactory;
 import choreo.auto.AutoRoutine;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.gemsrobotics.FieldConstants;
+import com.gemsrobotics.MatchStateScheduler;
 import com.gemsrobotics.RobotContainer;
 import com.gemsrobotics.RobotState;
 import com.gemsrobotics.subsystems.superstructure.Superstructure;
@@ -12,6 +13,7 @@ import com.gemsrobotics.subsystems.swerve.CommandSwerveDrivetrain;
 import com.gemsrobotics.util.AllianceFlipUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj2.command.*;
 import frc.robot.lib.BLine.Path;
 
@@ -24,6 +26,31 @@ public final class Autos {
     private final CommandSwerveDrivetrain m_swerve;
     private final AutoFactory m_autoFactory;
     private final AutoChooser m_autoChooser;
+    private final SendableChooser<AutoSegment> m_autoSegment1Chooser;
+//    private final SendableChooser<AutoSegment> m_autoSegment2Chooser;
+//    private final AutoSegment m_autoSegment1;
+//    private final AutoSegment m_autoSegment2;
+
+    public enum AutoSegment {
+        Nothing("Nothing"),
+        OutInQuarterField("OutInQuarterField"),
+        InOutQuarterField("CwQuarterField"),
+        CcwNearHub("CcwNearHub"),
+        CwNearHub("CwNearHub"),
+        FullSweep("FullSweep"),
+        HotAuto("HotAuto"),
+        TrespassAuto("TrespassAuto");
+
+        private final String name;
+
+        AutoSegment(String name) {
+            this.name = name;
+        }
+
+        public String getName() {
+            return name;
+        }
+    }
 
     public Autos(RobotContainer robot) {
         m_robot = robot;
@@ -35,6 +62,10 @@ public final class Autos {
         m_robotState = m_robot.getRobotState();
         m_superstructure = m_robot.getSuperstructure();
         m_swerve = m_robot.getSwerve();
+
+        m_autoSegment1Chooser = new SendableChooser<>();
+        m_autoSegment1Chooser.setDefaultOption("Nothing", AutoSegment.Nothing);
+//        m_autoSegment1Chooser.addOption();
 
         m_autoChooser = new AutoChooser();
         m_autoChooser.addRoutine("Bline Right Auto", () -> blineAuto_RightSkipBump(false));
@@ -122,4 +153,6 @@ public final class Autos {
     public AutoChooser getAutoChooser() {
         return m_autoChooser;
     }
+
+
 }
