@@ -24,11 +24,9 @@ import static com.gemsrobotics.Constants.LAUNCH_TIME_BEFORE_ACTIVE;
 import static java.lang.Math.abs;
 import static java.lang.Math.signum;
 
-public class SuperstructureCommands {
+public final class SuperstructureCommands {
 	private static final double DISTANCE_TO_NEUTRAL_ZONE = FieldConstants.LinesVertical.neutralZoneNear;
 	private static final double DISTANCE_TO_OPPOSING_ALLIANCE_ZONE = FieldConstants.LinesVertical.oppAllianceZone;
-
-	private static final Rotation2d LAUNCH_TOLERANCE = Rotation2d.fromDegrees(2.0);
 
 	// determines if you should feed or score in hub or do nothing and wait
 	public static Command makeLaunchCommand(final CommandSwerveDrivetrain swerve, final Superstructure superstructure, final LaunchingCalculator calculator) {

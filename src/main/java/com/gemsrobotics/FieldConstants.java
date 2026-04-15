@@ -83,17 +83,6 @@ public class FieldConstants {
       return xOk && yOk;
   }
 
-  public static void publishPoints() {
-    NetworkTableInstance.getDefault().getTable("field_elements").getDoubleTopic("vertical_center").publish()
-            .set(LinesVertical.hubCenter);
-    NetworkTableInstance.getDefault().getTable("field_elements").getStructTopic("tag26", Pose3d.struct).publish()
-            .set(AprilTagLayoutType.OFFICIAL.getLayout().getTagPose(26).get());
-    NetworkTableInstance.getDefault().getTable("field_elements").getStructTopic("nearLeftCorner", Pose2d.struct).publish()
-            .set(new Pose2d(LeftBump.nearLeftCorner, Rotation2d.kZero));
-    NetworkTableInstance.getDefault().getTable("field_elements").getStructArrayTopic("bumps", Pose2d.struct).publish()
-            .set(PRE_BUMPS.stream().map(t -> new Pose2d(t, Rotation2d.kZero)).toArray(Pose2d[]::new));
-  }
-
   /**
    * Officially defined and relevant vertical lines found on the field (defined by X-axis offset)
    */
