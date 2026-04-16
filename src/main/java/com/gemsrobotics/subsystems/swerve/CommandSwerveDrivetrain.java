@@ -11,6 +11,7 @@ import java.util.stream.Stream;
 import choreo.Choreo;
 import choreo.auto.AutoFactory;
 import choreo.trajectory.SwerveSample;
+import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.Utils;
@@ -27,6 +28,7 @@ import com.gemsrobotics.lib.math.GeometryUtil;
 import com.gemsrobotics.vision.PoseEstimate;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.numbers.N1;
@@ -43,6 +45,7 @@ import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Subsystem;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.lib.BLine.FollowPath;
 import frc.robot.lib.BLine.Path;
@@ -84,6 +87,9 @@ public final class CommandSwerveDrivetrain extends SwerveConstants.TunerSwerveDr
     private final FollowPath.Builder m_autoPathBuilder, m_teleopPathBuilder;
     private final RobotState m_robotState;
     private final StatusSignal<AngularVelocity> m_yawVelocity;
+    private final StatusSignal<Double> m_gravityZ;
+
+    public final Trigger isFlat;
 
     private PIDController makePController(final double P) {
         return new PIDController(P, 0.0, 0.0);
@@ -172,7 +178,7 @@ public final class CommandSwerveDrivetrain extends SwerveConstants.TunerSwerveDr
                 Constants.MAX_ACCELERATION,
                 toDegrees(Constants.MAX_ANGULAR_RATE),
                 toDegrees(Constants.MAX_ANGULAR_RATE) / 2.0,
-                0.05,
+                0.2,
                 5.0,
                 0.3
         ));
@@ -183,6 +189,11 @@ public final class CommandSwerveDrivetrain extends SwerveConstants.TunerSwerveDr
         m_tiltPublisher = stateTable.getStructTopic("tilt", Rotation2d.struct).publish();
         m_goalPosePublisher = stateTable.getStructTopic("tracking_pose", Pose2d.struct).publish();
         m_goalPosePublisher.setDefault(new Pose2d());
+
+        m_gravityZ = getPigeon2().getGravityVectorZ(false);
+        signalManager.registerPublished(Constants.CAN.kMAIN_BUS, m_gravityZ, stateTable, "gravity_z");
+        isFlat = new Trigger(() -> m_gravityZ.isNear(1.000, 0.02))
+                .debounce(0.20, Debouncer.DebounceType.kRising);
 
         // TODO add NT4 logging hooks
         // use this for logging hooks
@@ -206,6 +217,10 @@ public final class CommandSwerveDrivetrain extends SwerveConstants.TunerSwerveDr
         if (Utils.isSimulation()) {
             startSimThread();
         }
+    }
+
+    public double getGravityZ() {
+        return m_gravityZ.getValueAsDouble();
     }
 
     /**
@@ -269,7 +284,6 @@ public final class CommandSwerveDrivetrain extends SwerveConstants.TunerSwerveDr
                 GeometryUtil.magnitude(GeometryUtil.transformVelocity(myState.Speeds, Constants.INTAKE_CORNER_NW, myState.Pose.getRotation())),
                 GeometryUtil.magnitude(GeometryUtil.transformVelocity(myState.Speeds, Constants.INTAKE_CORNER_NW, myState.Pose.getRotation()))
         });
-        m_tiltPublisher.set(getTilt());
         m_rotation3dPublisher.set(getRotation3d());
 
         /*
@@ -312,18 +326,19 @@ public final class CommandSwerveDrivetrain extends SwerveConstants.TunerSwerveDr
 
     private static final Translation3d ROBOT_NORMAL = new Translation3d(0.0, 0.0, 1.0);
 
-    /**
-     * @return the unsigned 3d-tilt of the robot, combining yaw, pitch, and roll
-     */
-    public Rotation2d getTilt() {
-        final Translation3d currentNormal = ROBOT_NORMAL.rotateBy(getRotation3d());
-        return Rotation2d.fromRadians(acos(currentNormal.getZ()));
-    }
-
-    private static final Rotation2d UPRIGHT_DEGREES = Rotation2d.fromRadians(1.552);
-    public boolean isFlat() {
-        return abs(getTilt().minus(UPRIGHT_DEGREES).getDegrees()) < 3.0;
-    }
+//    /**
+//     * @return the unsigned 3d-tilt of the robot, combining yaw, pitch, and roll
+//     */
+//    public Rotation2d getTilt() {
+//        final Rotation3d myRotation = getRotation3d();
+//        final Translation3d currentNormal = ROBOT_NORMAL.rotateBy(myRotation);
+//        return Rotation2d.fromRadians(acos(currentNormal.getZ()));
+//    }
+//
+//    private static final Rotation2d UPRIGHT_DEGREES = Rotation2d.fromRadians(PI / 2.0);
+//    public boolean isFlat() {
+//        return abs(getTilt().minus(UPRIGHT_DEGREES).getDegrees()) < 1.5;
+//    }
 
     /**
      * Adds a vision measurement to the Kalman Filter. This will correct the odometry pose estimate

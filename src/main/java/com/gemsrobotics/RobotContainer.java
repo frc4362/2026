@@ -5,6 +5,7 @@
 package com.gemsrobotics;
 
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.gemsrobotics.commands.Autos;
 import com.gemsrobotics.commands.SuperstructureCommands;
 import com.gemsrobotics.launching.LaunchingCalculator;
@@ -38,7 +39,7 @@ public final class RobotContainer {
     private final LaunchingCalculator m_launchCalculator;
     private final Autos m_autos;
     private final ProjectileManager m_projectileManager;
-    private final Trigger m_doEarlyAgitationTrigger, m_retractIntakeTrigger, m_wantsIntakingTrigger;
+    private final Trigger m_doEarlyAgitationTrigger, m_retractIntakeTrigger, m_wantsIntakingTrigger, m_driveOverBumpTrigger;
 
     public RobotContainer(MatchStateScheduler matchStateScheduler) {
         m_signalManager = new StatusSignalManager();
@@ -48,6 +49,7 @@ public final class RobotContainer {
         final Trigger pilotIntakingTrigger = m_pilot.leftTrigger();
         final Trigger pilotSnakingTrigger = m_pilot.rightBumper();
         m_wantsIntakingTrigger = pilotIntakingTrigger;
+        m_driveOverBumpTrigger = m_pilot.povDown();
 
         m_matchStateScheduler = matchStateScheduler;
         m_visualizer = new RobotVisualizer();
@@ -99,6 +101,10 @@ public final class RobotContainer {
 
         m_doEarlyAgitationTrigger = new Trigger(DriverStation::isAutonomous).or(m_copilot.a());
         m_retractIntakeTrigger = m_copilot.y();
+
+        m_driveOverBumpTrigger.whileTrue(SuperstructureCommands.driveOverBump(m_robotState, m_swerve, true, 4.0, 0.05)
+                .andThen(m_swerve.runOnce(() -> m_swerve.setControl(new SwerveRequest.SwerveDriveBrake()))));
+        m_driveOverBumpTrigger.onFalse(m_swerve.runOnce(() -> m_swerve.setControl(new SwerveRequest.SwerveDriveBrake())));
 
         m_projectileManager = new ProjectileManager(
                 m_robotState,

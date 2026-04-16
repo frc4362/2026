@@ -63,7 +63,7 @@ public final class SwerveConstants {
 
     // The stator current at which the wheels start to slip;
     // This needs to be tuned to your individual robot
-    private static final Current kSlipCurrent = Amps.of(100);
+    private static final Current kSlipCurrent = Amps.of(90);
 
     // Initial configs for the drive and steer motors and the azimuth encoder; these cannot be null.
     // Some configs will be overwritten; check the `with*InitialConfigs()` API documentation.
@@ -80,9 +80,14 @@ public final class SwerveConstants {
     // Configs for the Pigeon 2; leave this null to skip applying Pigeon 2 configs
     private static final Pigeon2Configuration pigeonConfigs = new Pigeon2Configuration()
             .withMountPose(new MountPoseConfigs()
-                    .withMountPoseYaw(-180)
-                    .withMountPosePitch(-88.875)
-                    .withMountPoseRoll(-38.65));
+                    .withMountPoseYaw(-180.00013732910156)
+                    .withMountPosePitch(-87.65)
+                    .withMountPoseRoll(-30.0));
+//    private static final Pigeon2Configuration pigeonConfigs = new Pigeon2Configuration()
+//            .withMountPose(new MountPoseConfigs()
+//                    .withMountPoseYaw(-173.65603637695312)
+//                    .withMountPosePitch(-85.11724090576172)
+//                    .withMountPoseRoll(-25.535856246948242));
 
     // Every 1 rotation of the azimuth results in kCoupleRatio drive motor turns;
     // This may need to be tuned to your individual robot

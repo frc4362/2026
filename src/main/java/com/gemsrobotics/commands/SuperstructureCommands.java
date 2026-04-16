@@ -1,5 +1,6 @@
 package com.gemsrobotics.commands;
 
+import com.ctre.phoenix6.swerve.SwerveModule;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.gemsrobotics.FieldConstants;
 import com.gemsrobotics.Robot;
@@ -73,8 +74,15 @@ public final class SuperstructureCommands {
 			final Superstructure superstructure,
 			final LaunchingCalculator launchingCalculator
 	) {
-		return SuperstructureCommands.makeLaunchCommand(swerve, superstructure, launchingCalculator)
-				.withDeadline(new WaitUntilCommand(superstructure.isEitherLaunching).andThen(new WaitUntilCommand(() -> !superstructure.isEitherLaunching.getAsBoolean())));
+		final Command deadline;
+		if (Robot.isReal()) {
+			deadline = new WaitUntilCommand(superstructure.isEitherLaunching)
+					.andThen(new WaitCommand(2.0).andThen(new WaitUntilCommand(() -> !superstructure.isEitherLaunching.getAsBoolean())));
+		} else {
+			deadline = new WaitCommand(4.5);
+		}
+
+		return SuperstructureCommands.makeLaunchCommand(swerve, superstructure, launchingCalculator).withDeadline(deadline);
 	}
 
 	public static Command blineToPoint(final CommandSwerveDrivetrain swerve, final Pose2d endingPose) {
@@ -98,15 +106,20 @@ public final class SuperstructureCommands {
 
 	public static Command waitForBumpCross(final CommandSwerveDrivetrain swerve, final double duration) {
 		return Commands.sequence(
-				new WaitUntilCommand(() -> !swerve.isFlat()),
-				new WaitUntilCommand(new Trigger(swerve::isFlat).debounce(duration, Debouncer.DebounceType.kRising)));
+				new WaitUntilCommand(() -> !swerve.isFlat.getAsBoolean()),
+				new WaitUntilCommand(swerve.isFlat));
 	}
 
 	// please note this does not stop the drive train
 	// rotation3d is in Roll Pitch Yaw
-	public static Command driveOverBump(final RobotState robotState, final CommandSwerveDrivetrain swerve, final double velocity, final double duration) {
+	public static Command driveOverBump(final RobotState robotState, final CommandSwerveDrivetrain swerve, final boolean pointsWheelsFirst, final double velocity, final double duration) {
 		final SwerveRequest.FieldCentricFacingAngle request = CommandSwerveDrivetrain.makeAimingRequest();
 		return Commands.sequence(
+				swerve.runOnce(() -> {
+					swerve.setControl(new SwerveRequest.PointWheelsAt()
+							.withSteerRequestType(SwerveModule.SteerRequestType.MotionMagicExpo)
+							.withModuleDirection(Rotation2d.fromRadians(0)));
+				}).onlyIf(() -> pointsWheelsFirst),
 				swerve.runOnce(() -> {
 					final Pose2d startingPose = robotState.getLatestFieldToVehicle().getValue();
 					final Translation2d bumpTarget = FieldConstants.getClosestBump(startingPose.getTranslation());
@@ -116,6 +129,12 @@ public final class SuperstructureCommands {
 							.withVelocityY(0.0)
 							.withTargetDirection(startingPose.getRotation()));
 				}),
-				Robot.isReal() ? waitForBumpCross(swerve, duration) : new WaitCommand(1.0));
+				Robot.isReal() ? waitForBumpCross(swerve, duration) : new WaitCommand(0.3));
+	}
+
+	// please note this does not stop the drive train
+	// rotation3d is in Roll Pitch Yaw
+	public static Command driveOverBump(final RobotState robotState, final CommandSwerveDrivetrain swerve, final double velocity, final double duration) {
+		return driveOverBump(robotState, swerve, true, velocity, duration);
 	}
 }

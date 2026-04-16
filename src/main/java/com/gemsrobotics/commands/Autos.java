@@ -30,6 +30,7 @@ public final class Autos {
     private final AutoChooser m_autoChooser;
     private final SendableChooser<FirstAutoSegment> m_autoSegment1Chooser;
     private final SendableChooser<SecondAutoSegment> m_autoSegment2Chooser;
+    private final SendableChooser<Boolean> m_isLeftChooser;
 
     public interface AutoSegment {
         String getBlinePathName();
@@ -80,20 +81,25 @@ public final class Autos {
         SmartDashboard.putData(m_autoSegment1Chooser);
         m_autoSegment2Chooser = new EnumChooser<>(SecondAutoSegment.class, SecondAutoSegment.InsideOut);
         SmartDashboard.putData(m_autoSegment2Chooser);
-        final SendableChooser<Boolean> isLeftChooser = new SendableChooser<>();
-        isLeftChooser.setDefaultOption("Right", false);
-        isLeftChooser.addOption("Left", true);
-        SmartDashboard.putData(isLeftChooser);
+        m_isLeftChooser = new SendableChooser<>();
+        m_isLeftChooser.setDefaultOption("Right", false);
+        m_isLeftChooser.addOption("Left", true);
+        SmartDashboard.putData(m_isLeftChooser);
 
         m_autoChooser = new AutoChooser();
         m_autoChooser.addRoutine("Configurable Auto", () -> makeAuto(
-                isLeftChooser.getSelected(),
+                m_isLeftChooser.getSelected(),
                 m_autoSegment1Chooser.getSelected(),
                 m_autoSegment2Chooser.getSelected()));
     }
 
     private FollowPath makeFollowPathCommand(final boolean isLeft, final AutoSegment autoSegment) {
-        return m_swerve.getAutoBlineBuilder().build(new Path((autoSegment.getBlinePathName())));
+        final Path path = new Path(autoSegment.getBlinePathName());
+        if (isLeft) {
+            path.mirror();
+        }
+
+        return m_swerve.getAutoBlineBuilder().build(path);
     }
 
     private Command followPathUntilBump(final FollowPath pathCommand) {
@@ -115,18 +121,19 @@ public final class Autos {
                 Commands.runOnce(() -> {
                     final Pose2d flippedPose = AllianceFlipUtil.apply(LEFT_STARTING_POSE);
                     m_swerve.resetPose(flippedPose);
-                }).onlyIf(() -> isLeft),
-                SuperstructureCommands.findAndDriveOverBump(m_robotState, m_swerve, DRIVE_OVER_BUMP_VELOCITY, DRIVE_OVER_BUMP_DURATION)
-                        .alongWith(new WaitCommand(0.4).andThen(m_superstructure.setWantedState(Superstructure.SystemState.INTAKING))),
-                followPathUntilBump(firstPassCommand),
-                SuperstructureCommands.findAndDriveOverBump(m_robotState, m_swerve, DRIVE_OVER_BUMP_VELOCITY, DRIVE_OVER_BUMP_DURATION),
-                SuperstructureCommands.launchUntilEmpty(m_swerve, m_superstructure, m_robot.getLaunchCalculator()).withTimeout(6.0),
+                }).onlyIf(m_isLeftChooser::getSelected),
                 m_superstructure.setWantedState(Superstructure.SystemState.INTAKING),
                 SuperstructureCommands.findAndDriveOverBump(m_robotState, m_swerve, DRIVE_OVER_BUMP_VELOCITY, DRIVE_OVER_BUMP_DURATION),
+                followPathUntilBump(firstPassCommand),
+                SuperstructureCommands.findAndDriveOverBump(m_robotState, m_swerve, DRIVE_OVER_BUMP_VELOCITY, DRIVE_OVER_BUMP_DURATION),
+                m_swerve.runOnce(() -> m_swerve.setControl(new SwerveRequest.SwerveDriveBrake())),
+                SuperstructureCommands.launchUntilEmpty(m_swerve, m_superstructure, m_robot.getLaunchCalculator()).withTimeout(6.0),
+                SuperstructureCommands.findAndDriveOverBump(m_robotState, m_swerve, DRIVE_OVER_BUMP_VELOCITY, DRIVE_OVER_BUMP_DURATION)
+                        .beforeStarting(m_superstructure.setWantedState(Superstructure.SystemState.INTAKING)),
                 followPathUntilBump(secondPassCommand),
 //                // drive back with balls again
                 SuperstructureCommands.findAndDriveOverBump(m_robotState, m_swerve, DRIVE_OVER_BUMP_VELOCITY, DRIVE_OVER_BUMP_DURATION),
-                m_swerve.runOnce(() -> m_swerve.setControl(new SwerveRequest.Idle())),
+                m_swerve.runOnce(() -> m_swerve.setControl(new SwerveRequest.SwerveDriveBrake())),
                 SuperstructureCommands.launchUntilEmpty(m_swerve, m_superstructure, m_robot.getLaunchCalculator()).withTimeout(6.0),
                 m_superstructure.setWantedState(Superstructure.SystemState.IDLE)));
 
