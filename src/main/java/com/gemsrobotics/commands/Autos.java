@@ -87,10 +87,15 @@ public final class Autos {
         SmartDashboard.putData(m_isLeftChooser);
 
         m_autoChooser = new AutoChooser();
-        m_autoChooser.addRoutine("Configurable Auto", () -> makeAuto(
-                m_isLeftChooser.getSelected(),
-                m_autoSegment1Chooser.getSelected(),
-                m_autoSegment2Chooser.getSelected()));
+        for (final FirstAutoSegment firstPass : FirstAutoSegment.values()) {
+            for (final SecondAutoSegment secondPass : SecondAutoSegment.values()) {
+                for (final boolean left : new boolean[]{true, false}) {
+                    final String side = left ? "Left" : "Right";
+                    m_autoChooser.addRoutine(side + ": " + firstPass.name() + "," + secondPass.name(),
+                            () -> makeAuto(left, firstPass, secondPass));
+                }
+            }
+        }
     }
 
     private FollowPath makeFollowPathCommand(final boolean isLeft, final AutoSegment autoSegment) {
@@ -112,7 +117,7 @@ public final class Autos {
     private static final double DRIVE_OVER_BUMP_VELOCITY = 4.0;
     private static final double DRIVE_OVER_BUMP_DURATION = 0.04;
     public AutoRoutine makeAuto(final boolean isLeft, final FirstAutoSegment firstAutoSegment, final SecondAutoSegment secondAutoSegment) {
-        final AutoRoutine routine = m_autoFactory.newRoutine("configured_auto");
+        final AutoRoutine routine = m_autoFactory.newRoutine("configured_auto_" + (isLeft ? "Left" : "Right") + "_" + firstAutoSegment.name() + "_" + secondAutoSegment.name());
 
         final FollowPath firstPassCommand = makeFollowPathCommand(isLeft, firstAutoSegment);
         final FollowPath secondPassCommand = makeFollowPathCommand(isLeft, secondAutoSegment);
@@ -121,7 +126,7 @@ public final class Autos {
                 Commands.runOnce(() -> {
                     final Pose2d flippedPose = AllianceFlipUtil.apply(LEFT_STARTING_POSE);
                     m_swerve.resetPose(flippedPose);
-                }).onlyIf(m_isLeftChooser::getSelected),
+                }).onlyIf(() -> isLeft),
                 m_superstructure.setWantedState(Superstructure.SystemState.INTAKING),
                 SuperstructureCommands.findAndDriveOverBump(m_robotState, m_swerve, DRIVE_OVER_BUMP_VELOCITY, DRIVE_OVER_BUMP_DURATION),
                 followPathUntilBump(firstPassCommand),
