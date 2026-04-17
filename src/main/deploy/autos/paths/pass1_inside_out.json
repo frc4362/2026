@@ -8,9 +8,9 @@
     },
     {
       "type": "translation",
-      "x_meters": 6.300944223894909,
-      "y_meters": 3.466734419109671,
-      "intermediate_handoff_radius_meters": 0.4
+      "x_meters": 6.272447067111807,
+      "y_meters": 3.7089602517660483,
+      "intermediate_handoff_radius_meters": 0.33
     },
     {
       "type": "waypoint",
@@ -65,8 +65,8 @@
     "max_velocity_meters_per_sec": [
       {
         "value": 3.25,
-        "start_ordinal": 2,
-        "end_ordinal": 5
+        "start_ordinal": 1,
+        "end_ordinal": 4
       }
     ],
     "max_acceleration_meters_per_sec2": [

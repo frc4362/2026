@@ -109,13 +109,14 @@ public final class Autos {
 
     private Command followPathUntilBump(final FollowPath pathCommand) {
         return new ParallelDeadlineGroup(
-                new WaitCommand(1.0).andThen(new WaitUntilCommand(() -> FieldConstants.isReadyToCrossBump(m_robotState.getLatestFieldToVehicle().getValue()))),
-                pathCommand);
+                new WaitCommand(3.0).andThen(new WaitUntilCommand(() -> FieldConstants.isReadyToCrossBump(m_robotState.getLatestFieldToVehicle().getValue()))),
+                pathCommand).withTimeout(8.0);
     }
 
     private static final Pose2d LEFT_STARTING_POSE = new Pose2d(3.5344300270080566, 5.5548200607299805, Rotation2d.kZero);
     private static final double DRIVE_OVER_BUMP_VELOCITY = 4.0;
-    private static final double DRIVE_OVER_BUMP_DURATION = 0.04;
+    private static final double DRIVE_OVER_BUMP_NO_BALLS_DURATION = 0.07;
+    private static final double DRIVE_OVER_BUMP_DURATION = 0.19;
     public AutoRoutine makeAuto(final boolean isLeft, final FirstAutoSegment firstAutoSegment, final SecondAutoSegment secondAutoSegment) {
         final AutoRoutine routine = m_autoFactory.newRoutine("configured_auto_" + (isLeft ? "Left" : "Right") + "_" + firstAutoSegment.name() + "_" + secondAutoSegment.name());
 
@@ -128,12 +129,13 @@ public final class Autos {
                     m_swerve.resetPose(flippedPose);
                 }).onlyIf(() -> isLeft),
                 m_superstructure.setWantedState(Superstructure.SystemState.INTAKING),
-                SuperstructureCommands.findAndDriveOverBump(m_robotState, m_swerve, DRIVE_OVER_BUMP_VELOCITY, DRIVE_OVER_BUMP_DURATION),
+                SuperstructureCommands.findAndDriveOverBump(m_robotState, m_swerve, DRIVE_OVER_BUMP_VELOCITY, DRIVE_OVER_BUMP_NO_BALLS_DURATION),
+                m_swerve.runOnce(() -> m_swerve.setControl(new SwerveRequest.SwerveDriveBrake())),
                 followPathUntilBump(firstPassCommand),
                 SuperstructureCommands.findAndDriveOverBump(m_robotState, m_swerve, DRIVE_OVER_BUMP_VELOCITY, DRIVE_OVER_BUMP_DURATION),
                 m_swerve.runOnce(() -> m_swerve.setControl(new SwerveRequest.SwerveDriveBrake())),
-                SuperstructureCommands.launchUntilEmpty(m_swerve, m_superstructure, m_robot.getLaunchCalculator()).withTimeout(6.0),
-                SuperstructureCommands.findAndDriveOverBump(m_robotState, m_swerve, DRIVE_OVER_BUMP_VELOCITY, DRIVE_OVER_BUMP_DURATION)
+                SuperstructureCommands.launchUntilEmpty(m_swerve, m_superstructure, m_robot.getLaunchCalculator()).withTimeout(7.0),
+                SuperstructureCommands.findAndDriveOverBump(m_robotState, m_swerve, DRIVE_OVER_BUMP_VELOCITY + 1.0, DRIVE_OVER_BUMP_NO_BALLS_DURATION)
                         .beforeStarting(m_superstructure.setWantedState(Superstructure.SystemState.INTAKING)),
                 followPathUntilBump(secondPassCommand),
 //                // drive back with balls again

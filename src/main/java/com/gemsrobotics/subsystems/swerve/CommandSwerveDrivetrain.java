@@ -159,9 +159,9 @@ public final class CommandSwerveDrivetrain extends SwerveConstants.TunerSwerveDr
                 () -> getState().Pose,
                 () -> getState().Speeds,
                 this::setRobotSpeeds,
-                makePController(5.0),
+                makePController(6.7),
                 makePController(4.0),
-                makePController(3.0)
+                makePController(4)
         ).withDefaultShouldFlip();
         m_teleopPathBuilder = new FollowPath.Builder(
                 this,
@@ -192,8 +192,7 @@ public final class CommandSwerveDrivetrain extends SwerveConstants.TunerSwerveDr
 
         m_gravityZ = getPigeon2().getGravityVectorZ(false);
         signalManager.registerPublished(Constants.CAN.kMAIN_BUS, m_gravityZ, stateTable, "gravity_z");
-        isFlat = new Trigger(() -> m_gravityZ.isNear(1.000, 0.02))
-                .debounce(0.20, Debouncer.DebounceType.kRising);
+        isFlat = new Trigger(() -> m_gravityZ.isNear(1.000, 0.02));
 
         // TODO add NT4 logging hooks
         // use this for logging hooks
@@ -388,8 +387,8 @@ public final class CommandSwerveDrivetrain extends SwerveConstants.TunerSwerveDr
     public void acceptPoseMeasurement(final PoseEstimate estimate) {
         if (Constants.Vision.ACCEPT_VISION_MEASUREMENTS) {
             final PoseEstimate correctEstimate;
-//            if (estimate.variance().get(2, 0) >= Constants.Vision.HIGH_VARIANCE || estimate.tagCount() < 2 || DriverStation.isEnabled()) {
-            if (estimate.variance().get(2, 0) >= Constants.Vision.HIGH_VARIANCE || DriverStation.isEnabled()) {
+            if (estimate.variance().get(2, 0) >= Constants.Vision.HIGH_VARIANCE || estimate.tagCount() < 2 || DriverStation.isEnabled()) {
+//            if (estimate.variance().get(2, 0) >= Constants.Vision.HIGH_VARIANCE || DriverStation.isEnabled()) {
                 // insert the known heading reading
                 // rather than hitting the pose estimator with a heading with a high variance
                 // this prevents spiraling off of the field

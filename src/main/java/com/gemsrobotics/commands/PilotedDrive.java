@@ -179,7 +179,7 @@ public final class PilotedDrive extends Command {
     }
 
     // meters per second
-    private static final double MAX_ALLOWED_VELOCITY_INTAKING = 3.5;
+    private static final double MAX_ALLOWED_VELOCITY_INTAKING = 3.85;
 
     private static ChassisSpeeds scaleChassisSpeeds(final ChassisSpeeds desiredVelocity, final double speed) {
         final double currentChassisSpeeds = hypot(desiredVelocity.vxMetersPerSecond, desiredVelocity.vyMetersPerSecond);

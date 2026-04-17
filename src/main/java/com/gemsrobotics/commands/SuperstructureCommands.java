@@ -107,7 +107,7 @@ public final class SuperstructureCommands {
 	public static Command waitForBumpCross(final CommandSwerveDrivetrain swerve, final double duration) {
 		return Commands.sequence(
 				new WaitUntilCommand(() -> !swerve.isFlat.getAsBoolean()),
-				new WaitUntilCommand(swerve.isFlat));
+				new WaitUntilCommand(swerve.isFlat.debounce(duration, Debouncer.DebounceType.kRising)));
 	}
 
 	// please note this does not stop the drive train

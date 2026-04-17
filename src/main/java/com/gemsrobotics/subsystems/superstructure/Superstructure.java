@@ -125,7 +125,7 @@ public final class Superstructure extends SubsystemBase {
         m_doEarlyAgitation = false;
 
         isEitherLaunching = (m_launcherEast.isLaunching.or(m_launcherWest.isLaunching))
-                .debounce(0.5, Debouncer.DebounceType.kFalling);
+                .debounce(0.35, Debouncer.DebounceType.kFalling);
     }
 
     @Override

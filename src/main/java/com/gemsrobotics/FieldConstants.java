@@ -79,7 +79,7 @@ public class FieldConstants {
       // if your distance off center plus half your width is greater than half the size of the bump
       // you will hit a wall while crossing
       final boolean yOk = (distanceOffBumpCenter + effectiveVehicleWidth / 2.0) < (BUMP_WIDTH_M / 2.0);
-      final boolean xOk = abs(effectiveVehicleCenter.getX() - bump.getX()) < (1.0 + LeftBump.depth);
+      final boolean xOk = abs(effectiveVehicleCenter.getX() - bump.getX()) < (0.5 + LeftBump.depth);
       return xOk && yOk;
   }
 

@@ -39,7 +39,7 @@ public final class Constants {
   public static final double INTAKE_MAX_VELOCITY = DCMotor.getKrakenX60(2).withReduction(Intake.TRANSLATION_GEARING).freeSpeedRadPerSec * INTAKE_ROLLER_RADIUS.in(Meters);
 
   public static final double MAX_SPEED = SwerveConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
-  public static final double MAX_ANGULAR_RATE = RotationsPerSecond.of(1.0).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
+  public static final double MAX_ANGULAR_RATE = RotationsPerSecond.of(1.3).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
   public static final double MAX_ACCELERATION = MAX_SPEED * 0.75;
   public static final Mass ROBOT_WEIGHT = Pounds.of(115.0 + 20.0 + 13.0);
   public static final Distance BALL_RADIUS = Inches.of(5.91).div(2.0);

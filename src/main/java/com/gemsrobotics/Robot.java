@@ -7,6 +7,7 @@ package com.gemsrobotics;
 import choreo.auto.AutoChooser;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.gemsrobotics.subsystems.superstructure.Superstructure;
+import com.gemsrobotics.util.AllianceFlipUtil;
 import edu.wpi.first.networktables.*;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.TimedRobot;
@@ -41,6 +42,8 @@ public final class Robot extends TimedRobot {
         m_matchStateScheduler.logMatchState();
         m_robotContainer.periodic();
         CommandScheduler.getInstance().run();
+
+        SmartDashboard.putBoolean("ready for bump cross", FieldConstants.isReadyToCrossBump(m_robotContainer.getRobotState().getLatestFieldToVehicle().getValue()));
 
         m_twoTagsPublisher.set(m_robotContainer.getRobotState().getLastVisionPoseEstimate().tagCount() > 1);
     }
