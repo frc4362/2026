@@ -9,6 +9,8 @@ import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.gemsrobotics.subsystems.superstructure.Superstructure;
 import com.gemsrobotics.util.AllianceFlipUtil;
 import edu.wpi.first.networktables.*;
+import edu.wpi.first.util.datalog.DataLog;
+import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -23,6 +25,7 @@ public final class Robot extends TimedRobot {
     private final BooleanPublisher m_twoTagsPublisher;
 
     public Robot() {
+//        DataLogManager.start();
         m_matchStateScheduler = new MatchStateScheduler();
         m_robotContainer = new RobotContainer(m_matchStateScheduler);
         RobotController.setBrownoutVoltage(4.75);

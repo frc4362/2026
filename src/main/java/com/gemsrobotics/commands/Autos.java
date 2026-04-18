@@ -115,7 +115,7 @@ public final class Autos {
 
     private static final Pose2d LEFT_STARTING_POSE = new Pose2d(3.5344300270080566, 5.5548200607299805, Rotation2d.kZero);
     private static final double DRIVE_OVER_BUMP_VELOCITY = 4.0;
-    private static final double DRIVE_OVER_BUMP_NO_BALLS_DURATION = 0.07;
+    private static final double DRIVE_OVER_BUMP_NO_BALLS_DURATION = 0.09;
     private static final double DRIVE_OVER_BUMP_DURATION = 0.19;
     public AutoRoutine makeAuto(final boolean isLeft, final FirstAutoSegment firstAutoSegment, final SecondAutoSegment secondAutoSegment) {
         final AutoRoutine routine = m_autoFactory.newRoutine("configured_auto_" + (isLeft ? "Left" : "Right") + "_" + firstAutoSegment.name() + "_" + secondAutoSegment.name());
