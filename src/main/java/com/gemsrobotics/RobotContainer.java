@@ -48,6 +48,7 @@ public final class RobotContainer {
 
         final Trigger pilotIntakingTrigger = m_pilot.leftTrigger();
         final Trigger pilotSnakingTrigger = m_pilot.rightBumper();
+        final Trigger pilotTowerDrivingTrigger = m_pilot.a();
         m_wantsIntakingTrigger = pilotIntakingTrigger;
         m_driveOverBumpTrigger = m_pilot.povDown();
 
@@ -63,7 +64,8 @@ public final class RobotContainer {
                 () -> -m_pilot.getRightX(),
                 () -> false,
                 pilotIntakingTrigger,
-                pilotSnakingTrigger));
+                pilotSnakingTrigger,
+                pilotTowerDrivingTrigger));
 
         m_robotState.addPoseEstimateConsumer(m_swerve::acceptPoseMeasurement);
 

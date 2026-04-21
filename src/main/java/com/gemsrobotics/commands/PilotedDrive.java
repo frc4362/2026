@@ -36,7 +36,7 @@ public final class PilotedDrive extends Command {
 
     private final RobotState m_robotState;
     private final CommandSwerveDrivetrain m_swerve;
-    private final BooleanSupplier m_isEvading, m_isIntaking, m_isSnaking;
+    private final BooleanSupplier m_isEvading, m_isIntaking, m_isSnaking, m_isTowerDriving;
     private final DoubleSupplier m_velocityXSupplier, m_velocityYSupplier, m_rotation;
 
     private final FieldCentricEvasion m_evasionRequest;
@@ -53,7 +53,8 @@ public final class PilotedDrive extends Command {
             final DoubleSupplier rotation,
             final BooleanSupplier isEvading,
             final BooleanSupplier isIntaking,
-            final BooleanSupplier isSnaking
+            final BooleanSupplier isSnaking,
+            final BooleanSupplier isTowerDriving
     ) {
         addRequirements(drivetrain);
 
@@ -65,6 +66,7 @@ public final class PilotedDrive extends Command {
         m_velocityXSupplier = velocityX;
         m_velocityYSupplier = velocityY;
         m_rotation = rotation;
+        m_isTowerDriving = isTowerDriving;
 
         final Translation2d rotationalCenter = new Pose2d().transformBy(FieldConstants.VEHICLE_TO_CENTER).getTranslation();
 
@@ -131,6 +133,11 @@ public final class PilotedDrive extends Command {
                 } else {
                     if (m_maintainHeadingGoal.isEmpty()) {
                         m_maintainHeadingGoal = Optional.of(getHeadingGoal());
+                    }
+
+                    if (m_isTowerDriving.getAsBoolean()) {
+                        Rotation2dPlus newHeadingGoal = new Rotation2dPlus(m_maintainHeadingGoal.get()).getNearestPole();
+                        m_maintainHeadingGoal = Optional.of(newHeadingGoal);
                     }
 
                     setDrivingFacingAngle(targetVelocity, m_maintainHeadingGoal.get());
