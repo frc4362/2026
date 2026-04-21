@@ -64,6 +64,7 @@ public final class Superstructure extends SubsystemBase {
     private boolean m_retractIntake;
     private boolean m_doEarlyAgitation;
     private boolean m_wantsIntaking;
+    private boolean m_isHomingIntake;
 
     private TunedLaunchStrategy m_tunedLaunchStrategy;
 
@@ -178,7 +179,11 @@ public final class Superstructure extends SubsystemBase {
         if (m_retractIntake) {
             m_intake.setRetract();
         } else if (m_hasEverDeployedIntake) {
-            m_intake.setDeploy();
+            if(m_isHomingIntake) {
+                m_intake.setHoming();
+            } else {
+                m_intake.setDeploy();
+            }
         }
 
         m_intake.setStop();
@@ -351,4 +356,7 @@ public final class Superstructure extends SubsystemBase {
     public void setWantsIntaking(final boolean wantsIntaking) {
         m_wantsIntaking = wantsIntaking;
     }
+
+    public void setResettingIntake(final boolean resettingIntake) {
+        m_isHomingIntake = resettingIntake;}
 }

@@ -213,6 +213,14 @@ public final class Intake {
         m_translationBottom.setControl(new CoastOut());
     }
 
+    public void setHomed() {
+        m_deployer.setPosition(INTAKE_DEPLOYED_ROTATIONS, 0.001);
+    }
+
+    public void setHoming() {
+        m_deployer.setControl(new VoltageOut(-2));
+    }
+
     public Rotation2d getAngle() {
         return Rotation2d.fromRotations(m_deployerPosition.getValueAsDouble());
     }

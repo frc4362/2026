@@ -26,6 +26,7 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 
 import static com.gemsrobotics.Constants.CAN.*;
 import static edu.wpi.first.units.Units.*;
+import static edu.wpi.first.wpilibj2.command.Commands.runOnce;
 
 public final class RobotContainer {
     private final StatusSignalManager m_signalManager;
@@ -38,6 +39,7 @@ public final class RobotContainer {
     private final Vision m_vision;
     private final LaunchingCalculator m_launchCalculator;
     private final Autos m_autos;
+    private final Intake m_intake;
     private final ProjectileManager m_projectileManager;
     private final Trigger m_doEarlyAgitationTrigger, m_retractIntakeTrigger, m_wantsIntakingTrigger, m_driveOverBumpTrigger;
 
@@ -73,6 +75,7 @@ public final class RobotContainer {
             new Limelight4.Inputs(m_swerve.getState().Pose, m_swerve.getYawVelocity()));
 
         m_launchCalculator = new LaunchingCalculator(m_robotState);
+        m_intake = new Intake(m_signalManager,  new TalonFX(INTAKE_TRANSLATION_LEADER, kAUX_BUS), new TalonFX(INTAKE_TRANSLATION_FOLLOWER, kAUX_BUS), new TalonFX(INTAKE_DEPLOYER, kAUX_BUS));
         m_superstructure = new Superstructure(
                 m_swerve,
                 new Launcher(m_signalManager, "launcher_east", LAUNCHER_LOWER_EAST, LAUNCHER_UPPER_EAST, false),
@@ -80,7 +83,7 @@ public final class RobotContainer {
                 new Hopper(m_signalManager, new TalonFX(SINGULATOR_WEST, kAUX_BUS), new TalonFX(SINGULATOR_EAST, kAUX_BUS)),
                 new Uptake(m_signalManager,"uptake", new TalonFX(UPTAKE_EAST, kAUX_BUS), new TalonFX(UPTAKE_WEST, kAUX_BUS)),
                 new Hood(m_signalManager, new TalonFX(HOOD, kAUX_BUS)),
-                new Intake(m_signalManager,  new TalonFX(INTAKE_TRANSLATION_LEADER, kAUX_BUS), new TalonFX(INTAKE_TRANSLATION_FOLLOWER, kAUX_BUS), new TalonFX(INTAKE_DEPLOYER, kAUX_BUS)),
+                m_intake,
                 m_robotState);
         m_autos = new Autos(this);
 
@@ -103,6 +106,13 @@ public final class RobotContainer {
 
         m_doEarlyAgitationTrigger = new Trigger(DriverStation::isAutonomous).or(m_copilot.a());
         m_retractIntakeTrigger = m_copilot.y();
+
+        final Trigger resetIntakeTrigger = m_copilot.start();
+        resetIntakeTrigger.onTrue(runOnce(() -> m_superstructure.setResettingIntake(true)));
+        resetIntakeTrigger.onFalse(runOnce(() -> {
+            m_superstructure.setResettingIntake(false);
+            m_intake.setHomed();
+        }));
 
         m_driveOverBumpTrigger.whileTrue(SuperstructureCommands.driveOverBump(m_robotState, m_swerve, true, 4.0, 0.05)
                 .andThen(m_swerve.runOnce(() -> m_swerve.setControl(new SwerveRequest.SwerveDriveBrake()))));
