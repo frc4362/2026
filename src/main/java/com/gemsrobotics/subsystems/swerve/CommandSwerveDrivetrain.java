@@ -37,6 +37,7 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotController;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -136,6 +137,8 @@ public final class CommandSwerveDrivetrain extends SwerveConstants.TunerSwerveDr
                     measuredChassisSpeeds.vyMetersPerSecond,
                     omegaRadiansPerSecond);
 
+            SmartDashboard.putNumber("robot velocity", Math.hypot(measuredChassisSpeeds.vxMetersPerSecond, measuredChassisSpeeds.vyMetersPerSecond));
+
             m_robotState.addDriveSample(
                     sampleTime,
                     swerveState.Pose,
@@ -152,9 +155,9 @@ public final class CommandSwerveDrivetrain extends SwerveConstants.TunerSwerveDr
                 () -> getState().Pose,
                 () -> getState().Speeds,
                 this::setRobotSpeeds,
-                makePController(6.7),
-                makePController(4.0),
-                makePController(4)
+                makePController(6),
+                makePController(4),
+                makePController(2.5)
         ).withDefaultShouldFlip();
         m_teleopPathBuilder = new FollowPath.Builder(
                 this,

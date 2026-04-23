@@ -50,7 +50,7 @@ public final class RobotContainer {
 
         final Trigger pilotIntakingTrigger = m_pilot.leftTrigger();
         final Trigger pilotSnakingTrigger = m_pilot.rightBumper();
-        final Trigger pilotTowerDrivingTrigger = m_pilot.a();
+        final Trigger pilotTowerDrivingTrigger = m_pilot.b();
         m_wantsIntakingTrigger = pilotIntakingTrigger;
         m_driveOverBumpTrigger = m_pilot.povDown();
 
