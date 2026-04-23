@@ -11,8 +11,6 @@ import java.util.stream.Stream;
 import choreo.Choreo;
 import choreo.auto.AutoFactory;
 import choreo.trajectory.SwerveSample;
-import com.ctre.phoenix6.BaseStatusSignal;
-import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.Utils;
 import com.ctre.phoenix6.hardware.TalonFX;
@@ -23,30 +21,25 @@ import com.ctre.phoenix6.swerve.SwerveRequest;
 
 import com.gemsrobotics.Constants;
 import com.gemsrobotics.RobotState;
+import com.gemsrobotics.lib.StatelessNetworkTable;
 import com.gemsrobotics.lib.StatusSignalManager;
 import com.gemsrobotics.lib.math.GeometryUtil;
 import com.gemsrobotics.vision.PoseEstimate;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.controller.PIDController;
-import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
-import edu.wpi.first.networktables.DoubleArrayPublisher;
-import edu.wpi.first.networktables.NetworkTable;
-import edu.wpi.first.networktables.NetworkTableInstance;
-import edu.wpi.first.networktables.StructPublisher;
+import edu.wpi.first.networktables.*;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotController;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.lib.BLine.FollowPath;
 import frc.robot.lib.BLine.Path;
 
@@ -194,17 +187,16 @@ public final class CommandSwerveDrivetrain extends SwerveConstants.TunerSwerveDr
         signalManager.registerPublished(Constants.CAN.kMAIN_BUS, m_gravityZ, stateTable, "gravity_z");
         isFlat = new Trigger(() -> m_gravityZ.isNear(1.000, 0.02));
 
-        // TODO add NT4 logging hooks
         // use this for logging hooks
-        final NetworkTable bLineTable = stateTable.getSubTable("bline");
-        FollowPath.setBooleanLoggingConsumer(pair -> {
-        });
-        FollowPath.setDoubleLoggingConsumer(pair -> {
-        });
-        FollowPath.setPoseLoggingConsumer(pair -> {
-        });
-        FollowPath.setTranslationListLoggingConsumer(pair -> {
-        });
+        final NetworkTable bLineTable = NetworkTableInstance.getDefault().getTable("bline");
+        final StatelessNetworkTable<BooleanPublisher, Boolean> blineBooleanTable = StatelessNetworkTable.booleanPublishers(bLineTable);
+        final StatelessNetworkTable<DoublePublisher, Double> blineStringTable = StatelessNetworkTable.doublePublishers(bLineTable);
+        final StatelessNetworkTable<StructPublisher<Pose2d>, Pose2d> blinePoseTable = StatelessNetworkTable.posePublishers(bLineTable);
+        final StatelessNetworkTable<StructArrayPublisher<Translation2d>, Translation2d[]> blineTranslationsTable = StatelessNetworkTable.translationsPublishers(bLineTable);
+        FollowPath.setBooleanLoggingConsumer(blineBooleanTable::logPair);
+        FollowPath.setDoubleLoggingConsumer(blineStringTable::logPair);
+        FollowPath.setPoseLoggingConsumer(blinePoseTable::logPair);
+        FollowPath.setTranslationListLoggingConsumer(blineTranslationsTable::logPair);
 
         // power tracking
         final NetworkTable motorsTable = NetworkTableInstance.getDefault().getTable("swerve_motors");
