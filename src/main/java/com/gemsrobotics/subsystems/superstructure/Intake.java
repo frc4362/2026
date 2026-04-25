@@ -28,7 +28,7 @@ import java.util.List;
 
 public final class Intake {
 //    private static final double INTAKE_STARTING_ROTATIONS = -0.43;
-    private static final double INTAKE_STARTING_ROTATIONS = 0.369;// - 0.022;
+    private static final double INTAKE_STARTING_ROTATIONS = 0.369 - 0.026;// - 0.022;
     // Assumes the intake is retracted at 0 rotations and deploys in the positive direction
     private static final double INTAKE_STOWED_ROTATIONS = 0.31;
     private static final double INTAKE_FEEDING_ROTATIONS = 0.295;
@@ -175,9 +175,9 @@ public final class Intake {
 
     public void setRetractSlowly() {
         m_deployer.setControl(m_deployRequest
-                .withPosition(0.16)
-                .withVelocity(0.16 / 2.25)
-                .withAcceleration(3.0));
+                .withPosition(0.215)
+                .withVelocity(0.45 / 2.25)
+                .withAcceleration(4.0));
     }
 
     public void setAgitating() {

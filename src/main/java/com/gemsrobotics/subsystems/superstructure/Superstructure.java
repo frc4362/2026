@@ -32,7 +32,7 @@ public final class Superstructure extends SubsystemBase {
     }
 
     public static final boolean DO_INTAKE_AGITATION = true;
-    public static final double INTAKE_AGITATION_DELAY = 1.75;
+    public static final double INTAKE_AGITATION_DELAY = 1.25;
     public static final double INTAKE_AGITATION_FREQUENCY = 2.0;
     public static final double INTAKE_AGITATION_PHASE = 1.0 / INTAKE_AGITATION_FREQUENCY;
 
@@ -230,12 +230,15 @@ public final class Superstructure extends SubsystemBase {
 
             if (m_wantsIntaking) {
                 m_intake.setIntaking();
-            } else if ((s % INTAKE_AGITATION_PHASE) < (INTAKE_AGITATION_PHASE / 2.0)) {
-                if (doPush) {
-                    m_intake.setAgitating();
-                } else {
-                    m_intake.setDeploy();
-                }
+//            } else if ((s % INTAKE_AGITATION_PHASE) < (INTAKE_AGITATION_PHASE / 2.0)) {
+//                m_intake.setRetractSlowly();
+            } else if (m_intakeLiftTimer.get() > INTAKE_AGITATION_DELAY) {
+                m_intake.setRetractSlowly();
+//                if (doPush) {
+//                    m_intake.setAgitating();
+//                } else {
+//                    m_intake.setDeploy();
+//                }
 //            } else if (m_intakeLiftTimer.get() > INTAKE_AGITATION_DELAY) {
 //                m_intake.setRetractSlowly();
             } else {
