@@ -126,10 +126,10 @@ public final class Constants {
     public static final int SWERVE_SW_ENCODER = 10;
     public static final int SWERVE_SE_ENCODER = 11;
 
-    public static final Angle SWERVE_NW_ENCODER_OFFSET = Rotations.of(0.456787109375);
-    public static final Angle SWERVE_NE_ENCODER_OFFSET = Rotations.of(-0.46630859375);
-    public static final Angle SWERVE_SW_ENCODER_OFFSET = Rotations.of(-0.45703125);
-    public static final Angle SWERVE_SE_ENCODER_OFFSET = Rotations.of(0.29150390625);
+    public static final Angle SWERVE_NW_ENCODER_OFFSET = Rotations.of(0.467041015625);
+    public static final Angle SWERVE_NE_ENCODER_OFFSET = Rotations.of(-0.464599609375);
+    public static final Angle SWERVE_SW_ENCODER_OFFSET = Rotations.of(0.378173828125);
+    public static final Angle SWERVE_SE_ENCODER_OFFSET = Rotations.of(0.29052734375);
 
     //--------------------aux-bus---------------------------
 
