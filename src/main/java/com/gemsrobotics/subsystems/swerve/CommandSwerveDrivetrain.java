@@ -188,7 +188,7 @@ public final class CommandSwerveDrivetrain extends SwerveConstants.TunerSwerveDr
 
         m_gravityZ = getPigeon2().getGravityVectorZ(false);
         signalManager.registerPublished(Constants.CAN.kMAIN_BUS, m_gravityZ, stateTable, "gravity_z");
-        isFlat = new Trigger(() -> m_gravityZ.isNear(1.000, 0.02));
+        isFlat = new Trigger(() -> m_gravityZ.isNear(1.000, 0.0175));
 
         // use this for logging hooks
         final NetworkTable bLineTable = NetworkTableInstance.getDefault().getTable("bline");

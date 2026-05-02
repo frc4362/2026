@@ -58,12 +58,12 @@ public class Hopper {
         cfg.Slot0.kP = 35.0;
         cfg.Slot0.kV = 0.0;
         cfg.Slot0.kA = 0.0;
-//        cfg.CurrentLimits.SupplyCurrentLimitEnable = true;
-        //cfg.CurrentLimits.SupplyCurrentLimit = 50.0;
         cfg.TorqueCurrent.PeakForwardTorqueCurrent = 150.0;
         cfg.TorqueCurrent.PeakReverseTorqueCurrent = -150.0;
         cfg.MotionMagic.MotionMagicAcceleration = 500.0;
         m_motorLeader.getConfigurator().apply(cfg);
+        cfg.CurrentLimits.SupplyCurrentLimitEnable = true;
+        cfg.CurrentLimits.SupplyCurrentLimit = 70.0;
         m_motorFollower.getConfigurator().apply(cfg);
 
         m_feedingRequest = new DutyCycleOut(1.0);

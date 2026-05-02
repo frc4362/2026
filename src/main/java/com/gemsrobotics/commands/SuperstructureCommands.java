@@ -13,6 +13,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.*;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.lib.BLine.Path;
@@ -104,10 +105,26 @@ public final class SuperstructureCommands {
 				driveOverBump(robotState, swerve, velocity, duration));
 	}
 
+	public static Command findAndDriveOverBumpBalls(final RobotState robotState, final CommandSwerveDrivetrain swerve, final double velocity, final double duration) {
+		return Commands.sequence(
+				lineUpForBump(robotState, swerve).onlyIf(() -> !FieldConstants.isReadyToCrossBump(robotState.getLatestFieldToVehicle().getValue())),
+				driveOverBumpBalls(robotState, swerve, true, velocity, duration));
+	}
+
 	public static Command waitForBumpCross(final CommandSwerveDrivetrain swerve, final double duration) {
 		return Commands.sequence(
 				new WaitUntilCommand(() -> !swerve.isFlat.getAsBoolean()),
 				new WaitUntilCommand(swerve.isFlat.debounce(duration, Debouncer.DebounceType.kRising)));
+	}
+
+	public static Command waitForBumpCrossBalls(final RobotState robotState, final CommandSwerveDrivetrain swerve, final double duration) {
+		return Commands.sequence(
+				new WaitUntilCommand(() -> !swerve.isFlat.getAsBoolean()),
+				new WaitUntilCommand(() -> {
+					final boolean inAllianceZone = FieldConstants.isInAllianceZone(robotState.getLatestFieldToVehicle().getValue().getTranslation());
+					final boolean seesTags = abs(Timer.getTimestamp() - robotState.getLastVisionPoseEstimateTimestamp()) < 0.25;
+					return inAllianceZone && seesTags;
+				}));
 	}
 
 	// please note this does not stop the drive train
@@ -130,6 +147,28 @@ public final class SuperstructureCommands {
 							.withTargetDirection(startingPose.getRotation()));
 				}),
 				Robot.isReal() ? waitForBumpCross(swerve, duration) : new WaitCommand(0.3));
+	}
+
+	// please note this does not stop the drive train
+	// rotation3d is in Roll Pitch Yaw
+	public static Command driveOverBumpBalls(final RobotState robotState, final CommandSwerveDrivetrain swerve, final boolean pointsWheelsFirst, final double velocity, final double duration) {
+		final SwerveRequest.FieldCentricFacingAngle request = CommandSwerveDrivetrain.makeAimingRequest();
+		return Commands.sequence(
+				swerve.runOnce(() -> {
+					swerve.setControl(new SwerveRequest.PointWheelsAt()
+							.withSteerRequestType(SwerveModule.SteerRequestType.MotionMagicExpo)
+							.withModuleDirection(Rotation2d.fromRadians(0)));
+				}).onlyIf(() -> pointsWheelsFirst),
+				swerve.runOnce(() -> {
+					final Pose2d startingPose = robotState.getLatestFieldToVehicle().getValue();
+					final Translation2d bumpTarget = FieldConstants.getClosestBump(startingPose.getTranslation());
+					final double direction = signum(bumpTarget.getX() - startingPose.getX());
+					swerve.setControl(request
+							.withVelocityX(velocity * direction)
+							.withVelocityY(0.0)
+							.withTargetDirection(startingPose.getRotation()));
+				}),
+				Robot.isReal() ? waitForBumpCrossBalls(robotState, swerve, duration) : new WaitCommand(0.3));
 	}
 
 	// please note this does not stop the drive train

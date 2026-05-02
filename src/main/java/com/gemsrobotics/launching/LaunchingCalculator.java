@@ -38,10 +38,10 @@ public final class LaunchingCalculator {
 	private static final double DRAG_CONSTANT_INVERSE_SECONDS = 0.25;
 	private static final double TOF_EPSILON = 0.001;
 	private static final double MIN_RANGE_METERS_HUB = 1.66;
-	private static final double MAX_RANGE_METERS_HUB = 5.5;//4.05;
+	private static final double MAX_RANGE_METERS_HUB = 4.9;//4.05;
 	private static final double MIN_RANGE_METERS_FEED = 4.87;
 	private static final double MAX_RANGE_METERS_FEED = 14.10;
-	private static final double LAUNCH_VELOCITY_OFFSET = -0.75;
+	private static final double LAUNCH_VELOCITY_OFFSET = -0.5;
 	private static final double FEED_LOCKOUT_VERTEX_DEPTH = Inches.of(90).in(Meters);
 
 	public static final Translation2d HUB_CORNER_TO_FEED_LOCKOUT = new Translation2d(Units.Meters.of(0.0), Constants.BALL_STREAM_WIDTH.div(2));

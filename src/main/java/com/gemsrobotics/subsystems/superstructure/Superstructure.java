@@ -65,6 +65,7 @@ public final class Superstructure extends SubsystemBase {
     private boolean m_doEarlyAgitation;
     private boolean m_wantsIntaking;
     private boolean m_isHomingIntake;
+    private boolean m_intakeOperatorOut;
 
     private TunedLaunchStrategy m_tunedLaunchStrategy;
 
@@ -124,6 +125,7 @@ public final class Superstructure extends SubsystemBase {
         m_wantsIntaking = false;
         m_hasEverDeployedIntake = false;
         m_doEarlyAgitation = false;
+        m_intakeOperatorOut = false;
 
         isEitherLaunching = (m_launcherEast.isLaunching.or(m_launcherWest.isLaunching))
                 .debounce(0.35, Debouncer.DebounceType.kFalling);
@@ -232,6 +234,14 @@ public final class Superstructure extends SubsystemBase {
                 m_intake.setIntaking();
 //            } else if ((s % INTAKE_AGITATION_PHASE) < (INTAKE_AGITATION_PHASE / 2.0)) {
 //                m_intake.setRetractSlowly();
+            } else if (m_intakeOperatorOut) {
+                m_intake.setDeploy();
+            } else if (m_doEarlyAgitation) {
+                if (DriverStation.isTeleopEnabled()) {
+                    m_intake.setRetract();
+                } else {
+                    m_intake.setRetractSlowly();
+                }
             } else if (m_intakeLiftTimer.get() > INTAKE_AGITATION_DELAY) {
                 m_intake.setRetractSlowly();
 //                if (doPush) {
@@ -239,8 +249,6 @@ public final class Superstructure extends SubsystemBase {
 //                } else {
 //                    m_intake.setDeploy();
 //                }
-//            } else if (m_intakeLiftTimer.get() > INTAKE_AGITATION_DELAY) {
-//                m_intake.setRetractSlowly();
             } else {
                 m_intake.setDeploy();
             }
@@ -262,7 +270,7 @@ public final class Superstructure extends SubsystemBase {
         m_intake.setIntaking();
         m_launcherEast.setOff();
         m_launcherWest.setOff();
-        m_uptake.setIntaking();
+        m_uptake.setIdle();
         m_hopper.setIntaking();
 
         m_hasEverDeployedIntake = true;
@@ -354,6 +362,10 @@ public final class Superstructure extends SubsystemBase {
 
     public void setDoEarlyAgitation(final boolean doAgitation) {
         m_doEarlyAgitation = doAgitation;
+    }
+
+    public void setOperatorIntakeOut(final boolean operatorIntakeOut) {
+        m_intakeOperatorOut = operatorIntakeOut;
     }
 
     public void setWantsIntaking(final boolean wantsIntaking) {

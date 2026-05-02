@@ -7,6 +7,7 @@
 
 package com.gemsrobotics;
 
+import com.gemsrobotics.util.AllianceFlipUtil;
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.geometry.*;
@@ -81,6 +82,11 @@ public class FieldConstants {
       final boolean yOk = (distanceOffBumpCenter + effectiveVehicleWidth / 2.0) < (BUMP_WIDTH_M / 2.0);
       final boolean xOk = abs(effectiveVehicleCenter.getX() - bump.getX()) < (0.5 + LeftBump.depth);
       return xOk && yOk;
+  }
+
+  private static final double ROBOT_IN_ZONE_MARGIN = ROBOT_RADIUS.div(2.0).in(Meters);
+  public static boolean isInAllianceZone(final Translation2d vehicleTranslation) {
+    return AllianceFlipUtil.applyX(vehicleTranslation.getX()) < (LinesVertical.allianceZone - ROBOT_IN_ZONE_MARGIN);
   }
 
   /**

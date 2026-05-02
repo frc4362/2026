@@ -41,7 +41,7 @@ public final class RobotContainer {
     private final Autos m_autos;
     private final Intake m_intake;
     private final ProjectileManager m_projectileManager;
-    private final Trigger m_doEarlyAgitationTrigger, m_retractIntakeTrigger, m_wantsIntakingTrigger, m_driveOverBumpTrigger;
+    private final Trigger m_doEarlyAgitationTrigger, m_retractIntakeTrigger, m_wantsIntakingTrigger, m_driveOverBumpTrigger, m_intakeOutTrigger;
 
     public RobotContainer(MatchStateScheduler matchStateScheduler) {
         m_signalManager = new StatusSignalManager();
@@ -104,8 +104,9 @@ public final class RobotContainer {
                 () -> -m_pilot.getLeftX()));
         wantsLaunchTrigger.onFalse(m_superstructure.applyWantedState(Superstructure.SystemState.IDLE));
 
-        m_doEarlyAgitationTrigger = new Trigger(DriverStation::isAutonomous).or(m_copilot.a());
+        m_doEarlyAgitationTrigger = m_copilot.a();
         m_retractIntakeTrigger = m_copilot.y();
+        m_intakeOutTrigger = m_copilot.b();
 
         final Trigger resetIntakeTrigger = m_copilot.start();
         resetIntakeTrigger.onTrue(runOnce(() -> m_superstructure.setResettingIntake(true)));
@@ -135,6 +136,7 @@ public final class RobotContainer {
         m_superstructure.setDoEarlyAgitation(m_doEarlyAgitationTrigger.getAsBoolean());
         m_superstructure.setRetractIntake(m_retractIntakeTrigger.getAsBoolean());
         m_superstructure.setWantsIntaking(m_wantsIntakingTrigger.getAsBoolean());
+        m_superstructure.setOperatorIntakeOut(m_intakeOutTrigger.getAsBoolean());
         m_vision.update();
         m_launchCalculator.periodic();
 
