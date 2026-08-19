@@ -5,6 +5,7 @@ import static java.lang.Math.*;
 
 import java.util.Arrays;
 import java.util.Optional;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
@@ -82,6 +83,7 @@ public final class CommandSwerveDrivetrain extends SwerveConstants.TunerSwerveDr
     private final RobotState m_robotState;
     private final StatusSignal<AngularVelocity> m_yawVelocity;
     private final StatusSignal<Double> m_gravityZ;
+    private Consumer<String> m_watchdogEpochConsumer = __ -> {};
 
     public final Trigger isFlat;
 
@@ -128,7 +130,7 @@ public final class CommandSwerveDrivetrain extends SwerveConstants.TunerSwerveDr
             m_logger.telemeterize(state);
 
             // submit info to RobotState
-            final SwerveDriveState swerveState = getStateCopy();
+            final SwerveDriveState swerveState = state;
             final double sampleTime = Utils.currentTimeToFPGATime(swerveState.Timestamp);
             final double omegaRadiansPerSecond = m_yawVelocity.refresh().getValue().in(RadiansPerSecond);
             final ChassisSpeeds measuredChassisSpeeds = getKinematics().toChassisSpeeds(swerveState.ModuleStates);
@@ -144,6 +146,7 @@ public final class CommandSwerveDrivetrain extends SwerveConstants.TunerSwerveDr
                     swerveState.Pose,
                     omegaRadiansPerSecond,
                     fusedChassisSpeeds);
+            m_watchdogEpochConsumer.accept("drivetrain telemetry callback work");
         });
 
         m_robotSpeedsRequest = new SwerveRequest.ApplyRobotSpeeds();
@@ -276,7 +279,7 @@ public final class CommandSwerveDrivetrain extends SwerveConstants.TunerSwerveDr
         final SwerveDriveState myState = getState();
         m_intakeCornersSpeedsPublisher.set(new double[] {
                 GeometryUtil.magnitude(GeometryUtil.transformVelocity(myState.Speeds, Constants.INTAKE_CORNER_NW, myState.Pose.getRotation())),
-                GeometryUtil.magnitude(GeometryUtil.transformVelocity(myState.Speeds, Constants.INTAKE_CORNER_NW, myState.Pose.getRotation()))
+                GeometryUtil.magnitude(GeometryUtil.transformVelocity(myState.Speeds, Constants.INTAKE_CORNER_NE, myState.Pose.getRotation()))
         });
         m_rotation3dPublisher.set(getRotation3d());
 
@@ -317,22 +320,6 @@ public final class CommandSwerveDrivetrain extends SwerveConstants.TunerSwerveDr
     public AngularVelocity getYawVelocity() {
         return m_yawVelocity.getValue();
     }
-
-    private static final Translation3d ROBOT_NORMAL = new Translation3d(0.0, 0.0, 1.0);
-
-//    /**
-//     * @return the unsigned 3d-tilt of the robot, combining yaw, pitch, and roll
-//     */
-//    public Rotation2d getTilt() {
-//        final Rotation3d myRotation = getRotation3d();
-//        final Translation3d currentNormal = ROBOT_NORMAL.rotateBy(myRotation);
-//        return Rotation2d.fromRadians(acos(currentNormal.getZ()));
-//    }
-//
-//    private static final Rotation2d UPRIGHT_DEGREES = Rotation2d.fromRadians(PI / 2.0);
-//    public boolean isFlat() {
-//        return abs(getTilt().minus(UPRIGHT_DEGREES).getDegrees()) < 1.5;
-//    }
 
     /**
      * Adds a vision measurement to the Kalman Filter. This will correct the odometry pose estimate
@@ -383,7 +370,6 @@ public final class CommandSwerveDrivetrain extends SwerveConstants.TunerSwerveDr
         if (Constants.Vision.ACCEPT_VISION_MEASUREMENTS) {
             final PoseEstimate correctEstimate;
             if (estimate.variance().get(2, 0) >= Constants.Vision.HIGH_VARIANCE || estimate.tagCount() < 2 || DriverStation.isEnabled()) {
-//            if (estimate.variance().get(2, 0) >= Constants.Vision.HIGH_VARIANCE || DriverStation.isEnabled()) {
                 // insert the known heading reading
                 // rather than hitting the pose estimator with a heading with a high variance
                 // this prevents spiraling off of the field
@@ -416,7 +402,6 @@ public final class CommandSwerveDrivetrain extends SwerveConstants.TunerSwerveDr
         aimingRequest.DriveRequestType = SwerveModule.DriveRequestType.Velocity;
         aimingRequest.ForwardPerspective = SwerveRequest.ForwardPerspectiveValue.BlueAlliance;
         aimingRequest.SteerRequestType = SwerveModule.SteerRequestType.MotionMagicExpo;
-//        aimingRequest.HeadingController.setPID(12.0, 0.0, 0.7);
         aimingRequest.HeadingController.setPID(9.0, 0.0, 0.0);
         return aimingRequest;
     }
@@ -427,5 +412,9 @@ public final class CommandSwerveDrivetrain extends SwerveConstants.TunerSwerveDr
 
     public FollowPath.Builder getTeleopBlineBuilder() {
         return m_teleopPathBuilder;
+    }
+
+    public void setWatchdogEpochConsumer(final Consumer<String> watchdogEpochConsumer) {
+        m_watchdogEpochConsumer = watchdogEpochConsumer;
     }
 }
