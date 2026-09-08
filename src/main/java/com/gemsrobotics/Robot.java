@@ -25,7 +25,6 @@ public final class Robot extends TimedRobot {
 //        DataLogManager.start();
         m_matchStateScheduler = new MatchStateScheduler();
         m_robotContainer = new RobotContainer(m_matchStateScheduler);
-        m_robotContainer.setWatchdogEpochConsumer(this::addEpoch);
         RobotController.setBrownoutVoltage(4.75);
 
         m_autoChooser = m_robotContainer.getAutos().getAutoChooser();
