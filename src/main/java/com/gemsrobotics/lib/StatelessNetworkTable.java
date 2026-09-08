@@ -15,11 +15,16 @@ import java.util.function.Function;
  * @param <PublisherType> The type of the publisher which we are storing ie. DoublePublisher, BooleanPublisher, StructPublisher<T>
  * @param <LoggableType> The type of the value which we are logging to this publisher. ie. Double, Boolean, or T
  */
-public final class StatelessNetworkTable<PublisherType extends Publisher, LoggableType> {
+public final class StatelessNetworkTable<PublisherType, LoggableType> {
     private final Map<String, PublisherType> m_publishers;
     private final Function<String, PublisherType> m_publisherMaker;
     private final BiConsumer<PublisherType, LoggableType> m_logFunction;
 
+    /**
+     * Produces a StatelessNetworkTable from two functions
+     * @param publisherMaker A function which produces a publisher of the specified type for a given key
+     * @param log A function which logs a value of a type to the generated publisher
+     */
     private StatelessNetworkTable(final Function<String, PublisherType> publisherMaker, final BiConsumer<PublisherType, LoggableType> log) {
         m_publishers = new HashMap<>();
         m_publisherMaker = publisherMaker;

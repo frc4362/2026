@@ -23,6 +23,7 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import com.gemsrobotics.subsystems.swerve.CommandSwerveDrivetrain;
 import com.gemsrobotics.subsystems.swerve.SwerveConstants;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import java.util.function.Consumer;
 
 import static com.gemsrobotics.Constants.CAN.*;
 import static edu.wpi.first.units.Units.*;
@@ -42,6 +43,7 @@ public final class RobotContainer {
     private final Intake m_intake;
     private final ProjectileManager m_projectileManager;
     private final Trigger m_doEarlyAgitationTrigger, m_retractIntakeTrigger, m_wantsIntakingTrigger, m_driveOverBumpTrigger, m_intakeOutTrigger;
+    private Consumer<String> m_watchdogEpochConsumer = __ -> {};
 
     public RobotContainer(MatchStateScheduler matchStateScheduler) {
         m_signalManager = new StatusSignalManager();
@@ -133,17 +135,21 @@ public final class RobotContainer {
         // Conspicuously, we don't update Superstructure.
         // This is because it is a Subsystem, so it is updated periodically inside the Scheduler
         m_signalManager.periodic();
+        m_watchdogEpochConsumer.accept("m_signalManager.periodic()");
         m_superstructure.setDoEarlyAgitation(m_doEarlyAgitationTrigger.getAsBoolean());
         m_superstructure.setRetractIntake(m_retractIntakeTrigger.getAsBoolean());
         m_superstructure.setWantsIntaking(m_wantsIntakingTrigger.getAsBoolean());
         m_superstructure.setOperatorIntakeOut(m_intakeOutTrigger.getAsBoolean());
         m_vision.update();
+        m_watchdogEpochConsumer.accept("m_vision.update()");
         m_launchCalculator.periodic();
+        m_watchdogEpochConsumer.accept("m_launchCalculator.periodic()");
 
         m_visualizer.update(
                 m_robotState.getLatestFieldToVehicle().getValue(),
                 m_superstructure.getIntakeAngle(),
                 m_superstructure.getHoodAngle());
+        m_watchdogEpochConsumer.accept("m_visualizer.update()");
 
         if (Robot.isSimulation()) {
             m_projectileManager.updateAll();
@@ -179,5 +185,10 @@ public final class RobotContainer {
 
     public Autos getAutos() {
         return m_autos;
+    }
+
+    public void setWatchdogEpochConsumer(final Consumer<String> watchdogEpochConsumer) {
+        m_watchdogEpochConsumer = watchdogEpochConsumer;
+        m_swerve.setWatchdogEpochConsumer(watchdogEpochConsumer);
     }
 }
