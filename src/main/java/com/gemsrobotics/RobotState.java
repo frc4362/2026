@@ -7,6 +7,7 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.units.measure.AngularVelocity;
 
 import java.util.*;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
@@ -23,14 +24,12 @@ public final class RobotState {
 	private final ConcurrentTimeInterpolatableBuffer<Double> m_vehicleAngularVelocity;
 
 	private final AtomicReference<PoseEstimate> m_lastVisionPoseEstimate;
-	private final AtomicReference<Double> m_lastVisionPoseEstimateTimestamp;
 	private final AtomicReference<ChassisSpeeds> m_recentVehicleRelativeVelocity;
 	private final AtomicReference<ChassisSpeeds> m_recentFieldRelativeVelocity;
 
 	public RobotState() {
-		m_visionPoseEstimateConsumers = new ArrayList<>();
+		m_visionPoseEstimateConsumers = new CopyOnWriteArrayList<>();
 		m_lastVisionPoseEstimate = new AtomicReference<>(PoseEstimate.NULL);
-		m_lastVisionPoseEstimateTimestamp = new AtomicReference<>(0.0);
 
 		m_fieldToVehicle = ConcurrentTimeInterpolatableBuffer.createBuffer(LOOKBACK_TIME_SECONDS);
 		m_fieldToVehicle.addSample(0.0, Pose2d.kZero);
@@ -47,7 +46,6 @@ public final class RobotState {
 
 	public void updatePoseEstimate(final PoseEstimate poseEstimate) {
 		m_lastVisionPoseEstimate.set(poseEstimate);
-		m_lastVisionPoseEstimateTimestamp.set(poseEstimate.timestampSeconds());
 		m_visionPoseEstimateConsumers.forEach(consumer -> consumer.accept(poseEstimate));
 	}
 
@@ -56,7 +54,7 @@ public final class RobotState {
 	}
 
 	public double getLastVisionPoseEstimateTimestamp() {
-		return m_lastVisionPoseEstimateTimestamp.get();
+		return m_lastVisionPoseEstimate.get().timestampSeconds();
 	}
 
 	public void addDriveSample(
@@ -109,7 +107,7 @@ public final class RobotState {
 			final double startTime,
 			final double endTime
 	) {
-		var range = buffer.getInternalBuffer().subMap(startTime, endTime).values();
+		var range = buffer.getInternalBuffer().subMap(startTime, true, endTime, true).values();
 		return range.stream().map(Math::abs).max(Double::compare);
 	}
 

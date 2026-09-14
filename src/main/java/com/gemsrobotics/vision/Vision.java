@@ -115,7 +115,9 @@ public final class Vision {
     }
 
     // we are assuming that all the pose estimates are independent, and do not share a source of error ie. field layout
-    private Optional<PoseEstimate> fusePoseEstimates(final List<PoseEstimate> visionEstimates) {
+    private Optional<PoseEstimate> fusePoseEstimates(List<PoseEstimate> visionEstimates) {
+        // defensive copy: the caller hands us an unmodifiable list (Stream.toList()), and we sort/remove in place below
+        visionEstimates = new ArrayList<>(visionEstimates);
         // ensure the estimates are all in order
         visionEstimates.sort(Comparator.comparing(PoseEstimate::timestampSeconds));
 
@@ -153,7 +155,7 @@ public final class Vision {
             synchronizedPoses.add(visionEstimates.get(i).fieldToVehicle().transformBy(nTr));
         }
         // add the last pose which we did not need to fast-forward
-        synchronizedPoses.add(mostRecentCapturePose);
+        synchronizedPoses.add(mostRecentPoseEstimate.fieldToVehicle());
 
         // square each element of the variance
         final List<Matrix<N3, N1>> variances = visionEstimates.stream().map(
@@ -166,7 +168,7 @@ public final class Vision {
             // note that we do not need to divide by the weights at the end as they are internally normalized in Rotation2d
             double cosSum = 0.0;
             double sinSum = 0.0;
-            for (int i = 0; i < synchronizedPoses.size() - 1; i++) {
+            for (int i = 0; i <= synchronizedPoses.size() - 1; i++) {
                 cosSum += synchronizedPoses.get(i).getRotation().getCos() / variances.get(i).get(2, 0);
                 sinSum += synchronizedPoses.get(i).getRotation().getSin() / variances.get(i).get(2, 0);
             }
@@ -227,8 +229,8 @@ public final class Vision {
             return Optional.empty();
         }
 
-        // if we're within a centimeter or two of the origin, we can assume this is pretty much a null reading
-        if (poseEstimate.pose.getTranslation().getSquaredNorm() < 0.02) {
+        // if we're within 3 centimeters of the origin, we can assume this is pretty much a null reading
+        if (poseEstimate.pose.getTranslation().getSquaredNorm() < 0.0009) {
             return Optional.empty();
         }
 
