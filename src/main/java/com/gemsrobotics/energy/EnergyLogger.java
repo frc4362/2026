@@ -11,8 +11,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static java.lang.Math.abs;
-
 public final class EnergyLogger {
     public static final String CURRENTS_TABLE_NAME = "currents";
     public static final String POWERS_TABLE_NAME = "powers";
@@ -91,7 +89,7 @@ public final class EnergyLogger {
             final double newEnergyConsumed = joulesToWattHours(power * Constants.LOOP_PERIOD_SECONDS);
             m_totalEnergyWattHours += newEnergyConsumed;
             final double totalSinkEnergy = m_sinkEnergies.merge(sink.getName(), newEnergyConsumed, Double::sum);
-            m_sinkLoggers.get(sink.getName()).log(current, power, joulesToWattHours(totalSinkEnergy));
+            m_sinkLoggers.get(sink.getName()).log(current, power, totalSinkEnergy);
         }
 
         m_breakerSim.update(m_totalCurrentAmps);

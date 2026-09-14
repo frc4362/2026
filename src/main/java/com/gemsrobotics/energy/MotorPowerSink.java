@@ -8,8 +8,6 @@ import edu.wpi.first.units.measure.Voltage;
 import java.util.ArrayList;
 import java.util.List;
 
-import static java.lang.Math.abs;
-
 public class MotorPowerSink implements PowerSink {
     private final String m_name;
     private final List<StatusSignal<Current>> m_supplyCurrentSignals;
@@ -36,7 +34,7 @@ public class MotorPowerSink implements PowerSink {
         double totalCurrent = 0.0;
 
         for (final var currentSignal : m_supplyCurrentSignals) {
-            totalCurrent += abs(currentSignal.getValueAsDouble());
+            totalCurrent += Math.max(0.0, currentSignal.getValueAsDouble());
         }
 
         return totalCurrent;
@@ -48,7 +46,8 @@ public class MotorPowerSink implements PowerSink {
 
         // size of the two lists will be the same
         for (int i = 0; i < m_supplyVoltageSignals.size(); i++) {
-            totalPower += abs(m_supplyCurrentSignals.get(i).getValueAsDouble()) * m_supplyVoltageSignals.get(i).getValueAsDouble();
+            final double supplyCurrent = Math.max(0.0, m_supplyCurrentSignals.get(i).getValueAsDouble());
+            totalPower += supplyCurrent * m_supplyVoltageSignals.get(i).getValueAsDouble();
         }
 
         return totalPower;

@@ -66,12 +66,14 @@ public class Flywheel {
         m_leaderStatorCurrentSignal = m_motorLeader.getStatorCurrent(false);
         m_leaderTemperatureSignal = m_motorLeader.getDeviceTemp(false);
 
+        m_leaderSupplyCurrentSignal = m_motorLeader.getSupplyCurrent(false);
+
         final NetworkTable myTable = nt;
-        final var powerSignals = signalManager.registerPowerTracking(bus, myTable, m_motorLeader);
-        m_leaderSupplyCurrentSignal = powerSignals.get(m_motorLeader.getDeviceID()).supplyCurrentSignal();
         signalManager.registerPublished(bus, m_leaderVelocitySignal, myTable, "velocity_rps");
         signalManager.registerPublished(bus, m_leaderVelocityReferenceSignal, myTable, "velocity_reference_rps");
         signalManager.registerPublished(bus, m_leaderStatorCurrentSignal, myTable, "stator_current_amps");
+        signalManager.registerPublished(bus, m_leaderSupplyCurrentSignal, myTable, "supply_current_amps");
+        signalManager.registerPublished(bus, m_motorLeader.getSupplyVoltage(false), myTable, "supply_voltage");
         signalManager.registerPublished(bus, m_leaderTemperatureSignal, myTable, "temp_c");
 
         // sim code

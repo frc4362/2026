@@ -11,7 +11,7 @@ public class RoborioPowerDraw implements PowerSink {
 
     @Override
     public double getCurrent() {
-        return RobotController.getInputCurrent();
+        return Math.max(0.0, RobotController.getInputCurrent());
     }
 
     @Override
