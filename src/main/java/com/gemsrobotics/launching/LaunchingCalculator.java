@@ -218,7 +218,7 @@ public final class LaunchingCalculator {
 		final Pose2d lookaheadRobotPose = lookaheadLauncherPose.transformBy(Constants.ROBOT_TO_LAUNCHER.inverse());
 		// if we ever move shooter off center, we need to calculate the heading with that in mind
 		final Rotation2d desiredRobotRotation = target.minus(lookaheadRobotPose.getTranslation()).getAngle()
-				.rotateBy(Constants.ROBOT_TO_LAUNCHER.getRotation());
+				.minus(Constants.ROBOT_TO_LAUNCHER.getRotation());
 		m_lookaheadPosePublisher.set(new Pose2d(lookaheadRobotPose.getTranslation(), desiredRobotRotation));
 
 		final var ret = new Parameters(
@@ -321,9 +321,9 @@ public final class LaunchingCalculator {
 
 	private static FeedingTarget getFeedingTarget(final Pose2d vehiclePose) {
 		if (DO_TOWER_FEEDING) {
-			final boolean isOutOfAllianceZone = vehiclePose.getX() > FieldConstants.LeftBump.center.getX();
-			final boolean isBehindHubs = vehiclePose.getY() < (FieldConstants.Hub.leftFace.getY() + LAUNCH_SAFETY_MARGIN)
-					&& vehiclePose.getY() > (FieldConstants.Hub.rightFace.getY() - LAUNCH_SAFETY_MARGIN);
+			final boolean isOutOfAllianceZone = AllianceFlipUtil.applyX(vehiclePose.getX()) > FieldConstants.LeftBump.center.getX();
+			final boolean isBehindHubs = AllianceFlipUtil.applyY(vehiclePose.getY()) < (FieldConstants.Hub.leftFace.getY() + LAUNCH_SAFETY_MARGIN)
+					&& AllianceFlipUtil.applyY(vehiclePose.getY()) > (FieldConstants.Hub.rightFace.getY() - LAUNCH_SAFETY_MARGIN);
 			final boolean isTowerFeedAllowed = isOutOfAllianceZone && !isBehindHubs;
 
 			// if a simple tower feed is allowed, do it
